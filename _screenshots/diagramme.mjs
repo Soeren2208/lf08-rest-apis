@@ -3,8 +3,8 @@ import { chromium } from 'playwright';
 const OUT = 'C:\\Users\\sschw\\AppData\\Local\\Temp\\claude\\C--Users-sschw-Lernfeld-8-Lernsituationen-02-REST-APIs-erstellen-Neuentwicklung\\31b4de08-5a57-4811-b8b4-ff52fde63154\\scratchpad\\';
 
 const seiten = [
-  { url: 'http://localhost:3000/docs/arbeitsblaetter/01-projekt-aufsetzen', name: 'ab01' },
-  { url: 'http://localhost:3000/docs/arbeitsblaetter/02-personen-speichern', name: 'ab02' },
+  { url: 'http://localhost:3000/lf08-rest-apis/tutorial-01/01-projekt-aufsetzen', name: 'ab01' },
+  { url: 'http://localhost:3000/lf08-rest-apis/tutorial-01/02-personen-speichern', name: 'ab02' },
 ];
 
 const browser = await chromium.launch();

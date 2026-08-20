@@ -3,65 +3,54 @@ import Link from '@docusaurus/Link';
 import Layout from '@theme/Layout';
 import Heading from '@theme/Heading';
 import styles from './index.module.css';
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
-// Kartenliste für den Abschnitt "Arbeitsblätter".
-const arbeitsblaetter = [
-  {
-    nummer: '01',
-    titel: 'Projekt aufsetzen',
-    stichworte: 'Spring Initializr · REST-Controller · Record · Actuator',
-    link: '/docs/arbeitsblaetter/01-projekt-aufsetzen',
-  },
-  {
-    nummer: '02',
-    titel: 'Personen speichern',
-    stichworte: 'JPA-Entität · Repository · H2 · Konstruktor-Injektion',
-    link: '/docs/arbeitsblaetter/02-personen-speichern',
-  },
-  {
-    nummer: '03',
-    titel: 'CRUD vervollständigen',
-    stichworte: 'PUT · DELETE · Statuscodes · Idempotenz · Testfälle',
-    link: '/docs/arbeitsblaetter/03-crud-vervollstaendigen',
-  },
-];
-
-// Linkliste für den Abschnitt "Infoblätter".
+// Die Infoblätter sind immer erreichbar.
 const infoblaetter = [
   {
     titel: 'Was ist ein Webservice?',
     beschreibung: 'Programme, die mit Programmen reden — und warum das etwas anderes ist als eine Webseite',
-    link: '/docs/infoblaetter/webservices',
+    link: '/infoblaetter/webservices',
   },
   {
     titel: 'Das REST-Paradigma',
     beschreibung: 'Ressourcen statt Funktionen, die sechs Prinzipien, Idempotenz — und die Abgrenzung zu SOAP',
-    link: '/docs/infoblaetter/rest-paradigma',
+    link: '/infoblaetter/rest-paradigma',
   },
   {
     titel: 'HTTP kompakt',
     beschreibung: 'Aufbau von Anfrage und Antwort, Methoden, Statuscodes, Header',
-    link: '/docs/infoblaetter/http-kompakt',
+    link: '/infoblaetter/http-kompakt',
   },
   {
     titel: 'JSON',
     beschreibung: 'Aufbau des Datenformats, Abbildung auf Java-Typen, Serialisierung und typische Fehler',
-    link: '/docs/infoblaetter/json',
+    link: '/infoblaetter/json',
   },
   {
     titel: 'Maven und Abhängigkeiten',
     beschreibung: 'pom.xml, GAV-Koordinaten, transitive Abhängigkeiten, Starter und der Maven Wrapper',
-    link: '/docs/infoblaetter/maven',
+    link: '/infoblaetter/maven',
   },
   {
     titel: 'JPA und Hibernate',
-    beschreibung: 'Objektrelationales Mapping, der Unterschied zwischen JPA, Hibernate und Spring Data, die Entität',
-    link: '/docs/infoblaetter/jpa-hibernate',
+    beschreibung: 'Objektrelationales Mapping, der Unterschied zwischen JPA, Hibernate und Spring Data',
+    link: '/infoblaetter/jpa-hibernate',
   },
   {
     titel: 'Testfälle formulieren',
     beschreibung: 'Äquivalenzklassen, Grenzwerte und was man an einer REST-Schnittstelle prüft',
-    link: '/docs/infoblaetter/testfaelle',
+    link: '/infoblaetter/testfaelle',
+  },
+  {
+    titel: 'Lombok',
+    beschreibung: 'Boilerplate beim Kompilieren erzeugen — und wo @Data gefährlich wird',
+    link: '/infoblaetter/lombok',
+  },
+  {
+    titel: 'Abgeleitete Abfragen',
+    beschreibung: 'Der Methodenname als Abfrage, die Bausteine, und wann JPQL besser ist',
+    link: '/infoblaetter/abgeleitete-abfragen',
   },
 ];
 
@@ -75,7 +64,7 @@ const lernziele = [
   'Testfälle systematisch formulieren und ausführen',
 ];
 
-function ArbeitsblattCard({nummer, titel, stichworte, link}) {
+function TutorialCard({nummer, titel, stichworte, link}) {
   return (
     <Link to={link} className={styles.card}>
       <span className={styles.cardNummer}>{nummer}</span>
@@ -86,6 +75,10 @@ function ArbeitsblattCard({nummer, titel, stichworte, link}) {
 }
 
 export default function Home() {
+  // Nur die freigegebenen Tutorials - gesteuert ueber tutorials.js
+  const {siteConfig} = useDocusaurusContext();
+  const freigegeben = siteConfig.customFields.tutorials;
+
   return (
     <Layout
       title="REST-APIs mit Spring Boot"
@@ -113,11 +106,10 @@ export default function Home() {
             gemeinsame Schnittstelle gebaut.
           </p>
           <p>
-            Die Arbeitsblätter bauen aufeinander auf und werden der Reihe nach
-            bearbeitet. Jedes endet mit einer lauffähigen Anwendung und einer
-            Reihe von Testfällen, mit denen du deine Arbeit selbst überprüfst.
-            Die Infoblätter liefern den fachlichen Hintergrund und lassen sich
-            unabhängig davon nachschlagen.
+            Die Tutorials bauen aufeinander auf und werden der Reihe nach
+            bearbeitet. Jedes Arbeitsblatt endet mit einer lauffähigen
+            Anwendung und Testfällen zur Selbstprüfung. Die Infoblätter liefern
+            den fachlichen Hintergrund und lassen sich jederzeit nachschlagen.
           </p>
         </section>
 
@@ -131,21 +123,35 @@ export default function Home() {
         </section>
 
         <section className={styles.section}>
-          <Heading as="h2">Arbeitsblätter</Heading>
+          <Heading as="h2">Tutorials</Heading>
           <p>
-            Arbeite die Arbeitsblätter der Reihe nach ab. Jedes enthält
-            Aufgaben, die du abhaken kannst, um deinen Fortschritt zu verfolgen.
+            Arbeite die Tutorials der Reihe nach ab. Jedes enthält Aufgaben,
+            die du abhaken kannst, um deinen Fortschritt zu verfolgen.
           </p>
           <div className={styles.cardGrid}>
-            {arbeitsblaetter.map((item) => (
-              <ArbeitsblattCard key={item.nummer} {...item} />
+            {freigegeben.map((t) => (
+              <TutorialCard
+                key={t.id}
+                nummer={t.nummer}
+                titel={t.titel}
+                stichworte={t.stichworte}
+                link={`/${t.id}/`}
+              />
             ))}
           </div>
+          <p>
+            <em>
+              Weitere Tutorials werden im Laufe des Schuljahres freigeschaltet.
+            </em>
+          </p>
         </section>
 
         <section className={styles.section}>
           <Heading as="h2">Infoblätter</Heading>
-          <p>Begleitende Informationen zu den fachlichen Grundlagen:</p>
+          <p>
+            Nachschlagematerial zu den fachlichen Grundlagen — unabhängig davon,
+            an welchem Tutorial du gerade arbeitest:
+          </p>
           <ul className={styles.linkListe}>
             {infoblaetter.map((item) => (
               <li key={item.titel}>

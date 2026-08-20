@@ -217,7 +217,7 @@ Hibernate erzeugt Objekte über den parameterlosen Konstruktor und füllt sie an
 
 **Genau deshalb kann eine Entität kein Record sein:** Ein Record hat nur den Konstruktor mit allen Werten, seine Felder sind `final`, und Hibernate müsste nach dem Einfügen die erzeugte `id` nachträglich hineinschreiben — was bei `final` nicht geht.
 
-Ausführlich steht das im Infoblatt [JPA und Hibernate](../infoblaetter/jpa-hibernate).
+Ausführlich steht das im Infoblatt [JPA und Hibernate](/infoblaetter/jpa-hibernate).
 :::
 
 ### Aufgabe 3 – Das Repository
@@ -418,7 +418,7 @@ Früher gab es nur die Langform, und man gab zusätzlich an, welche Datenformate
                 produces = MediaType.APPLICATION_JSON_VALUE)
 ```
 
-Beides ist heute überflüssig, weil JSON das Standardformat von Spring-REST-Endpunkten ist. Nötig wird es erst, wenn ein Endpunkt **mehrere** Formate bedienen soll — siehe [HTTP kompakt](../infoblaetter/http-kompakt#content-negotiation-mehrere-formate).
+Beides ist heute überflüssig, weil JSON das Standardformat von Spring-REST-Endpunkten ist. Nötig wird es erst, wenn ein Endpunkt **mehrere** Formate bedienen soll — siehe [HTTP kompakt](/infoblaetter/http-kompakt#content-negotiation-mehrere-formate).
 
 Die Kurzform ist heute der Normalfall. Die Langform solltest du aber wiedererkennen, wenn du in einem Betrieb auf älteren Code stößt.
 :::
@@ -670,7 +670,7 @@ Du siehst dieselben Datensätze einmal als JSON über den Webservice und einmal 
 
 Das ist der Kern des **objektrelationalen Mappings**: Hibernate übersetzt zwischen Java-Objekten und Datenbankzeilen. Du hast nie eine `INSERT`-Anweisung geschrieben — im Log kannst du nachlesen, dass Hibernate sie erzeugt hat.
 
-Wie diese Übersetzung funktioniert und was **JPA**, **Hibernate** und **Spring Data JPA** jeweils dazu beitragen, erklärt das Infoblatt [JPA und Hibernate](../infoblaetter/jpa-hibernate).
+Wie diese Übersetzung funktioniert und was **JPA**, **Hibernate** und **Spring Data JPA** jeweils dazu beitragen, erklärt das Infoblatt [JPA und Hibernate](/infoblaetter/jpa-hibernate).
 :::
 
 ### Aufgabe 7 – Testfälle ausführen

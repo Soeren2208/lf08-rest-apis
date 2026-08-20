@@ -26,7 +26,7 @@ Nach Bearbeitung dieses Arbeitsblatts kannst du:
 - den Zustand deiner laufenden Anwendung über den Actuator prüfen
 
 :::info Vorwissen
-Lies vorher die Infoblätter [Was ist ein Webservice?](../infoblaetter/webservices) und [Das REST-Paradigma](../infoblaetter/rest-paradigma). Für den Aufbau der Nachrichten hilft [HTTP kompakt](../infoblaetter/http-kompakt).
+Lies vorher die Infoblätter [Was ist ein Webservice?](/infoblaetter/webservices) und [Das REST-Paradigma](/infoblaetter/rest-paradigma). Für den Aufbau der Nachrichten hilft [HTTP kompakt](/infoblaetter/http-kompakt).
 :::
 
 ## Warum ein Spring-Boot-Projekt kein normales Java-Projekt ist
@@ -118,32 +118,29 @@ IntelliJ bringt den Spring Initializr eingebaut mit. Du musst also nichts herunt
 
 #### Schritt 1: Den Assistenten öffnen
 
-<Task id="ab01-a1-menu">Öffne das Hauptmenü über das Symbol ☰ oben links und wähle **File → New → Project…**</Task>
-
-![Das Menü File → New → Project in IntelliJ](/img/ij-01-neues-projekt.png)
-
-:::tip Reihenfolge der Klicks
-1. **☰** ganz oben links anklicken — das klappt die Menüleiste auf
-2. **File** anklicken
-3. Im Menü auf **New** zeigen — rechts öffnet sich ein weiteres Menü
-4. Dort **Project…** anklicken
-
-Läuft noch kein Projekt, geht es auch direkt: Auf dem Startbildschirm gibt es die Schaltfläche **New Project**.
-:::
+<Task id="ab01-a1-menu">Wähle **File → New → Project…** — oder auf dem Startbildschirm die Schaltfläche **New Project**.</Task>
 
 #### Schritt 2: Den Generator „Spring Boot" wählen
 
-<Task id="ab01-a1-generator">Wähle in der linken Liste unter **Generators** den Eintrag **Spring Boot** aus.</Task>
+Der Assistent sieht diesmal anders aus als gewohnt: Links stehen nicht nur die üblichen Projektarten, sondern darunter ein zweiter Abschnitt **Generators**.
+
+<Task id="ab01-a1-generator">Wähle in der linken Liste unter **Generators** den Eintrag **Spring Boot**.</Task>
 
 :::danger Nicht verwechseln
-Ganz oben in derselben Liste steht unter **New Project** auch ein Eintrag **Java**. Der erzeugt ein gewöhnliches Java-Projekt **ohne** Spring Boot.
+Ganz oben in derselben Liste steht unter **New Project** auch ein Eintrag **Java**. Der erzeugt ein gewöhnliches Java-Projekt **ohne** Spring Boot — damit läuft später nichts von dem, was in diesen Arbeitsblättern steht.
 
 Du brauchst den Eintrag weiter unten im Abschnitt **Generators**.
 :::
 
 #### Schritt 3: Die Projektangaben eintragen
 
-![Der Spring-Boot-Generator mit den Eingabefeldern](/img/ij-02-spring-boot.png)
+![Der Assistent mit ausgewähltem Generator Spring Boot und den Eingabefeldern](/img/ij-02-spring-boot.png)
+
+:::note Zur Abbildung
+Sie zeigt den Dialog **vor** dem Ausfüllen — die Felder stehen noch auf den Voreinstellungen. Auch der Ordner unter *Location* ist nur ein Beispiel; nimm deinen eigenen.
+
+Maßgeblich sind die Werte aus der folgenden Tabelle.
+:::
 
 <Task id="ab01-a1-felder">Fülle die Felder von oben nach unten aus:</Task>
 
@@ -218,7 +215,7 @@ Rechts unter **Added dependencies** müssen am Ende genau **vier** Einträge ste
 :::note Der erste Start dauert
 Maven lädt jetzt über hundert Dateien aus dem Internet. Beim ersten Mal dauert das mehrere Minuten, danach nur noch Sekunden. Warte ab, bis die Fortschrittsanzeige unten verschwunden ist.
 
-Warum aus vier Einträgen über hundert Dateien werden, steht im Infoblatt [Maven und Abhängigkeiten](../infoblaetter/maven).
+Warum aus vier Einträgen über hundert Dateien werden, steht im Infoblatt [Maven und Abhängigkeiten](/infoblaetter/maven).
 :::
 
 ---
@@ -283,7 +280,7 @@ personenverwaltung/
 
 In Betrieben gilt: Nutze den Wrapper, nicht dein lokales Maven.
 
-Was Maven sonst noch tut, woher die Bibliotheken kommen und warum aus deinen vier ausgewählten Abhängigkeiten über hundert Dateien werden, steht im Infoblatt [Maven und Abhängigkeiten](../infoblaetter/maven).
+Was Maven sonst noch tut, woher die Bibliotheken kommen und warum aus deinen vier ausgewählten Abhängigkeiten über hundert Dateien werden, steht im Infoblatt [Maven und Abhängigkeiten](/infoblaetter/maven).
 :::
 
 <Task id="ab01-a2-start">Starte die Anwendung: Führe die `main`-Methode in `PersonenverwaltungApplication` aus.</Task>
@@ -383,7 +380,7 @@ Was die drei Annotationen bedeuten:
 :::tip Beachte, was hier gerade passiert ist
 Du hast ein Java-Objekt zurückgegeben — und im Browser steht JSON. Diese Umwandlung nennt man **Serialisierung**. Spring erledigt sie automatisch. Aus den Record-Komponenten `message` und `time` werden die JSON-Felder gleichen Namens.
 
-Wie JSON aufgebaut ist und wie Java-Typen darauf abgebildet werden, steht im Infoblatt [JSON](../infoblaetter/json).
+Wie JSON aufgebaut ist und wie Java-Typen darauf abgebildet werden, steht im Infoblatt [JSON](/infoblaetter/json).
 :::
 
 ### Aufgabe 5 – Testfälle ausführen

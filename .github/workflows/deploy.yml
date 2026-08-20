@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   bauen:
-    name: Beide Tutorials bauen
+    name: Website bauen
     runs-on: ubuntu-latest
     steps:
       - name: Quelltext holen
@@ -29,58 +29,42 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: website/package-lock.json
 
-      # ---------- Tutorial 1 ----------
-      - name: Tutorial 1 – Abhängigkeiten installieren
+      - name: Abhängigkeiten installieren
         working-directory: website
         run: npm ci
 
-      - name: Tutorial 1 – bauen
+      # Welche Tutorials gebaut werden, steuert website/tutorials.js.
+      # Ein Tutorial mit veroeffentlicht:false landet gar nicht erst im
+      # Ergebnis - seine Adresse liefert dann einen 404.
+      - name: Bauen
         working-directory: website
         run: npm run build
 
-      # ---------- Tutorial 2 ----------
-      - name: Tutorial 2 – Abhängigkeiten installieren
-        working-directory: website-02-gaestebuch
-        run: npm ci
-
-      - name: Tutorial 2 – bauen
-        working-directory: website-02-gaestebuch
-        run: npm run build
-
-      # ---------- Alles zu einer Seite zusammensetzen ----------
-      # Ergebnis:
-      #   /                 Startseite mit den Verweisen
-      #   /tutorial-01/     Personenverwaltung
-      #   /tutorial-02/     Gästebuch
-      - name: Seite zusammensetzen
+      - name: Freigeschaltete Tutorials anzeigen
+        working-directory: website
         run: |
-          mkdir -p seite/tutorial-01 seite/tutorial-02
-          cp -r landing/.            seite/
-          cp -r website/build/.      seite/tutorial-01/
-          cp -r website-02-gaestebuch/build/. seite/tutorial-02/
-          echo "--- Inhalt der fertigen Seite ---"
-          ls -la seite
-          test -f seite/index.html
-          test -f seite/tutorial-01/index.html
-          test -f seite/tutorial-02/index.html
+          echo "Im Ergebnis enthalten:"
+          ls -d build/tutorial-* 2>/dev/null | sed 's|build/|  |' || echo "  (keins)"
 
-      - name: Pages vorbereiten
+      - name: Pages einrichten
         uses: actions/configure-pages@v5
 
       - name: Ergebnis hochladen
         uses: actions/upload-pages-artifact@v3
         with:
-          path: seite
+          path: website/build
 
   veroeffentlichen:
-    name: Auf GitHub Pages veröffentlichen
+    name: Veröffentlichen
     needs: bauen
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Veröffentlichen
+      - name: Auf GitHub Pages veröffentlichen
         id: deployment
         uses: actions/deploy-pages@v4

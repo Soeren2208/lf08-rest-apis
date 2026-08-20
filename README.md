@@ -17,13 +17,44 @@ am Schulzentrum Utbremen, Bremen.
 
 | Ordner | Inhalt |
 |---|---|
-| `website/` | Tutorial 1 – Personenverwaltung (Docusaurus) |
-| `website-02-gaestebuch/` | Tutorial 2 – Gästebuch-Microservice (Docusaurus) |
+| `website/` | Die gesamte Website (Docusaurus) — alle Tutorials und Infoblätter |
 | `01-personenverwaltung/` | Lauffähiges Referenzprojekt zu Tutorial 1 (Spring Boot 4.1, Java 25) |
 | `02-gaestebuch/` | Lauffähiges Referenzprojekt zu Tutorial 2 |
-| `landing/` | Statische Startseite, die auf beide Tutorials verweist |
 | `_screenshots/` | Screenshots und die Skripte, mit denen sie erzeugt werden |
 | `.github/workflows/` | Pipeline für die Veröffentlichung |
+
+Innerhalb von `website/`:
+
+| | |
+|---|---|
+| `tutorials.js` | **Hier wird freigeschaltet** — siehe unten |
+| `docs-infoblaetter/` | Die Infoblätter, genau einmal. Immer erreichbar. |
+| `docs-tutorial-01/` | Arbeitsblätter von Tutorial 1 |
+| `docs-tutorial-02/` | Arbeitsblätter von Tutorial 2 |
+| `src/pages/index.js` | Startseite |
+
+---
+
+## Tutorials freischalten
+
+Die Schüler sollen nicht alle Tutorials gleichzeitig bekommen. Gesteuert wird
+das in **`website/tutorials.js`**:
+
+```js
+{ id: 'tutorial-02', titel: 'Gästebuch', veroeffentlicht: false }
+```
+
+- `false` → Das Tutorial wird **gar nicht gebaut**. Die Adresse liefert einen
+  `404`, auch für jemanden, der sie errät. Weder Inhalt noch Titel stehen
+  irgendwo im Ergebnis.
+- `true` → Es erscheint auf der Startseite und in der Navigationsleiste.
+
+Umschalten, committen, pushen — nach etwa zwei Minuten ist es online.
+
+Die **Infoblätter sind nicht geschaltet**. Sie sind Nachschlagematerial und
+immer erreichbar. Das heißt auch: Wer in Tutorial 1 steckt, sieht im
+Verzeichnis bereits *Lombok* und *Abgeleitete Abfragen*. Das ist gewollt —
+Nachschlagen ist etwas anderes, als die Arbeitsblätter vorab zu bekommen.
 
 ---
 
@@ -32,18 +63,14 @@ am Schulzentrum Utbremen, Bremen.
 Voraussetzung: **Node 22 oder neuer**.
 
 ```bash
-cd website              # oder website-02-gaestebuch
+cd website
 npm install
 npm run start
 ```
 
-`npm run start` startet den Entwicklungsserver mit automatischem Neuladen.
-Tutorial 1 läuft auf Port 3000; für Tutorial 2 parallel:
-
-```bash
-cd website-02-gaestebuch
-npm run start -- --port 3001
-```
+`npm run start` startet den Entwicklungsserver mit automatischem Neuladen auf
+Port 3000. Nicht freigeschaltete Tutorials fehlen auch hier — zum Bearbeiten
+also vorübergehend in `tutorials.js` auf `true` setzen.
 
 Vor dem Push lohnt sich ein vollständiger Build, weil die Pipeline denselben ausführt:
 
@@ -86,13 +113,21 @@ löst sofort eine Veröffentlichung aus — das ist möglich, aber ungeprüft.
 
 ## Drei Dinge, die man wissen muss
 
-### 1. Die Infoblätter liegen doppelt
+### 1. Verweise zwischen den Bereichen absolut schreiben
 
-Sieben Infoblätter (Webservices, REST, HTTP, JSON, Maven, JPA/Hibernate,
-Testfälle) existieren **in beiden** Website-Ordnern, damit jedes Tutorial für
-sich vollständig ist. Wer eines davon ändert, muss es in beiden Ordnern tun.
+Jedes Tutorial und die Infoblätter sind eigene Docusaurus-Doku-Bereiche.
+Verweise über eine Bereichsgrenze hinweg müssen deshalb **absolut** sein:
 
-Hinweise dazu stehen in `website-02-gaestebuch/INFOBLAETTER-SYNC.md`.
+| | |
+|---|---|
+| `[HTTP kompakt](/infoblaetter/http-kompakt)` | richtig |
+| `[HTTP kompakt](../infoblaetter/http-kompakt)` | bricht den Build ab |
+
+Innerhalb eines Bereichs bleibt der Dateiname ohne Pfad, etwa
+`[Projekt aufsetzen](01-projekt-aufsetzen)`.
+
+Kaputte Links lassen den Build absichtlich scheitern (`onBrokenLinks: 'throw'`)
+— sie fallen also sofort auf und nicht erst auf der veröffentlichten Seite.
 
 ### 2. `future.v4` darf nicht aktiviert werden
 
