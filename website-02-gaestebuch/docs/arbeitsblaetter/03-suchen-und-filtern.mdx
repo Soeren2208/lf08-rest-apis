@@ -1,0 +1,361 @@
+---
+title: "AB 03 – Suchen und filtern"
+sidebar_label: "03 – Suchen und filtern"
+slug: 03-suchen-und-filtern
+sidebar_position: 3
+---
+
+# AB 03 – Suchen, filtern und blättern
+
+## Die Situation
+
+> Das Gästebuch läuft seit einigen Wochen. Zwei Rückmeldungen kommen herein:
+>
+> *„Die ältesten Einträge stehen oben. Wir wollen die neuesten zuerst sehen."*
+>
+> *„Für den Jahresbericht brauchen wir alle Einträge aus einem bestimmten Jahr."*
+>
+> Und die Kollegin aus dem Betrieb ergänzt: *„Habt ihr euch überlegt, was passiert, wenn da irgendwann 10.000 Einträge drin stehen?"*
+
+## Lernziele
+
+Nach Bearbeitung dieses Arbeitsblatts kannst du:
+
+- **abgeleitete Abfragen** aus Methodennamen erzeugen und ihre Funktionsweise erklären
+- begründen, warum Filtern und Sortieren in die Datenbank gehört und nicht in den Controller
+- **Request-Parameter** mit `@RequestParam` entgegennehmen und optional gestalten
+- eine Schnittstelle mit `Pageable` **seitenweise** ausliefern
+- den Aufbau einer `Page`-Antwort lesen
+
+## Aufgaben
+
+### Aufgabe 1 – Die falsche Reihenfolge
+
+<Task id="t2-ab03-a1-beobachten">Lege vier Einträge nacheinander an und rufe die Sammlung ab. In welcher Reihenfolge kommen sie zurück?</Task>
+
+Die Einträge erscheinen in der Reihenfolge ihrer Ids — der älteste zuerst. Für ein Gästebuch ist das genau verkehrt herum.
+
+Eine naheliegende Lösung wäre, im Controller zu sortieren:
+
+```java
+@GetMapping
+public ResponseEntity<List<GuestbookEntry>> findAllEntries() {
+    List<GuestbookEntry> alle = repository.findAll();
+    alle.sort(Comparator.comparing(GuestbookEntry::getDate).reversed());   // ❌
+    return ResponseEntity.ok(alle);
+}
+```
+
+Das funktioniert. Trotzdem ist es der falsche Weg.
+
+:::danger Warum das schlechter Stil ist
+Die Datenbank kann sortieren — schnell, und mit Unterstützung durch Indizes. Hier holt sich die Anwendung **alle** Datensätze, überträgt sie über die Datenbankverbindung in den Hauptspeicher und ordnet sie dann selbst neu.
+
+Bei zwanzig Einträgen fällt das nicht auf. Bei zwanzigtausend schon.
+
+**Faustregel:** Arbeit, die die Datenbank erledigen kann, gehört in die Datenbank.
+:::
+
+### Aufgabe 2 – Sortieren lassen
+
+Spring Data nimmt Sortierwünsche direkt entgegen. Dafür gibt es das Interface `Sort`:
+
+```java
+repository.findAll(Sort.by(Sort.Direction.DESC, "date"));
+```
+
+Daraus erzeugt Hibernate ein `ORDER BY date DESC` — die Datenbank sortiert, nicht dein Programm.
+
+<Task id="t2-ab03-a2">Ändere den Endpunkt so, dass die Sortierung vom Repository kommt. Prüfe im Log, dass im erzeugten SQL ein <code>order by</code> auftaucht.</Task>
+
+:::tip Nach `date` sortieren, nicht nach `id`
+Beides liefert hier zufällig dasselbe Ergebnis, weil neuere Einträge auch höhere Ids haben.
+
+Fachlich richtig ist `date`: Gefragt war „die neuesten zuerst" — und das ist eine Aussage über das **Datum**. Würden Einträge später einmal nachträglich importiert, liefe die Sortierung nach `id` ins Leere.
+:::
+
+### Aufgabe 3 – Einträge eines Jahres
+
+Jetzt der zweite Wunsch: alle Einträge eines bestimmten Jahres. Das Jahr soll der Client in der URL mitgeben:
+
+```text
+GET /api/v1/guestbook?year=2026
+```
+
+Alles nach dem `?` ist ein **Request-Parameter**. Im Unterschied zur Pfadvariablen bezeichnet er keine eigene Ressource, sondern schränkt eine vorhandene ein.
+
+| | Pfadvariable | Request-Parameter |
+|---|---|---|
+| Beispiel | `/guestbook/**7**` | `/guestbook?**year=2026**` |
+| Annotation | `@PathVariable` | `@RequestParam` |
+| Bedeutung | *welche* Ressource | *wie* eingeschränkt |
+| Pflicht? | ja, Teil des Pfades | meist optional |
+
+<Task id="t2-ab03-a3-naiv">Implementiere den Filter zunächst so:</Task>
+
+```java
+@GetMapping("/jahr")
+public ResponseEntity<List<GuestbookEntry>> findByYear(@RequestParam Integer year) {
+    List<GuestbookEntry> gefiltert = repository.findAll().stream()
+            .filter(entry -> entry.getDate().getYear() == year)
+            .toList();
+    return ResponseEntity.ok(gefiltert);
+}
+```
+
+<Task id="t2-ab03-a3-test">Probiere den Endpunkt aus. Er liefert das richtige Ergebnis.</Task>
+
+:::warning Dasselbe Problem wie in Aufgabe 1 — nur schlimmer
+`repository.findAll()` holt **jeden einzelnen Eintrag** aus der Datenbank. Anschließend wirft der Filter die meisten davon weg.
+
+Bei 10.000 Einträgen und der Frage nach dem Jahr 2019 werden 10.000 Datensätze übertragen, um vielleicht 30 zu behalten.
+
+Sieh dir das erzeugte SQL im Log an: Dort steht ein schlichtes `select ... from guestbook_entry` — **ohne** `where`. Die Datenbank weiß gar nicht, dass gefiltert werden soll.
+:::
+
+### Aufgabe 4 – Die Abfrage ins Repository verlagern
+
+Spring Data kann die Abfrage aus dem **Methodennamen** ableiten. Du schreibst nur die Signatur — die Implementierung entsteht beim Start.
+
+<Task id="t2-ab03-a4-repo">Ergänze im `GuestbookEntryRepository`:</Task>
+
+```java
+List<GuestbookEntry> findByDateBetween(LocalDateTime from, LocalDateTime to);
+```
+
+Mehr nicht. Kein Rumpf, kein SQL.
+
+So liest Spring Data den Namen:
+
+```text
+findBy      Date        Between
+────────    ────        ───────
+"suche"     Attribut    Vergleich
+            date        between ? and ?
+```
+
+Daraus wird `... where date between ? and ?`.
+
+:::tip Lass dir die Möglichkeiten zeigen
+Tippe im Repository `findBy` und warte auf die Vorschlagsliste deiner Entwicklungsumgebung. Sie kennt die Attribute deiner Entität und schlägt gültige Fortsetzungen vor — `findByAuthor`, `findByTitleContaining`, `findByDateAfter` und viele mehr.
+
+Eine Übersicht steht im Infoblatt [Abgeleitete Abfragen](../infoblaetter/abgeleitete-abfragen).
+:::
+
+<Task id="t2-ab03-a4-controller">Rufe die neue Methode im Controller auf. Ein Jahr beginnt am 1. Januar und endet vor dem 1. Januar des Folgejahres:</Task>
+
+```java
+LocalDateTime from = LocalDate.of(year, 1, 1).atStartOfDay();
+LocalDateTime to   = from.plusYears(1);
+```
+
+<Task id="t2-ab03-a4-sql">Führe den Endpunkt erneut aus und sieh im Log nach. Jetzt muss im SQL ein <code>where</code> stehen.</Task>
+
+### Aufgabe 5 – Ein Endpunkt statt zwei
+
+Du hast jetzt zwei Endpunkte: `/guestbook` und `/guestbook/jahr`. Das ist unnötig.
+
+Überleg einmal fachlich: Beide beantworten dieselbe Frage — „gib mir Gästebucheinträge". Der zweite schränkt sie nur ein. Das ist **kein eigener Anwendungsfall** und verdient deshalb keine eigene Adresse.
+
+<Task id="t2-ab03-a5">Lösche den Endpunkt <code>/jahr</code>. Mache den Parameter am vorhandenen Endpunkt <b>optional</b>:</Task>
+
+```java
+@GetMapping
+public ResponseEntity<List<GuestbookEntry>> findAllEntries(
+        @RequestParam(required = false) Integer year) {
+
+    if (year == null) {
+        return ResponseEntity.ok(repository.findAll(Sort.by(Sort.Direction.DESC, "date")));
+    }
+
+    LocalDateTime from = LocalDate.of(year, 1, 1).atStartOfDay();
+    LocalDateTime to   = from.plusYears(1);
+    return ResponseEntity.ok(repository.findByDateBetween(from, to));
+}
+```
+
+Jetzt beantwortet **ein** Endpunkt beide Fälle:
+
+```text
+GET /api/v1/guestbook              →  alle Einträge
+GET /api/v1/guestbook?year=2026    →  nur die aus 2026
+```
+
+:::info Was passiert ohne `required = false`?
+Dann ist der Parameter Pflicht. Ein Aufruf ohne `?year=…` würde mit `400 Bad Request` abgewiesen.
+
+Probiere es ruhig aus: Lass `required = false` einmal weg und rufe den Endpunkt ohne Parameter auf.
+:::
+
+### Aufgabe 6 – Seitenweise ausliefern
+
+Bleibt die Frage der Kollegin: Was bei 10.000 Einträgen?
+
+Auch dann liefert dein Endpunkt **alle** auf einmal. Die Antwort wäre mehrere Megabyte groß, der Browser des Kunden würde spürbar hängen. Echte APIs liefern deshalb **Seiten**.
+
+Spring Data bringt das mit: Statt einer `List` gibt man eine **`Page`** zurück und nimmt ein `Pageable` entgegen.
+
+<Task id="t2-ab03-a6-repo">Ändere die Repository-Methode so, dass sie seitenweise arbeitet:</Task>
+
+```java
+Page<GuestbookEntry> findByDateBetween(LocalDateTime from, LocalDateTime to, Pageable pageable);
+```
+
+<Task id="t2-ab03-a6-controller">Passe den Controller an:</Task>
+
+```java
+@GetMapping
+public ResponseEntity<Page<GuestbookEntry>> findAllEntries(
+        @RequestParam(required = false) Integer year,
+        @PageableDefault(size = 10, sort = "date", direction = Sort.Direction.DESC)
+        Pageable pageable) {
+
+    if (year == null) {
+        return ResponseEntity.ok(repository.findAll(pageable));
+    }
+
+    LocalDateTime from = LocalDate.of(year, 1, 1).atStartOfDay();
+    LocalDateTime to   = from.plusYears(1);
+    return ResponseEntity.ok(repository.findByDateBetween(from, to, pageable));
+}
+```
+
+Das `Pageable` trägt drei Angaben: welche Seite, wie groß, wie sortiert. `@PageableDefault` legt die Werte fest, falls der Client nichts angibt — dadurch ist auch die Sortierung aus Aufgabe 2 mit erledigt.
+
+Der Client steuert es über Parameter:
+
+```text
+GET /api/v1/guestbook?page=0&size=5
+GET /api/v1/guestbook?page=1&size=5&sort=author,asc
+GET /api/v1/guestbook?year=2026&page=0&size=20
+```
+
+<Task id="t2-ab03-a6-test">Rufe den Endpunkt mit <code>?size=1</code> auf und sieh dir die Antwort genau an.</Task>
+
+Die Antwort sieht jetzt anders aus:
+
+```json
+{
+  "content": [ { "id": 4, "title": "...", "author": "..." } ],
+  "totalElements": 4,
+  "totalPages": 4,
+  "number": 0,
+  "size": 1,
+  "first": true,
+  "last": false
+}
+```
+
+| Feld | Bedeutung |
+|---|---|
+| `content` | die Einträge dieser Seite |
+| `totalElements` | wie viele es insgesamt gibt |
+| `totalPages` | wie viele Seiten das ergibt |
+| `number` | die aktuelle Seite, **beginnend bei 0** |
+| `size` | wie viele pro Seite |
+| `first` / `last` | ob dies die erste bzw. letzte Seite ist |
+
+:::warning Die Antwortstruktur hat sich geändert
+Vorher kam ein Array, jetzt ein Objekt mit den Einträgen unter `content`. Ein Client, der bisher direkt über die Antwort gelaufen ist, muss angepasst werden.
+
+Genau deshalb überlegt man sich Paginierung **früh** — ein späterer Umbau trifft alle Clients.
+:::
+
+### Aufgabe 7 – Testfälle
+
+<Task id="t2-ab03-a7">Führe die Testfälle aus.</Task>
+
+<TestTable
+  storageKey="t2-ab03-tests"
+  tests={[
+    {
+      id: 'TF-01',
+      beschreibung: 'Neueste zuerst',
+      vorbedingung: 'Mindestens drei Einträge, nacheinander angelegt',
+      schritte: ['GET auf /api/v1/guestbook'],
+      erwartet: <>Der zuletzt angelegte Eintrag steht in <code>content</code> an erster Stelle.</>
+    },
+    {
+      id: 'TF-02',
+      beschreibung: 'Sortierung geschieht in der Datenbank',
+      vorbedingung: 'spring.jpa.show-sql=true ist gesetzt',
+      schritte: ['GET auf /api/v1/guestbook', 'Log ansehen'],
+      erwartet: <>Das erzeugte SQL enthält <code>order by</code>.</>
+    },
+    {
+      id: 'TF-03',
+      beschreibung: 'Filter greift in der Datenbank',
+      vorbedingung: 'Einträge aus dem laufenden Jahr existieren',
+      schritte: ['GET auf /api/v1/guestbook?year=2026', 'Log ansehen'],
+      erwartet: <>Das SQL enthält <code>where</code> mit <code>between</code> — <b>nicht</b> ein einfaches select über die ganze Tabelle.</>
+    },
+    {
+      id: 'TF-04',
+      beschreibung: 'Jahr ohne Einträge',
+      vorbedingung: 'Es gibt keine Einträge aus 2019',
+      schritte: ['GET auf /api/v1/guestbook?year=2019'],
+      erwartet: <>Status <code>200</code>, <code>content</code> ist <code>[]</code> und <code>totalElements</code> ist <code>0</code> — nicht 404.</>
+    },
+    {
+      id: 'TF-05',
+      beschreibung: 'Parameter ist optional',
+      vorbedingung: 'Anwendung läuft',
+      schritte: ['GET auf /api/v1/guestbook ohne jeden Parameter'],
+      erwartet: <>Status <code>200</code> mit allen Einträgen — nicht 400.</>
+    },
+    {
+      id: 'TF-06',
+      beschreibung: 'Seitengröße wirkt',
+      vorbedingung: 'Vier Einträge existieren',
+      schritte: ['GET auf /api/v1/guestbook?size=2'],
+      erwartet: <><code>content</code> enthält 2 Einträge, <code>totalElements</code> ist 4, <code>totalPages</code> ist 2.</>
+    },
+    {
+      id: 'TF-07',
+      beschreibung: 'Blättern',
+      vorbedingung: 'TF-06 wurde ausgeführt',
+      schritte: ['GET auf /api/v1/guestbook?size=2&page=1'],
+      erwartet: <>Andere Einträge als auf Seite 0. <code>number</code> ist <code>1</code>, <code>last</code> ist <code>true</code>.</>
+    },
+    {
+      id: 'TF-08',
+      beschreibung: 'Ungültiges Jahr',
+      vorbedingung: 'Anwendung läuft',
+      schritte: ['GET auf /api/v1/guestbook?year=abc'],
+      erwartet: <>Status <code>400</code> — der Wert lässt sich nicht in eine Zahl umwandeln.</>
+    }
+  ]}
+/>
+
+## Zusammenfassung
+
+:::tip Das hast du gelernt
+- Sortieren und Filtern gehören in die **Datenbank**, nicht in den Controller.
+- **Abgeleitete Abfragen** entstehen aus dem Methodennamen: `findByDateBetween` wird zu `where date between ? and ?`.
+- `@RequestParam` nimmt Werte aus der URL entgegen; `required = false` macht sie optional.
+- Ein **Filter** rechtfertigt keinen eigenen Endpunkt — er schränkt eine vorhandene Ressource ein.
+- `Pageable` und `Page` liefern Ergebnisse **seitenweise**; `@PageableDefault` setzt Standardwerte.
+- Eine `Page`-Antwort ist ein Objekt mit `content`, `totalElements`, `totalPages` und `number` — kein Array mehr.
+- Im Log lässt sich am erzeugten SQL überprüfen, ob die Arbeit wirklich in der Datenbank passiert.
+:::
+
+## Selbstkontrolle
+
+1. Warum ist Sortieren im Controller schlechter Stil?
+2. Wie wird aus `findByDateBetween` eine SQL-Abfrage?
+3. Wann nimmt man eine Pfadvariable, wann einen Request-Parameter?
+4. Warum bekommt der Jahresfilter keinen eigenen Endpunkt?
+5. Welchen Wert hat `number` auf der ersten Seite?
+6. Woran erkennst du im Log, dass die Datenbank filtert und nicht dein Programm?
+
+<details>
+<summary>Antworten</summary>
+
+1. Weil die Anwendung dafür alle Datensätze aus der Datenbank holen und in den Hauptspeicher übertragen muss. Die Datenbank kann das schneller und mit weniger Datenverkehr.
+2. Spring Data zerlegt den Namen beim Start: `findBy` leitet die Abfrage ein, `Date` benennt das Attribut, `Between` den Vergleich. Daraus entsteht `where date between ? and ?`.
+3. Eine Pfadvariable bezeichnet **welche** Ressource gemeint ist (`/guestbook/7`). Ein Request-Parameter schränkt eine Sammlung ein (`?year=2026`).
+4. Weil er keinen neuen Anwendungsfall darstellt. Gefragt sind weiterhin Gästebucheinträge — nur eine Teilmenge davon. Deshalb dieselbe Adresse mit optionalem Parameter.
+5. `0`. Die Zählung beginnt bei null.
+6. Das erzeugte SQL enthält eine `where`-Bedingung. Fehlt sie und es steht nur `select ... from guestbook_entry`, wurde die ganze Tabelle geholt und erst danach gefiltert.
+
+</details>

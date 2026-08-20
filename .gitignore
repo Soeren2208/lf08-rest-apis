@@ -1,0 +1,42 @@
+# ---------------------------------------------------------------
+# Abhängigkeiten und Bauergebnisse
+# ---------------------------------------------------------------
+node_modules/
+build/
+.docusaurus/
+.cache-loader/
+
+# Java / Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# Lokale H2-Datenbanken der Referenzprojekte
+data/
+*.mv.db
+*.trace.db
+
+# Log-Dateien der Referenzprojekte
+*.log
+
+# ---------------------------------------------------------------
+# Alte Word-Arbeitsblätter
+# Bewusst ausgeschlossen: Sie enthalten in den Beispieldaten eine
+# private Anschrift und Handynummer. Die Dateien liegen weiterhin
+# lokal vor, gehören aber nicht in ein öffentliches Repository.
+# ---------------------------------------------------------------
+*.docx
+*.doc
+
+# ---------------------------------------------------------------
+# Betriebssystem und Entwicklungsumgebung
+# ---------------------------------------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
+
+# ---------------------------------------------------------------
+# Zwischenstände
+# ---------------------------------------------------------------
+_screenshots/dia-*.png

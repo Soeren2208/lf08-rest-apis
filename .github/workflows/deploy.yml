@@ -1,0 +1,86 @@
+name: Website bauen und veröffentlichen
+
+# Läuft bei jedem Push auf main und lässt sich zusätzlich von Hand starten.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Rechte, die der Workflow für die Veröffentlichung auf GitHub Pages braucht.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Läuft immer nur eine Veröffentlichung gleichzeitig.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  bauen:
+    name: Beide Tutorials bauen
+    runs-on: ubuntu-latest
+    steps:
+      - name: Quelltext holen
+        uses: actions/checkout@v4
+
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # ---------- Tutorial 1 ----------
+      - name: Tutorial 1 – Abhängigkeiten installieren
+        working-directory: website
+        run: npm ci
+
+      - name: Tutorial 1 – bauen
+        working-directory: website
+        run: npm run build
+
+      # ---------- Tutorial 2 ----------
+      - name: Tutorial 2 – Abhängigkeiten installieren
+        working-directory: website-02-gaestebuch
+        run: npm ci
+
+      - name: Tutorial 2 – bauen
+        working-directory: website-02-gaestebuch
+        run: npm run build
+
+      # ---------- Alles zu einer Seite zusammensetzen ----------
+      # Ergebnis:
+      #   /                 Startseite mit den Verweisen
+      #   /tutorial-01/     Personenverwaltung
+      #   /tutorial-02/     Gästebuch
+      - name: Seite zusammensetzen
+        run: |
+          mkdir -p seite/tutorial-01 seite/tutorial-02
+          cp -r landing/.            seite/
+          cp -r website/build/.      seite/tutorial-01/
+          cp -r website-02-gaestebuch/build/. seite/tutorial-02/
+          echo "--- Inhalt der fertigen Seite ---"
+          ls -la seite
+          test -f seite/index.html
+          test -f seite/tutorial-01/index.html
+          test -f seite/tutorial-02/index.html
+
+      - name: Pages vorbereiten
+        uses: actions/configure-pages@v5
+
+      - name: Ergebnis hochladen
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: seite
+
+  veroeffentlichen:
+    name: Auf GitHub Pages veröffentlichen
+    needs: bauen
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Veröffentlichen
+        id: deployment
+        uses: actions/deploy-pages@v4

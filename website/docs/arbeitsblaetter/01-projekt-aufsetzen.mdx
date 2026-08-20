@@ -1,0 +1,472 @@
+---
+title: "AB 01 – Projekt aufsetzen"
+sidebar_label: "01 – Projekt aufsetzen"
+slug: 01-projekt-aufsetzen
+sidebar_position: 1
+---
+
+# AB 01 – Das Projekt aufsetzen und den ersten Endpunkt bauen
+
+## Die Situation
+
+> Die Personalabteilung der **HiTec GmbH** verwaltet ihre Mitarbeiterdaten bislang in einer Tabellenkalkulation. Künftig sollen mehrere Programme darauf zugreifen: die neue Weboberfläche, eine App für das Außendienstteam und die Zeiterfassung an der Pforte.
+>
+> Dein Auftrag: Baue ein **Backend**, das die Personendaten verwaltet und sie allen drei Programmen über eine einheitliche Schnittstelle zur Verfügung stellt.
+
+In diesem ersten Arbeitsblatt entsteht noch keine Datenverwaltung. Es geht darum, das Projekt zum Laufen zu bringen und den ersten Endpunkt zu bauen — damit du siehst, dass die Grundlage steht.
+
+## Lernziele
+
+Nach Bearbeitung dieses Arbeitsblatts kannst du:
+
+- ein Spring-Boot-Projekt mit dem Spring Initializr erzeugen und die benötigten Abhängigkeiten auswählen
+- den Aufbau eines Spring-Boot-Projekts erklären (`pom.xml`, `application.properties`, Application-Klasse)
+- einen REST-Controller mit einem `GET`-Endpunkt implementieren
+- einen **Record** als Datenklasse einsetzen und erklären, warum er sich für Antwortobjekte eignet
+- den Zustand deiner laufenden Anwendung über den Actuator prüfen
+
+:::info Vorwissen
+Lies vorher die Infoblätter [Was ist ein Webservice?](../infoblaetter/webservices) und [Das REST-Paradigma](../infoblaetter/rest-paradigma). Für den Aufbau der Nachrichten hilft [HTTP kompakt](../infoblaetter/http-kompakt).
+:::
+
+## Warum ein Spring-Boot-Projekt kein normales Java-Projekt ist
+
+Ein Webservice muss über das Netzwerk erreichbar sein. Dafür braucht es einen **Webserver**. Früher hat man den getrennt installiert und die eigene Anwendung dort hineingelegt.
+
+Spring Boot dreht das um: Der Webserver wird **Teil der Anwendung**. Am Ende entsteht eine einzige `.jar`-Datei, die alles enthält, was sie zum Laufen braucht — man startet sie wie ein gewöhnliches Java-Programm.
+
+<svg viewBox="0 0 720 290" width="100%" role="img"
+     aria-label="Vergleich: klassisch drei Schritte, mit Spring Boot ein Schritt"
+     fontFamily="var(--ifm-font-family-base)">
+
+  {/* ---------- linke Seite: klassisch ---------- */}
+  <text x="180" y="24" textAnchor="middle" fontSize="17" fontWeight="700"
+        fill="var(--ifm-font-color-base)">Klassisch</text>
+  <rect x="20" y="40" width="320" height="210" rx="14"
+        fill="var(--ifm-color-emphasis-100)" stroke="var(--ifm-color-emphasis-300)" strokeWidth="1.5"/>
+
+  <g transform="translate(44,60)">
+    <rect width="272" height="46" rx="9" fill="var(--ifm-background-color)"
+          stroke="var(--ifm-color-emphasis-300)"/>
+    <circle cx="26" cy="23" r="13" fill="var(--ifm-color-emphasis-200)"/>
+    <text x="26" y="28" textAnchor="middle" fontSize="13" fontWeight="700"
+          fill="var(--ifm-color-emphasis-800)">1</text>
+    <text x="50" y="28" fontSize="14" fill="var(--ifm-font-color-base)">Webserver installieren</text>
+  </g>
+  <path d="M180 112 L180 128" stroke="var(--ifm-color-emphasis-500)" strokeWidth="2"/>
+  <path d="M176 124 L180 130 L184 124" fill="none" stroke="var(--ifm-color-emphasis-500)" strokeWidth="2"/>
+
+  <g transform="translate(44,132)">
+    <rect width="272" height="46" rx="9" fill="var(--ifm-background-color)"
+          stroke="var(--ifm-color-emphasis-300)"/>
+    <circle cx="26" cy="23" r="13" fill="var(--ifm-color-emphasis-200)"/>
+    <text x="26" y="28" textAnchor="middle" fontSize="13" fontWeight="700"
+          fill="var(--ifm-color-emphasis-800)">2</text>
+    <text x="50" y="28" fontSize="14" fill="var(--ifm-font-color-base)">Anwendung hineinlegen</text>
+  </g>
+  <path d="M180 184 L180 200" stroke="var(--ifm-color-emphasis-500)" strokeWidth="2"/>
+  <path d="M176 196 L180 202 L184 196" fill="none" stroke="var(--ifm-color-emphasis-500)" strokeWidth="2"/>
+
+  <g transform="translate(44,204)">
+    <rect width="272" height="46" rx="9" fill="var(--ifm-background-color)"
+          stroke="var(--ifm-color-emphasis-300)"/>
+    <circle cx="26" cy="23" r="13" fill="var(--ifm-color-emphasis-200)"/>
+    <text x="26" y="28" textAnchor="middle" fontSize="13" fontWeight="700"
+          fill="var(--ifm-color-emphasis-800)">3</text>
+    <text x="50" y="28" fontSize="14" fill="var(--ifm-font-color-base)">Server starten</text>
+  </g>
+
+  {/* ---------- rechte Seite: Spring Boot ---------- */}
+  <text x="540" y="24" textAnchor="middle" fontSize="17" fontWeight="700"
+        fill="var(--ifm-color-primary)">Spring Boot</text>
+  <rect x="380" y="40" width="320" height="210" rx="14"
+        fill="var(--ifm-color-emphasis-100)" stroke="var(--ifm-color-primary)" strokeWidth="1.5"/>
+
+  <g transform="translate(404,60)">
+    <rect width="272" height="46" rx="9" fill="var(--ifm-background-color)"
+          stroke="var(--ifm-color-primary)"/>
+    <circle cx="26" cy="23" r="13" fill="var(--ifm-color-primary)" opacity="0.18"/>
+    <text x="26" y="28" textAnchor="middle" fontSize="13" fontWeight="700"
+          fill="var(--ifm-color-primary)">1</text>
+    <text x="50" y="28" fontSize="13.5" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">java -jar app.jar</text>
+  </g>
+  <path d="M540 112 L540 128" stroke="var(--ifm-color-primary)" strokeWidth="2"/>
+  <path d="M536 124 L540 130 L544 124" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2"/>
+
+  {/* fertig-Feld mit Haken */}
+  <g transform="translate(404,132)">
+    <rect width="272" height="118" rx="9" fill="var(--ifm-color-primary)" opacity="0.10"/>
+    <rect width="272" height="118" rx="9" fill="none" stroke="var(--ifm-color-primary)"/>
+    <circle cx="136" cy="40" r="19" fill="var(--ifm-color-primary)"/>
+    <path d="M127 40 L133.5 47 L146 32" fill="none" stroke="#ffffff"
+          strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"/>
+    <text x="136" y="80" textAnchor="middle" fontSize="14.5" fontWeight="700"
+          fill="var(--ifm-font-color-base)">fertig</text>
+    <text x="136" y="100" textAnchor="middle" fontSize="13"
+          fill="var(--ifm-color-emphasis-700)">der Server ist eingebaut</text>
+  </g>
+</svg>
+
+Das ist der Grund, warum solche Anwendungen sich gut in **Container** packen und in der Cloud betreiben lassen. Und es ist der Grund, warum ein Spring-Boot-Projekt nicht von Hand angelegt, sondern über den **Spring Initializr** erzeugt wird.
+
+## Aufgaben
+
+### Aufgabe 1 – Projekt in IntelliJ erzeugen
+
+IntelliJ bringt den Spring Initializr eingebaut mit. Du musst also nichts herunterladen und nichts entpacken — die Entwicklungsumgebung erledigt das.
+
+#### Schritt 1: Den Assistenten öffnen
+
+<Task id="ab01-a1-menu">Öffne das Hauptmenü über das Symbol ☰ oben links und wähle **File → New → Project…**</Task>
+
+![Das Menü File → New → Project in IntelliJ](/img/ij-01-neues-projekt.png)
+
+:::tip Reihenfolge der Klicks
+1. **☰** ganz oben links anklicken — das klappt die Menüleiste auf
+2. **File** anklicken
+3. Im Menü auf **New** zeigen — rechts öffnet sich ein weiteres Menü
+4. Dort **Project…** anklicken
+
+Läuft noch kein Projekt, geht es auch direkt: Auf dem Startbildschirm gibt es die Schaltfläche **New Project**.
+:::
+
+#### Schritt 2: Den Generator „Spring Boot" wählen
+
+<Task id="ab01-a1-generator">Wähle in der linken Liste unter **Generators** den Eintrag **Spring Boot** aus.</Task>
+
+:::danger Nicht verwechseln
+Ganz oben in derselben Liste steht unter **New Project** auch ein Eintrag **Java**. Der erzeugt ein gewöhnliches Java-Projekt **ohne** Spring Boot.
+
+Du brauchst den Eintrag weiter unten im Abschnitt **Generators**.
+:::
+
+#### Schritt 3: Die Projektangaben eintragen
+
+![Der Spring-Boot-Generator mit den Eingabefeldern](/img/ij-02-spring-boot.png)
+
+<Task id="ab01-a1-felder">Fülle die Felder von oben nach unten aus:</Task>
+
+| Feld | Wert | Hinweis |
+|---|---|---|
+| **Name** | `personenverwaltung` | Der Projektname |
+| **Location** | z. B. `C:\projekte` | Der Ordner, in dem das Projekt angelegt wird |
+| **Language** | **Java** | ist meist schon gewählt |
+| **Type** | **Maven** | ⚠️ Vorgabe ist *Gradle - Groovy* — unbedingt umstellen |
+| **Group** | `de.szut` | |
+| **Artifact** | `personenverwaltung` | |
+| **Package name** | `de.szut.personenverwaltung` | füllt sich meist automatisch |
+| **JDK** | Version **25** | |
+| **Java** | **25** | ⚠️ Vorgabe ist oft *17* |
+| **Packaging** | **Jar** | |
+
+:::warning Drei Stolperfallen
+**Type:** IntelliJ schlägt *Gradle - Groovy* vor. Wir arbeiten mit **Maven** — sonst passt später nichts zusammen, was in den Arbeitsblättern steht.
+
+**Java-Version:** Die Vorgabe ist häufig 17. Stelle beides auf **25** — sowohl das JDK als auch das Feld *Java*.
+
+**Pfade mit Umlauten:** Ein Ort wie `C:\Schüler\Übungen\` führt bei manchen Werkzeugen zu schwer auffindbaren Fehlern. Nimm etwas wie `C:\projekte`.
+:::
+
+<Task id="ab01-a1-next">Klicke unten rechts auf **Next**.</Task>
+
+#### Schritt 4: Die Abhängigkeiten auswählen
+
+Auf der zweiten Seite des Assistenten wählst du aus, welche Bausteine dein Projekt bekommen soll.
+
+![Die Auswahl der Abhängigkeiten](/img/ij-03-abhaengigkeiten.png)
+
+Die Seite ist dreigeteilt: Oben die **Spring-Boot-Version**, in der Mitte die nach Kategorien geordneten Abhängigkeiten, rechts oben die Beschreibung des gerade markierten Eintrags und rechts unten die Liste **Added dependencies** mit dem, was du bereits gewählt hast.
+
+<Task id="ab01-a1-version">Prüfe oben die Spring-Boot-Version: **4.1.0** — also die neueste ohne den Zusatz *SNAPSHOT*.</Task>
+
+:::warning Was SNAPSHOT bedeutet
+Versionen mit diesem Zusatz sind unfertige Entwicklungsstände, die sich täglich ändern können. Nimm immer eine Version ohne diesen Zusatz.
+:::
+
+<Task id="ab01-a1-deps">Hake diese vier Abhängigkeiten an:</Task>
+
+| Abhängigkeit | Kategorie | Wofür |
+|---|---|---|
+| **Spring Web** | Web | Damit die Anwendung HTTP versteht und REST-Endpunkte anbieten kann |
+| **Spring Data JPA** | SQL | Für den Datenbankzugriff, ohne SQL selbst zu schreiben |
+| **H2 Database** | SQL | Eine Datenbank, die keine Installation braucht |
+| **Spring Boot Actuator** | Ops | Liefert Betriebsinformationen über die laufende Anwendung |
+
+Die Kategorien lassen sich über den Pfeil links aufklappen. Schneller geht es über das **Suchfeld**:
+
+![Das Suchfeld filtert die Abhängigkeiten](/img/ij-04-suchfeld.png)
+
+<Task id="ab01-a1-suche">Tippe den Namen in das Suchfeld — die Liste filtert sich sofort. Setze dann das Häkchen vor dem Eintrag.</Task>
+
+:::danger Auf den genauen Namen achten
+Bei der Suche nach `Spring Web` erscheinen drei ähnliche Einträge:
+
+- **Spring Web** ← dieser ist gemeint
+- *Spring Reactive Web* — eine andere Programmierweise, passt nicht zu diesem Tutorial
+- *Spring Web Services* — für SOAP, nicht für REST
+
+Verwechselst du sie, kompiliert später nichts von dem, was in den Arbeitsblättern steht.
+:::
+
+:::tip Kontrolle vor dem Weitermachen
+Rechts unter **Added dependencies** müssen am Ende genau **vier** Einträge stehen. Steht dort noch *No dependencies added*, hat das Anhaken nicht funktioniert — klicke direkt auf das kleine Kästchen vor dem Namen.
+:::
+
+<Task id="ab01-a1-create">Klicke auf **Create**. IntelliJ legt das Projekt an und beginnt, die Bibliotheken herunterzuladen.</Task>
+
+:::note Der erste Start dauert
+Maven lädt jetzt über hundert Dateien aus dem Internet. Beim ersten Mal dauert das mehrere Minuten, danach nur noch Sekunden. Warte ab, bis die Fortschrittsanzeige unten verschwunden ist.
+
+Warum aus vier Einträgen über hundert Dateien werden, steht im Infoblatt [Maven und Abhängigkeiten](../infoblaetter/maven).
+:::
+
+---
+
+### Alternative: über start.spring.io im Browser
+
+<details>
+<summary>Wenn du eine andere Entwicklungsumgebung benutzt (VS Code, Eclipse) oder das Projekt lieber im Browser erzeugst</summary>
+
+Der Spring Initializr ist ein Webdienst. IntelliJ benutzt im Hintergrund genau diesen Dienst — du kannst ihn aber auch direkt aufrufen. Das Ergebnis ist dasselbe.
+
+**1.** Öffne [start.spring.io](https://start.spring.io) im Browser.
+
+**2.** Stelle die folgenden Werte ein:
+
+| Feld | Wert |
+|---|---|
+| Project | **Maven** |
+| Language | **Java** |
+| Spring Boot | **4.1.0** *(die neueste stabile Version ohne den Zusatz SNAPSHOT)* |
+| Group | `de.szut` |
+| Artifact | `personenverwaltung` |
+| Name | `personenverwaltung` |
+| Package name | `de.szut.personenverwaltung` |
+| Packaging | **Jar** |
+| Java | **25** |
+
+**3.** Füge über **ADD DEPENDENCIES** dieselben vier Abhängigkeiten hinzu: Spring Web, Spring Data JPA, H2 Database, Spring Boot Actuator.
+
+![Spring Initializr mit den einzustellenden Werten](/img/01-initializr.png)
+
+**4.** Klicke auf **GENERATE**. Entpacke die heruntergeladene ZIP-Datei an einen Ort ohne Leerzeichen und Umlaute im Pfad.
+
+**5.** Öffne den entpackten Ordner anschließend in deiner Entwicklungsumgebung.
+
+</details>
+
+### Aufgabe 2 – Projekt öffnen und starten
+
+<Task id="ab01-a2-open">Öffne das entpackte Verzeichnis in deiner Entwicklungsumgebung. Wichtig: Öffne den **Ordner** bzw. die Datei `pom.xml` als Projekt — nicht einzelne Java-Dateien.</Task>
+
+<Task id="ab01-a2-wait">Warte, bis die Entwicklungsumgebung alle Abhängigkeiten geladen hat. Beim ersten Mal dauert das mehrere Minuten, weil Maven die Bibliotheken aus dem Internet holt.</Task>
+
+Sieh dir an, was der Initializr erzeugt hat:
+
+```text
+personenverwaltung/
+├── pom.xml                     ← Projektbeschreibung: Abhängigkeiten, Java-Version
+├── mvnw / mvnw.cmd             ← der Maven Wrapper
+└── src/
+    ├── main/
+    │   ├── java/de/szut/personenverwaltung/
+    │   │   └── PersonenverwaltungApplication.java   ← Startpunkt
+    │   └── resources/
+    │       └── application.properties               ← Einstellungen
+    └── test/
+        └── java/…                                   ← Tests
+```
+
+:::tip Der Maven Wrapper
+`mvnw` (Linux/macOS) bzw. `mvnw.cmd` (Windows) lädt automatisch **die Maven-Version, die zum Projekt gehört**. Dadurch bauen alle im Team mit derselben Version — unabhängig davon, was auf dem einzelnen Rechner installiert ist.
+
+In Betrieben gilt: Nutze den Wrapper, nicht dein lokales Maven.
+
+Was Maven sonst noch tut, woher die Bibliotheken kommen und warum aus deinen vier ausgewählten Abhängigkeiten über hundert Dateien werden, steht im Infoblatt [Maven und Abhängigkeiten](../infoblaetter/maven).
+:::
+
+<Task id="ab01-a2-start">Starte die Anwendung: Führe die `main`-Methode in `PersonenverwaltungApplication` aus.</Task>
+
+In der Konsole erscheint zum Schluss eine Zeile wie:
+
+```text
+Tomcat started on port 8080 (http) with context path '/'
+Started PersonenverwaltungApplication in 2.417 seconds
+```
+
+**Tomcat** ist der eingebaute Webserver. Deine Anwendung ist jetzt unter `http://localhost:8080` erreichbar.
+
+### Aufgabe 3 – Prüfen, ob die Anwendung wirklich läuft
+
+Die Anwendung bietet noch keinen einzigen eigenen Endpunkt an. Der Actuator liefert aber bereits einen.
+
+<Task id="ab01-a3-health">Rufe im Browser `http://localhost:8080/actuator/health` auf.</Task>
+
+Du siehst:
+
+```json
+{"status":"UP"}
+```
+
+![Der Health-Endpunkt des Actuators](/img/05-actuator-health.png)
+
+<Task id="ab01-a3-404">Rufe zum Vergleich `http://localhost:8080/gibtesnicht` auf und sieh dir den Statuscode in den Entwicklerwerkzeugen (Taste **F12**, Reiter *Netzwerk*) an.</Task>
+
+:::note Beobachte den Unterschied
+`/actuator/health` liefert **200 OK**, `/gibtesnicht` liefert **404 Not Found**. Der Browser zeigt beide Male irgendetwas an — der Unterschied steckt im Statuscode, nicht im sichtbaren Text.
+
+Das ist der Grund, warum man bei Webservices immer auf den Statuscode schaut.
+:::
+
+### Aufgabe 4 – Der erste eigene Endpunkt
+
+Jetzt baust du einen Endpunkt, der einen Begrüßungstext zurückgibt. Er braucht noch keine Datenbank.
+
+<Task id="ab01-a4-pkg">Lege im Package `de.szut.personenverwaltung` ein Unterpackage `controller` an.</Task>
+
+<Task id="ab01-a4-record">Erstelle darin einen **Record** mit dem Bezeichner `Greeting`:</Task>
+
+```java title="src/main/java/de/szut/personenverwaltung/controller/Greeting.java"
+package de.szut.personenverwaltung.controller;
+
+import java.time.LocalDateTime;
+
+public record Greeting(String message, LocalDateTime time) {
+}
+```
+
+Das ist die **vollständige** Klasse. Ein Record erzeugt automatisch Konstruktor, Zugriffsmethoden, `equals()`, `hashCode()` und `toString()`.
+
+:::info Warum hier ein Record?
+Ein Record ist **unveränderlich**: Einmal erzeugt, lässt sich sein Inhalt nicht mehr ändern.
+
+Genau das will man bei einem Antwortobjekt. Es wird gebaut, verschickt — fertig. Niemand soll es unterwegs verändern. Die Sprache erzwingt hier, was die Architektur ohnehin verlangt.
+
+Später wirst du sehen, dass Datenbankklassen aus genau dem umgekehrten Grund **keine** Records sein können.
+:::
+
+<Task id="ab01-a4-controller">Erstelle im selben Package die Klasse `WelcomeController`:</Task>
+
+```java title="src/main/java/de/szut/personenverwaltung/controller/WelcomeController.java"
+package de.szut.personenverwaltung.controller;
+
+import java.time.LocalDateTime;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/v1/welcome")
+public class WelcomeController {
+
+    @GetMapping
+    public Greeting welcome() {
+        return new Greeting("Willkommen bei der Personenverwaltung!", LocalDateTime.now());
+    }
+}
+```
+
+Was die drei Annotationen bedeuten:
+
+| Annotation | Bedeutung |
+|---|---|
+| `@RestController` | Sagt Spring: Diese Klasse bietet REST-Endpunkte an. Rückgabewerte werden automatisch in JSON umgewandelt. |
+| `@RequestMapping("/api/v1/welcome")` | Der gemeinsame Pfadanfang aller Endpunkte dieser Klasse. |
+| `@GetMapping` | Diese Methode beantwortet `GET`-Anfragen an diesen Pfad. |
+
+<Task id="ab01-a4-restart">Starte die Anwendung neu und rufe `http://localhost:8080/api/v1/welcome` auf.</Task>
+
+![Die Antwort des Welcome-Endpunkts im Browser](/img/02-welcome.png)
+
+:::tip Beachte, was hier gerade passiert ist
+Du hast ein Java-Objekt zurückgegeben — und im Browser steht JSON. Diese Umwandlung nennt man **Serialisierung**. Spring erledigt sie automatisch. Aus den Record-Komponenten `message` und `time` werden die JSON-Felder gleichen Namens.
+
+Wie JSON aufgebaut ist und wie Java-Typen darauf abgebildet werden, steht im Infoblatt [JSON](../infoblaetter/json).
+:::
+
+### Aufgabe 5 – Testfälle ausführen
+
+Ab jetzt prüfst du deine Arbeit systematisch. Ein **Testfall** beschreibt, was du tust und was dabei herauskommen muss — unabhängig davon, wer ihn ausführt.
+
+<Task id="ab01-a5-tests">Führe die folgenden Testfälle aus und halte das Ergebnis fest.</Task>
+
+<TestTable
+  storageKey="ab01-tests"
+  tests={[
+    {
+      id: 'TF-01',
+      beschreibung: 'Anwendung startet',
+      vorbedingung: 'Projekt ist geöffnet, Port 8080 ist frei',
+      schritte: ['main-Methode von PersonenverwaltungApplication ausführen'],
+      erwartet: <>In der Konsole erscheint <code>Started PersonenverwaltungApplication</code>. Es wird keine Ausnahme geworfen.</>
+    },
+    {
+      id: 'TF-02',
+      beschreibung: 'Health-Endpunkt erreichbar',
+      vorbedingung: 'Anwendung läuft',
+      schritte: ['Im Browser http://localhost:8080/actuator/health aufrufen'],
+      erwartet: <>Status <code>200</code>, Inhalt <code>{'{"status":"UP"}'}</code></>
+    },
+    {
+      id: 'TF-03',
+      beschreibung: 'Welcome-Endpunkt liefert JSON',
+      vorbedingung: 'Anwendung läuft',
+      schritte: ['Im Browser http://localhost:8080/api/v1/welcome aufrufen'],
+      erwartet: <>Status <code>200</code>. Antwort enthält die Felder <code>message</code> und <code>time</code>.</>
+    },
+    {
+      id: 'TF-04',
+      beschreibung: 'Unbekannter Pfad wird abgewiesen',
+      vorbedingung: 'Anwendung läuft',
+      schritte: ['http://localhost:8080/api/v1/welcomes aufrufen', 'Statuscode in den Entwicklerwerkzeugen (F12 → Netzwerk) ablesen'],
+      erwartet: <>Status <code>404</code> — nicht 200 und nicht 500.</>
+    },
+    {
+      id: 'TF-05',
+      beschreibung: 'Falsche HTTP-Methode wird abgewiesen',
+      vorbedingung: 'Anwendung läuft',
+      schritte: ['Einen POST-Request an http://localhost:8080/api/v1/welcome senden'],
+      erwartet: <>Status <code>405</code> (Method Not Allowed). Der Endpunkt existiert, akzeptiert aber nur GET.</>
+    }
+  ]}
+/>
+
+:::note Warum Testfälle aufschreiben?
+Solange du selbst entwickelst, hast du im Kopf, was funktionieren soll. Sobald jemand anderes prüft — oder du selbst in drei Wochen — ist dieses Wissen weg.
+
+Ein guter Testfall nennt drei Dinge: die **Vorbedingung**, die **Schritte** und das **erwartete Ergebnis**. Er ist so genau, dass zwei Personen unabhängig voneinander zum selben Urteil kommen.
+:::
+
+## Zusammenfassung
+
+:::tip Das hast du gelernt
+- Ein Spring-Boot-Projekt entsteht über den **Spring Initializr** und bringt seinen Webserver selbst mit.
+- Der **Maven Wrapper** (`mvnw`) sorgt dafür, dass alle mit derselben Maven-Version bauen.
+- `@RestController` und `@GetMapping` machen aus einer Java-Methode einen erreichbaren Endpunkt.
+- Ein **Record** ist eine unveränderliche Datenklasse — ideal für Antwortobjekte.
+- Spring wandelt Rückgabeobjekte automatisch in JSON um (**Serialisierung**).
+- Der **Statuscode** sagt mehr über den Erfolg einer Anfrage aus als der sichtbare Text.
+:::
+
+## Selbstkontrolle
+
+Beantworte die Fragen, bevor du nachsiehst.
+
+1. Warum wird ein Spring-Boot-Projekt nicht als gewöhnliches Java-Projekt angelegt?
+2. Wozu dient die Annotation `@RestController`?
+3. Was ist der Unterschied zwischen `@RequestMapping` an der Klasse und `@GetMapping` an der Methode?
+4. Warum eignet sich ein Record gut für ein Antwortobjekt, aber schlecht für eine Klasse, deren Werte sich ändern sollen?
+5. Welchen Statuscode liefert ein Aufruf mit richtiger Adresse, aber falscher HTTP-Methode?
+
+<details>
+<summary>Antworten</summary>
+
+1. Weil die Anwendung ihren eigenen Webserver mitbringt und dafür eine besondere Projektstruktur und passende Abhängigkeiten braucht. Der Initializr stellt beides bereit.
+2. Die Annotation kennzeichnet die Klasse als REST-Controller. Spring findet sie beim Start automatisch und wandelt die Rückgabewerte ihrer Methoden in JSON um.
+3. `@RequestMapping` an der Klasse legt den gemeinsamen Pfadanfang für **alle** Endpunkte fest. `@GetMapping` an der Methode bestimmt, dass genau diese Methode `GET`-Anfragen beantwortet — und ergänzt gegebenenfalls den Pfad.
+4. Ein Record ist unveränderlich. Ein Antwortobjekt wird einmal erzeugt und verschickt, es soll sich nicht mehr ändern. Eine Klasse, deren Werte sich ändern sollen, braucht dagegen Setter — die ein Record nicht hat.
+5. `405 Method Not Allowed`.
+
+</details>

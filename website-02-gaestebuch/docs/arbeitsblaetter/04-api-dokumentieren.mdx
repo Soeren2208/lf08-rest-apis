@@ -1,0 +1,228 @@
+---
+title: "AB 04 – Die API dokumentieren"
+sidebar_label: "04 – Die API dokumentieren"
+slug: 04-api-dokumentieren
+sidebar_position: 4
+---
+
+# AB 04 – Die API dokumentieren
+
+## Die Situation
+
+> Eine Partnerfirma soll das Gästebuch in ihr eigenes Portal einbinden. Ihre Entwicklerin schreibt:
+>
+> *„Schickt mir bitte eine Beschreibung der Schnittstelle. Welche Endpunkte gibt es, welche Felder erwartet ihr, welche Statuscodes kommen zurück?"*
+>
+> Du könntest das in ein Textdokument schreiben. Die Frage ist nur: Wer pflegt es, wenn sich die Schnittstelle ändert?
+
+## Lernziele
+
+Nach Bearbeitung dieses Arbeitsblatts kannst du:
+
+- erklären, warum handgeschriebene Schnittstellendokumentation veraltet
+- **OpenAPI** als Beschreibungsformat für REST-Schnittstellen einordnen
+- **springdoc** einbinden und die **Swagger-UI** benutzen
+- Endpunkte mit Annotationen aussagekräftiger dokumentieren
+
+## Das Problem mit Dokumentation
+
+Jede Dokumentation, die getrennt vom Code gepflegt wird, läuft ihm irgendwann hinterher. Jemand ergänzt ein Feld, jemand ändert einen Statuscode — und niemand denkt an die Beschreibung.
+
+Die Lösung: **Die Dokumentation aus dem Code erzeugen.** Dann kann sie nicht veralten, weil sie keine eigene Quelle hat.
+
+:::info Was OpenAPI ist
+**OpenAPI** ist ein standardisiertes Format, um REST-Schnittstellen zu beschreiben — welche Pfade es gibt, welche Methoden, welche Felder, welche Antworten. Die Beschreibung selbst ist JSON.
+
+Weil es ein Standard ist, können Werkzeuge etwas damit anfangen: eine Bedienoberfläche daraus bauen, Client-Code erzeugen, Tests ableiten.
+
+Früher hieß das Format **Swagger**. Der Name lebt in den Werkzeugen weiter — daher „Swagger-UI".
+:::
+
+Damit schließt sich auch ein Kreis zum Infoblatt [Das REST-Paradigma](../infoblaetter/rest-paradigma): Dort stand, dass die Praxis auf Stufe 2 des Reifegradmodells arbeitet und die Aufgabe, dem Client die Möglichkeiten mitzuteilen, von der Dokumentation übernommen wird. Genau das passiert hier.
+
+## Aufgaben
+
+### Aufgabe 1 – springdoc einbinden
+
+<Task id="t2-ab04-a1">Ergänze in der `pom.xml` innerhalb von `<dependencies>`:</Task>
+
+```xml
+<dependency>
+    <groupId>org.springdoc</groupId>
+    <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+    <version>3.1.0</version>
+</dependency>
+```
+
+<Task id="t2-ab04-a1-reload">Lass Maven die Abhängigkeit laden.</Task>
+
+:::note Warum hier eine Version steht
+Bei den Spring-Boot-Startern konntest du die Version weglassen, weil der Eltern-POM sie vorgibt. springdoc gehört nicht zu Spring Boot — deshalb musst du sie hier angeben.
+
+Achte darauf, eine Version zu wählen, die zu deiner Spring-Boot-Version passt: Die **3.x**-Linie gehört zu Spring Boot 4, die 2.x-Linie zu Spring Boot 3. Nachschlagen im Infoblatt [Maven und Abhängigkeiten](../infoblaetter/maven).
+:::
+
+<Task id="t2-ab04-a1-prop">Ergänze in `application.properties`:</Task>
+
+```properties
+springdoc.swagger-ui.path=/swagger-ui.html
+```
+
+### Aufgabe 2 – Die Oberfläche ansehen
+
+<Task id="t2-ab04-a2-start">Starte die Anwendung neu und rufe `http://localhost:8080/swagger-ui.html` auf.</Task>
+
+Du hast **keine Zeile Dokumentation geschrieben** — und siehst trotzdem alle deine Endpunkte, mit Methoden, Pfaden, Parametern und Feldern.
+
+<Task id="t2-ab04-a2-explore">Klappe den POST-Endpunkt auf. Klicke auf **Try it out**, fülle den Rumpf und führe die Anfrage aus.</Task>
+
+:::tip Die Oberfläche ist nicht nur zum Lesen
+Über **Try it out** setzt du echte Anfragen an deinen laufenden Dienst ab — direkt aus der Dokumentation. Für einen ersten Blick ist das schneller als Postman.
+
+Was Postman weiterhin besser kann: Anfragen speichern, in Sammlungen ordnen und im Team teilen.
+:::
+
+<Task id="t2-ab04-a2-json">Rufe zusätzlich `http://localhost:8080/v3/api-docs` auf. Das ist die OpenAPI-Beschreibung selbst — dieselbe Information als JSON.</Task>
+
+Diese Datei ist es, die du der Partnerfirma schickst. Aus ihr kann deren Werkzeugkette automatisch Client-Code erzeugen.
+
+### Aufgabe 3 – Die Beschreibung verbessern
+
+Die erzeugte Dokumentation ist vollständig, aber unpersönlich: Die Anwendung heißt „OpenAPI definition", und bei den Endpunkten steht nur, wie die Java-Methode heißt.
+
+<Task id="t2-ab04-a3-info">Lege im Package `config` eine Klasse `OpenApiConfig` an:</Task>
+
+```java title="src/main/java/de/szut/gaestebuch/config/OpenApiConfig.java"
+package de.szut.gaestebuch.config;
+
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.info.Info;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+@OpenAPIDefinition(
+        info = @Info(
+                title = "Gästebuch-API",
+                version = "v1",
+                description = "Schnittstelle zum Anlegen, Lesen, Ändern "
+                            + "und Löschen von Gästebucheinträgen."))
+public class OpenApiConfig {
+}
+```
+
+<Task id="t2-ab04-a3-operation">Beschreibe einen Endpunkt genauer. Ergänze am POST-Endpunkt:</Task>
+
+```java
+@Operation(summary = "Legt einen neuen Gästebucheintrag an")
+@ApiResponse(responseCode = "201", description = "Eintrag wurde angelegt")
+@ApiResponse(responseCode = "400", description = "Der Rumpf war fehlerhaft")
+@PostMapping
+public ResponseEntity<GuestbookEntry> createEntry(...) { ... }
+```
+
+<Task id="t2-ab04-a3-check">Lade die Swagger-UI neu und vergleiche.</Task>
+
+:::warning Nicht jeden Endpunkt zutexten
+Annotationen zur Dokumentation blähen den Controller auf. Ergänze sie dort, wo etwas **nicht** aus dem Code hervorgeht — etwa fachliche Bedingungen oder besondere Fehlerfälle.
+
+Dass ein `GET` auf `/{id}` einen Eintrag liefert, sieht man auch ohne Beschreibung.
+:::
+
+### Aufgabe 4 – Testfälle
+
+<Task id="t2-ab04-a4">Führe die Testfälle aus.</Task>
+
+<TestTable
+  storageKey="t2-ab04-tests"
+  tests={[
+    {
+      id: 'TF-01',
+      beschreibung: 'Swagger-UI ist erreichbar',
+      vorbedingung: 'Anwendung läuft',
+      schritte: ['http://localhost:8080/swagger-ui.html aufrufen'],
+      erwartet: <>Die Oberfläche erscheint und listet den Controller mit allen Endpunkten.</>
+    },
+    {
+      id: 'TF-02',
+      beschreibung: 'Alle Endpunkte sind aufgeführt',
+      vorbedingung: 'TF-01 bestanden',
+      schritte: ['Die Liste durchsehen'],
+      erwartet: <>Genau fünf Endpunkte: POST, GET (Sammlung), GET (Id), PUT, DELETE.</>
+    },
+    {
+      id: 'TF-03',
+      beschreibung: 'Try it out funktioniert',
+      vorbedingung: 'TF-01 bestanden',
+      schritte: ['POST aufklappen', 'Try it out klicken', 'Gültigen Rumpf eingeben und ausführen'],
+      erwartet: <>Status <code>201</code>. Der Eintrag ist danach über GET abrufbar.</>
+    },
+    {
+      id: 'TF-04',
+      beschreibung: 'OpenAPI-Beschreibung als JSON',
+      vorbedingung: 'Anwendung läuft',
+      schritte: ['http://localhost:8080/v3/api-docs aufrufen'],
+      erwartet: <>Ein JSON-Objekt mit einem Feld <code>openapi</code> und einem Abschnitt <code>paths</code>.</>
+    },
+    {
+      id: 'TF-05',
+      beschreibung: 'Eigener Titel wird übernommen',
+      vorbedingung: 'OpenApiConfig wurde angelegt',
+      schritte: ['Swagger-UI neu laden'],
+      erwartet: <>Oben steht <b>Gästebuch-API v1</b> statt „OpenAPI definition".</>
+    },
+    {
+      id: 'TF-06',
+      beschreibung: 'Dokumentation folgt dem Code',
+      vorbedingung: 'Anwendung läuft',
+      schritte: ['Der Entität ein neues Attribut hinzufügen, z.B. rating', 'Anwendung neu starten', 'Swagger-UI neu laden'],
+      erwartet: <>Das neue Feld erscheint <b>ohne</b> weiteres Zutun im Schema.</>
+    }
+  ]}
+/>
+
+:::note TF-06 ist der eigentliche Punkt
+Er zeigt, warum erzeugte Dokumentation der handgeschriebenen überlegen ist: Sie kann nicht veralten, weil sie keine zweite Quelle hat.
+
+Denk daran, das Testattribut anschließend wieder zu entfernen.
+:::
+
+## Ausblick
+
+Dein Gästebuch ist funktionsfähig und dokumentiert. Diese Fragen bleiben offen:
+
+- Was passiert, wenn jemand einen Eintrag **ohne Titel** oder mit einem 5000 Zeichen langen Kommentar schickt? *(→ Validierung)*
+- Der Controller redet direkt mit dem Repository. Wo gehören eigentlich **fachliche Regeln** hin — etwa eine Sperre gegen Spam? *(→ Service-Schicht)*
+- Du hast alle Testfälle **von Hand** ausgeführt. Beim nächsten Mal wieder? *(→ automatisierte Tests)*
+- Die API gibt die Entität **unverändert** nach außen. Was, wenn sich die Datenbankstruktur ändert? *(→ DTOs)*
+
+Damit geht es im nächsten Tutorial weiter.
+
+## Zusammenfassung
+
+:::tip Das hast du gelernt
+- Getrennt gepflegte Dokumentation veraltet; erzeugte Dokumentation kann es nicht.
+- **OpenAPI** ist ein standardisiertes Beschreibungsformat für REST-Schnittstellen.
+- **springdoc** liest deinen Code und erzeugt daraus die Beschreibung — sichtbar in der **Swagger-UI**, abrufbar unter `/v3/api-docs`.
+- Über **Try it out** lassen sich Endpunkte direkt aus der Dokumentation aufrufen.
+- `@OpenAPIDefinition`, `@Operation` und `@ApiResponse` ergänzen, was aus dem Code nicht hervorgeht.
+- springdoc gehört nicht zu Spring Boot — deshalb muss die Version passend zur Boot-Version angegeben werden.
+:::
+
+## Selbstkontrolle
+
+1. Warum veraltet handgeschriebene Schnittstellendokumentation?
+2. Was ist der Unterschied zwischen OpenAPI und der Swagger-UI?
+3. Woher weiß springdoc, welche Endpunkte es gibt?
+4. Warum muss bei springdoc eine Version in der `pom.xml` stehen, bei `spring-boot-starter-webmvc` aber nicht?
+5. Wann lohnt sich `@Operation` an einem Endpunkt?
+
+<details>
+<summary>Antworten</summary>
+
+1. Weil sie eine zweite Quelle neben dem Code ist. Ändert jemand den Code, muss er daran denken, die Beschreibung nachzuziehen — und irgendwann tut das niemand.
+2. **OpenAPI** ist das Format, in dem die Schnittstelle beschrieben wird (JSON). Die **Swagger-UI** ist ein Werkzeug, das eine solche Beschreibung als bedienbare Oberfläche darstellt.
+3. springdoc untersucht beim Start die Controller-Klassen und liest deren Annotationen, Methodensignaturen und Rückgabetypen aus.
+4. Weil `spring-boot-starter-webmvc` im Eltern-POM von Spring Boot mit einer abgestimmten Version geführt wird. springdoc ist ein eigenständiges Projekt und steht dort nicht.
+5. Wenn etwas dokumentiert werden soll, das aus dem Code nicht hervorgeht — fachliche Bedingungen, besondere Fehlerfälle, Einschränkungen. Nicht für Selbstverständliches.
+
+</details>

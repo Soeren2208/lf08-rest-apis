@@ -1,0 +1,771 @@
+---
+title: "AB 02 – Personen speichern"
+sidebar_label: "02 – Personen speichern"
+slug: 02-personen-speichern
+sidebar_position: 2
+---
+
+# AB 02 – Personen speichern und lesen
+
+## Die Situation
+
+> Das Grundgerüst steht. Jetzt soll es um die eigentliche Aufgabe gehen: Personen müssen **dauerhaft gespeichert** werden. Die Personalabteilung will neue Mitarbeiter anlegen und einzelne Datensätze wieder abrufen können.
+
+## Lernziele
+
+Nach Bearbeitung dieses Arbeitsblatts kannst du:
+
+- eine Klasse als **JPA-Entität** kennzeichnen und erklären, was Hibernate daraus macht
+- ein **Repository** anlegen und begründen, warum du dafür keine Implementierung schreiben musst
+- eine H2-Datenbank konfigurieren und ihren Inhalt über die Web-Konsole prüfen
+- einen `POST`- und einen `GET`-Endpunkt implementieren
+- **Konstruktor-Injektion** anwenden und erklären, was Spring dabei tut
+- passende HTTP-Statuscodes zurückgeben, auch im Fehlerfall
+
+## Die drei Schichten
+
+Fast jede Backend-Anwendung ist in Schichten aufgebaut. Jede hat genau eine Aufgabe:
+
+<svg viewBox="0 0 720 470" width="100%" role="img"
+     aria-label="Schichten: Client, Controller, Repository, Datenbank; Model beschreibt die Daten"
+     fontFamily="var(--ifm-font-family-base)">
+
+  {/* ---------------- Client ---------------- */}
+  <g transform="translate(58,10)">
+    <rect width="300" height="60" rx="11" fill="var(--ifm-color-emphasis-100)"
+          stroke="var(--ifm-color-emphasis-300)" strokeWidth="1.5"/>
+    {/* Laptop */}
+    <g transform="translate(20,17)" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2" fill="none">
+      <rect x="0" y="0" width="32" height="21" rx="2.5"/>
+      <path d="M-4 26 L36 26" strokeLinecap="round"/>
+    </g>
+    <text x="70" y="28" fontSize="15" fontWeight="700" fill="var(--ifm-font-color-base)">Client</text>
+    <text x="70" y="47" fontSize="12.5" fill="var(--ifm-color-emphasis-700)">Browser, App, anderes Programm</text>
+  </g>
+
+  <path d="M208 70 L208 104" stroke="var(--ifm-color-emphasis-600)" strokeWidth="2"/>
+  <path d="M203 98 L208 106 L213 98" fill="none" stroke="var(--ifm-color-emphasis-600)" strokeWidth="2"/>
+  <text x="222" y="92" fontSize="12.5" fill="var(--ifm-color-emphasis-700)">HTTP-Anfrage mit JSON</text>
+
+  {/* ---------------- Controller ---------------- */}
+  <g transform="translate(58,106)">
+    <rect width="300" height="82" rx="12" fill="var(--ifm-color-emphasis-100)"
+          stroke="var(--ifm-color-primary)" strokeWidth="1.8"/>
+    {/* Tuer */}
+    <g transform="translate(20,17)" stroke="var(--ifm-color-primary)" strokeWidth="2" fill="none">
+      <rect x="0" y="0" width="26" height="34" rx="2.5"/>
+      <circle cx="20" cy="18" r="2.2" fill="var(--ifm-color-primary)" stroke="none"/>
+    </g>
+    <text x="66" y="27" fontSize="15" fontWeight="700" fill="var(--ifm-font-color-base)">Controller</text>
+    <text x="66" y="46" fontSize="12.5" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-color-primary)">@RestController</text>
+    <text x="66" y="66" fontSize="12.5" fill="var(--ifm-color-emphasis-700)">nimmt Anfragen entgegen</text>
+  </g>
+
+  <path d="M208 188 L208 226" stroke="var(--ifm-color-emphasis-600)" strokeWidth="2"/>
+  <path d="M203 220 L208 228 L213 220" fill="none" stroke="var(--ifm-color-emphasis-600)" strokeWidth="2"/>
+  <text x="222" y="212" fontSize="12.5" fill="var(--ifm-color-emphasis-700)">Java-Methodenaufruf</text>
+
+  {/* ---------------- Repository ---------------- */}
+  <g transform="translate(58,228)">
+    <rect width="300" height="82" rx="12" fill="var(--ifm-color-emphasis-100)"
+          stroke="var(--ifm-color-primary)" strokeWidth="1.8"/>
+    {/* Aktenschrank */}
+    <g transform="translate(19,17)" stroke="var(--ifm-color-primary)" strokeWidth="2" fill="none">
+      <rect x="0" y="0" width="30" height="34" rx="2.5"/>
+      <path d="M0 11.5 L30 11.5 M0 23 L30 23"/>
+      <path d="M12 6 L18 6 M12 17.5 L18 17.5 M12 29 L18 29" strokeLinecap="round"/>
+    </g>
+    <text x="66" y="27" fontSize="15" fontWeight="700" fill="var(--ifm-font-color-base)">Repository</text>
+    <text x="66" y="46" fontSize="12.5" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-color-primary)">extends JpaRepository</text>
+    <text x="66" y="66" fontSize="12.5" fill="var(--ifm-color-emphasis-700)">liest und schreibt Datensätze</text>
+  </g>
+
+  <path d="M208 310 L208 348" stroke="var(--ifm-color-emphasis-600)" strokeWidth="2"/>
+  <path d="M203 342 L208 350 L213 342" fill="none" stroke="var(--ifm-color-emphasis-600)" strokeWidth="2"/>
+  <text x="222" y="334" fontSize="12.5" fill="var(--ifm-color-emphasis-700)">SQL — von Hibernate erzeugt</text>
+
+  {/* ---------------- Datenbank ---------------- */}
+  <g transform="translate(128,352)">
+    <path d="M0 14 C0 6 36 0 80 0 C124 0 160 6 160 14 L160 66 C160 74 124 80 80 80 C36 80 0 74 0 66 Z"
+          fill="var(--ifm-color-emphasis-200)" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.8"/>
+    <path d="M0 14 C0 22 36 28 80 28 C124 28 160 22 160 14"
+          fill="none" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.8"/>
+    <text x="80" y="52" textAnchor="middle" fontSize="14" fontWeight="700"
+          fill="var(--ifm-font-color-base)">H2-Datenbank</text>
+    <text x="80" y="69" textAnchor="middle" fontSize="12" fill="var(--ifm-color-emphasis-700)">Tabelle PERSON</text>
+  </g>
+
+  {/* ---------------- Model rechts ---------------- */}
+  <g transform="translate(438,150)">
+    <rect width="248" height="140" rx="12" fill="var(--ifm-background-color)"
+          stroke="var(--ifm-color-emphasis-400)" strokeWidth="1.6" strokeDasharray="6 5"/>
+    {/* Datenkarte */}
+    <g transform="translate(20,20)" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2" fill="none">
+      <rect x="0" y="0" width="28" height="34" rx="3"/>
+      <path d="M6 10 L22 10 M6 18 L22 18 M6 26 L16 26" strokeLinecap="round"/>
+    </g>
+    <text x="62" y="32" fontSize="15" fontWeight="700" fill="var(--ifm-font-color-base)">Model / Entity</text>
+    <text x="62" y="50" fontSize="12.5" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-color-emphasis-800)">@Entity class Person</text>
+    <text x="20" y="82" fontSize="12.5" fill="var(--ifm-color-emphasis-700)">beschreibt, wie die Daten</text>
+    <text x="20" y="100" fontSize="12.5" fill="var(--ifm-color-emphasis-700)">aussehen — und wird von</text>
+    <text x="20" y="118" fontSize="12.5" fill="var(--ifm-color-emphasis-700)">beiden Schichten benutzt</text>
+  </g>
+
+  {/* gestrichelte Verbindungen zum Model */}
+  <path d="M436 186 L360 160" fill="none" stroke="var(--ifm-color-emphasis-400)"
+        strokeWidth="1.6" strokeDasharray="5 4"/>
+  <path d="M436 250 L360 268" fill="none" stroke="var(--ifm-color-emphasis-400)"
+        strokeWidth="1.6" strokeDasharray="5 4"/>
+</svg>
+
+:::info Kommt dir bekannt vor?
+Im ersten Lehrjahr hast du im NHPlus-Projekt eine **DAO**-Klasse geschrieben — mit JDBC-Verbindung und selbst formulierten SQL-Anweisungen.
+
+Das Repository ist dasselbe Konzept. Der Unterschied: Du schreibst es nicht mehr selbst.
+:::
+
+## Aufgaben
+
+### Aufgabe 1 – Die Datenbank konfigurieren
+
+<Task id="ab02-a1-props">Öffne `src/main/resources/application.properties` und trage ein:</Task>
+
+```properties title="src/main/resources/application.properties"
+spring.application.name=personenverwaltung
+
+# --- Datenbank ---
+spring.datasource.url=jdbc:h2:mem:persondb
+spring.datasource.username=sa
+spring.datasource.password=
+
+# --- H2-Console im Browser ---
+spring.h2.console.enabled=true
+
+# --- Hibernate: erzeugte SQL-Anweisungen mitlesen ---
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.open-in-view=false
+
+# --- Fehlerantworten nach RFC 9457 ---
+spring.mvc.problemdetails.enabled=true
+server.error.include-stacktrace=never
+```
+
+Was die wichtigen Zeilen bewirken:
+
+| Zeile | Bedeutung |
+|---|---|
+| `jdbc:h2:mem:persondb` | H2 läuft **im Hauptspeicher** (`mem`). Die Daten sind nach dem Beenden weg. Für die Entwicklung ideal, weil nichts installiert werden muss. |
+| `username=sa`, `password=` | Zugangsdaten. Genau diese trägst du gleich in der H2-Console ein. |
+| `spring.h2.console.enabled=true` | Schaltet die Weboberfläche der Datenbank frei. |
+| `spring.jpa.show-sql=true` | Zeigt dir im Log, welches SQL Hibernate erzeugt. Sehr lehrreich. |
+| `problemdetails.enabled=true` | Fehler werden im Standardformat RFC 9457 zurückgegeben. |
+| `include-stacktrace=never` | Verhindert, dass interne Programmdetails nach außen gelangen. |
+
+:::warning Häufigster Fehler bei der H2-Console
+Die JDBC-URL, die du gleich in der Console eingibst, muss **exakt** mit der Zeile in dieser Datei übereinstimmen. Weicht sie ab, verbindet sich die Console mit einer anderen, leeren Datenbank — und du wunderst dich, wo deine Daten sind.
+:::
+
+### Aufgabe 2 – Die Entität `Person`
+
+<Task id="ab02-a2-pkg">Lege das Package `de.szut.personenverwaltung.model` an.</Task>
+
+<Task id="ab02-a2-class">Erstelle darin die Klasse `Person` mit den Attributen `id` (Typ `Long`), `firstname` und `surname` (jeweils `String`).</Task>
+
+```java title="src/main/java/de/szut/personenverwaltung/model/Person.java"
+package de.szut.personenverwaltung.model;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+
+@Entity
+public class Person {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+
+    private String firstname;
+
+    private String surname;
+
+    public Person() {
+    }
+
+    // Getter und Setter für alle drei Attribute
+    // (von der Entwicklungsumgebung erzeugen lassen)
+}
+```
+
+<Task id="ab02-a2-getter">Lass dir Getter und Setter für alle drei Attribute erzeugen.</Task>
+
+Die Annotationen im Einzelnen:
+
+| Annotation | Wirkung |
+|---|---|
+| `@Entity` | Macht die Klasse zu einer JPA-Entität. Hibernate legt beim Start automatisch eine Tabelle `PERSON` an, jedes Attribut wird eine Spalte. |
+| `@Id` | Kennzeichnet das Attribut als **Primärschlüssel**. |
+| `@GeneratedValue` | Der Wert wird automatisch vergeben, nicht vom Programm gesetzt. `AUTO` überlässt die Wahl des Verfahrens der Datenbank. |
+
+:::danger Der parameterlose Konstruktor muss bleiben
+Hibernate erzeugt Objekte über den parameterlosen Konstruktor und füllt sie anschließend. Fehlt er, bekommst du beim Start eine schwer verständliche Fehlermeldung.
+
+**Genau deshalb kann eine Entität kein Record sein:** Ein Record hat nur den Konstruktor mit allen Werten, seine Felder sind `final`, und Hibernate müsste nach dem Einfügen die erzeugte `id` nachträglich hineinschreiben — was bei `final` nicht geht.
+
+Ausführlich steht das im Infoblatt [JPA und Hibernate](../infoblaetter/jpa-hibernate).
+:::
+
+### Aufgabe 3 – Das Repository
+
+<Task id="ab02-a3-pkg">Lege das Package `de.szut.personenverwaltung.repository` an.</Task>
+
+<Task id="ab02-a3-iface">Erstelle darin ein **Interface** `PersonRepository`, das `JpaRepository` erweitert:</Task>
+
+```java title="src/main/java/de/szut/personenverwaltung/repository/PersonRepository.java"
+package de.szut.personenverwaltung.repository;
+
+import de.szut.personenverwaltung.model.Person;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface PersonRepository extends JpaRepository<Person, Long> {
+}
+```
+
+Das ist alles. Kein `implements`, keine SQL-Anweisung, keine Verbindungsverwaltung.
+
+Die beiden Typparameter bedeuten:
+- `Person` — welcher Entitätstyp verwaltet wird
+- `Long` — welchen Datentyp der Primärschlüssel hat
+
+:::tip Wo kommt die Implementierung her?
+Spring Data erzeugt sie beim Start **zur Laufzeit**. Es liest das Interface, erkennt den Entitätstyp und baut daraus eine vollständige Klasse mit allen CRUD-Methoden:
+
+`save()` · `findById()` · `findAll()` · `deleteById()` · `count()` · `existsById()` …
+
+Vergleiche das mit der DAO-Klasse aus dem ersten Lehrjahr. Dort hast du jede dieser Methoden von Hand geschrieben.
+:::
+
+### Aufgabe 4 – Der Controller mit POST und GET
+
+<Task id="ab02-a4-class">Erstelle im Package `controller` die Klasse `PersonController`:</Task>
+
+```java title="src/main/java/de/szut/personenverwaltung/controller/PersonController.java"
+package de.szut.personenverwaltung.controller;
+
+import de.szut.personenverwaltung.model.Person;
+import de.szut.personenverwaltung.repository.PersonRepository;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+@RestController
+@RequestMapping("/api/v1/persons")
+public class PersonController {
+
+    private final PersonRepository repository;
+
+    public PersonController(PersonRepository repository) {
+        this.repository = repository;
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public Person createPerson(@RequestBody Person person) {
+        return repository.save(person);
+    }
+
+    @GetMapping("/{id}")
+    public Person getPersonById(@PathVariable Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Keine Person mit der Id " + id));
+    }
+}
+```
+
+#### Woher kommt das Repository?
+
+Der Controller braucht ein `PersonRepository` — erzeugt aber nirgends eines mit `new`. Stattdessen verlangt der **Konstruktor** eines.
+
+Beim Start sucht Spring nach einer passenden Instanz und übergibt sie. Das nennt man **Dependency Injection**: Die Abhängigkeit wird von außen hineingereicht, statt dass die Klasse sie sich selbst beschafft.
+
+<svg viewBox="0 0 720 470" width="100%" role="img"
+     aria-label="Spring erzeugt das Repository und steckt es in den Konstruktor des Controllers"
+     fontFamily="var(--ifm-font-family-base)">
+
+  {/* ---------------- Spring-Container ---------------- */}
+  <rect x="30" y="8" width="660" height="150" rx="14"
+        fill="var(--ifm-color-primary)" opacity="0.07"/>
+  <rect x="30" y="8" width="660" height="150" rx="14" fill="none"
+        stroke="var(--ifm-color-primary)" strokeWidth="1.8" strokeDasharray="7 5"/>
+
+  {/* Zahnrad */}
+  <g transform="translate(70,44)" stroke="var(--ifm-color-primary)" strokeWidth="2" fill="none">
+    <circle cx="0" cy="0" r="9"/>
+    <circle cx="0" cy="0" r="3.2"/>
+    <path d="M0 -15 L0 -11 M0 11 L0 15 M-15 0 L-11 0 M11 0 L15 0
+             M-10.6 -10.6 L-7.8 -7.8 M7.8 7.8 L10.6 10.6
+             M10.6 -10.6 L7.8 -7.8 M-7.8 7.8 L-10.6 10.6" strokeLinecap="round"/>
+  </g>
+  <text x="96" y="40" fontSize="16" fontWeight="700" fill="var(--ifm-font-color-base)">Spring-Container</text>
+  <text x="96" y="60" fontSize="12.5" fill="var(--ifm-color-emphasis-700)">läuft beim Start und baut alle Objekte, die deine Anwendung braucht</text>
+
+  <circle cx="70" cy="112" r="13" fill="var(--ifm-color-primary)"/>
+  <text x="70" y="117" textAnchor="middle" fontSize="13" fontWeight="700"
+        fill="#ffffff">1</text>
+  <text x="94" y="117" fontSize="13.5" fill="var(--ifm-font-color-base)">erzeugt das Repository</text>
+
+  {/* Repository-Baustein */}
+  <g transform="translate(410,86)">
+    <rect width="250" height="54" rx="10" fill="var(--ifm-background-color)"
+          stroke="var(--ifm-color-primary)" strokeWidth="2"/>
+    <g transform="translate(18,14)" stroke="var(--ifm-color-primary)" strokeWidth="2" fill="none">
+      <rect x="0" y="0" width="24" height="27" rx="2.5"/>
+      <path d="M0 9 L24 9 M0 18 L24 18"/>
+      <path d="M9 4.5 L15 4.5 M9 13.5 L15 13.5 M9 22.5 L15 22.5" strokeLinecap="round"/>
+    </g>
+    <text x="56" y="33" fontSize="13.5" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">PersonRepository</text>
+    {/* Steckerzungen unten */}
+    <rect x="96" y="54" width="20" height="9" rx="2" fill="var(--ifm-color-primary)"/>
+    <rect x="134" y="54" width="20" height="9" rx="2" fill="var(--ifm-color-primary)"/>
+  </g>
+
+  {/* ---------------- Übergabe ---------------- */}
+  <path d="M535 163 L535 205" stroke="var(--ifm-color-primary)" strokeWidth="2.4"/>
+  <path d="M528 197 L535 208 L542 197" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2.4"/>
+  <circle cx="382" cy="186" r="13" fill="var(--ifm-color-primary)"/>
+  <text x="382" y="191" textAnchor="middle" fontSize="13" fontWeight="700"
+        fill="#ffffff">2</text>
+  <text x="404" y="191" fontSize="13.5" fill="var(--ifm-font-color-base)">und steckt es in den Konstruktor</text>
+
+  {/* ---------------- Controller ---------------- */}
+  <rect x="30" y="220" width="660" height="168" rx="14"
+        fill="var(--ifm-color-emphasis-100)" stroke="var(--ifm-color-emphasis-300)" strokeWidth="1.5"/>
+
+  <g transform="translate(58,246)" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2" fill="none">
+    <rect x="0" y="0" width="24" height="31" rx="2.5"/>
+    <circle cx="18" cy="16" r="2.2" fill="var(--ifm-color-emphasis-700)" stroke="none"/>
+  </g>
+  <text x="96" y="262" fontSize="16" fontWeight="700" fill="var(--ifm-font-color-base)">PersonController</text>
+  <text x="96" y="281" fontSize="12.5" fill="var(--ifm-color-emphasis-700)">bekommt das Repository von außen — er baut es nicht selbst</text>
+
+  {/* Konstruktor mit Steckplatz */}
+  <text x="58" y="330" fontSize="13.5" fontFamily="var(--ifm-font-family-monospace)"
+        fill="var(--ifm-color-emphasis-800)">public PersonController(</text>
+  <g transform="translate(258,306)">
+    <rect width="250" height="34" rx="8" fill="var(--ifm-color-primary)" opacity="0.14"/>
+    <rect width="250" height="34" rx="8" fill="none" stroke="var(--ifm-color-primary)"
+          strokeWidth="2" strokeDasharray="6 4"/>
+    {/* eingerastete Steckerzungen */}
+    <rect x="96" y="-9" width="20" height="9" rx="2" fill="var(--ifm-color-primary)"/>
+    <rect x="134" y="-9" width="20" height="9" rx="2" fill="var(--ifm-color-primary)"/>
+    <text x="125" y="22" textAnchor="middle" fontSize="12.5"
+          fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-primary)">PersonRepository repository</text>
+  </g>
+  <text x="516" y="330" fontSize="13.5" fontFamily="var(--ifm-font-family-monospace)"
+        fill="var(--ifm-color-emphasis-800)">)</text>
+
+  <circle cx="70" cy="366" r="13" fill="var(--ifm-color-emphasis-600)"/>
+  <text x="70" y="371" textAnchor="middle" fontSize="13" fontWeight="700"
+        fill="#ffffff">3</text>
+  <text x="94" y="371" fontSize="13" fill="var(--ifm-color-emphasis-800)">das Feld ist final — nach dem Erzeugen steht es fest</text>
+
+  {/* ---------------- so nicht ---------------- */}
+  <rect x="30" y="404" width="660" height="52" rx="10"
+        fill="var(--ifm-color-danger)" opacity="0.08"/>
+  <rect x="30" y="404" width="660" height="52" rx="10" fill="none"
+        stroke="var(--ifm-color-danger)" strokeWidth="1.5"/>
+  <g transform="translate(62,430)" stroke="var(--ifm-color-danger)" strokeWidth="2.4" strokeLinecap="round">
+    <circle cx="0" cy="0" r="11" fill="none"/>
+    <path d="M-4.5 -4.5 L4.5 4.5 M4.5 -4.5 L-4.5 4.5"/>
+  </g>
+  <text x="86" y="427" fontSize="13" fontWeight="700" fill="var(--ifm-font-color-base)">So nicht:</text>
+  <text x="150" y="427" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+        fill="var(--ifm-color-danger)" textDecoration="line-through">new PersonRepository()</text>
+  <text x="86" y="445" fontSize="12.5" fill="var(--ifm-color-emphasis-700)">dann müsste der Controller selbst wissen, wie ein Repository gebaut wird — und wäre nicht mehr testbar</text>
+</svg>
+
+:::info Warum über den Konstruktor?
+Weil das Feld dadurch `final` sein kann — es ist nach dem Erzeugen garantiert gesetzt und kann nicht mehr verändert werden. Der Controller ist damit nie in einem halb fertigen Zustand.
+
+Und es gibt einen zweiten Grund, der später wichtig wird: Man kann dem Konstruktor beim **Testen** ein Ersatzobjekt übergeben. Darauf kommen wir zurück.
+:::
+
+#### Was die neuen Annotationen tun
+
+| Annotation | Bedeutung |
+|---|---|
+| `@PostMapping` | Beantwortet `POST`-Anfragen — hier zum Anlegen. |
+| `@ResponseStatus(HttpStatus.CREATED)` | Antwortet mit **201** statt mit 200. Das ist der richtige Code nach einem Anlegen. |
+| `@RequestBody` | Der JSON-Rumpf der Anfrage wird in ein `Person`-Objekt umgewandelt (**Deserialisierung**). |
+| `@GetMapping("/{id}")` | Ergänzt den Klassenpfad um einen variablen Teil: `/api/v1/persons/1` |
+| `@PathVariable` | Bindet den variablen Teil der URL an den Methodenparameter. |
+
+:::info In älterem Code siehst du die Langform
+`@PostMapping` ist die Kurzform von `@RequestMapping(method = RequestMethod.POST)`. Dasselbe gilt für `@GetMapping`, `@PutMapping` und `@DeleteMapping`.
+
+Früher gab es nur die Langform, und man gab zusätzlich an, welche Datenformate der Endpunkt annimmt und liefert:
+
+```java
+@RequestMapping(method = RequestMethod.POST,
+                consumes = MediaType.APPLICATION_JSON_VALUE,
+                produces = MediaType.APPLICATION_JSON_VALUE)
+```
+
+Beides ist heute überflüssig, weil JSON das Standardformat von Spring-REST-Endpunkten ist. Nötig wird es erst, wenn ein Endpunkt **mehrere** Formate bedienen soll — siehe [HTTP kompakt](../infoblaetter/http-kompakt#content-negotiation-mehrere-formate).
+
+Die Kurzform ist heute der Normalfall. Die Langform solltest du aber wiedererkennen, wenn du in einem Betrieb auf älteren Code stößt.
+:::
+
+#### Was dabei mit den Daten passiert
+
+Zwischen der Außenwelt und deiner Anwendung verläuft eine Grenze. **Draußen gibt es nur Text** — JSON ist eine Zeichenkette. **Drinnen gibt es nur Java-Objekte.** Bei jeder Überquerung muss umgewandelt werden.
+
+<svg viewBox="0 0 720 450" width="100%" role="img"
+     aria-label="POST überquert die Grenze zweimal, GET nur einmal"
+     fontFamily="var(--ifm-font-family-base)">
+
+  {/* ---------- Grenze ---------- */}
+  <path d="M336 46 L336 424" stroke="var(--ifm-color-emphasis-400)"
+        strokeWidth="2" strokeDasharray="8 6"/>
+  <text x="168" y="30" textAnchor="middle" fontSize="12.5" fontWeight="700"
+        fill="var(--ifm-color-info-dark)">AUSSENWELT — nur Text</text>
+  <text x="530" y="30" textAnchor="middle" fontSize="12.5" fontWeight="700"
+        fill="var(--ifm-color-primary)">DEINE ANWENDUNG — Java-Objekte</text>
+
+  {/* =============== POST =============== */}
+  <text x="16" y="70" fontSize="13.5" fontWeight="700"
+        fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-font-color-base)">POST /api/v1/persons</text>
+
+  {/* Hinweg */}
+  <g transform="translate(16,84)">
+    <rect width="290" height="44" rx="9" fill="var(--ifm-color-info)" opacity="0.12"/>
+    <rect width="290" height="44" rx="9" fill="none" stroke="var(--ifm-color-info-dark)" strokeWidth="1.6"/>
+    <text x="14" y="28" fontSize="15" fontWeight="700" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-color-info-dark)">&#123; &#125;</text>
+    <text x="42" y="28" fontSize="12" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">{'{"firstname":"Anna", ...}'}</text>
+  </g>
+  <path d="M310 106 L392 106" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
+  <path d="M385 101 L394 106 L385 111" fill="none" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
+  <text x="351" y="96" textAnchor="middle" fontSize="11.5" fontWeight="700"
+        fill="var(--ifm-color-emphasis-800)">Deserialisierung</text>
+  <text x="351" y="122" textAnchor="middle" fontSize="11"
+        fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-700)">@RequestBody</text>
+
+  <g transform="translate(396,84)">
+    <rect width="150" height="44" rx="9" fill="var(--ifm-color-primary)" opacity="0.12"/>
+    <rect width="150" height="44" rx="9" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="1.6"/>
+    <g transform="translate(14,10)" stroke="var(--ifm-color-primary)" strokeWidth="1.7" fill="none">
+      <path d="M0 6 L10 0 L20 6 L20 18 L10 24 L0 18 Z"/>
+      <path d="M0 6 L10 12 L20 6 M10 12 L10 24"/>
+    </g>
+    <text x="46" y="28" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">Person</text>
+  </g>
+  <path d="M550 106 L594 106" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
+  <path d="M587 101 L596 106 L587 111" fill="none" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
+  <text x="572" y="96" textAnchor="middle" fontSize="11"
+        fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-700)">save()</text>
+
+  <g transform="translate(600,82)">
+    <path d="M0 9 C0 4 22 0 50 0 C78 0 100 4 100 9 L100 39 C100 44 78 48 50 48 C22 48 0 44 0 39 Z"
+          fill="var(--ifm-color-emphasis-200)" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.5"/>
+    <path d="M0 9 C0 14 22 18 50 18 C78 18 100 14 100 9"
+          fill="none" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.5"/>
+    <text x="50" y="38" textAnchor="middle" fontSize="11.5" fill="var(--ifm-font-color-base)">Datenbank</text>
+  </g>
+
+  {/* Rueckweg */}
+  <g transform="translate(396,150)">
+    <rect width="150" height="44" rx="9" fill="var(--ifm-color-primary)" opacity="0.12"/>
+    <rect width="150" height="44" rx="9" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="1.6"/>
+    <g transform="translate(14,10)" stroke="var(--ifm-color-primary)" strokeWidth="1.7" fill="none">
+      <path d="M0 6 L10 0 L20 6 L20 18 L10 24 L0 18 Z"/>
+      <path d="M0 6 L10 12 L20 6 M10 12 L10 24"/>
+    </g>
+    <text x="46" y="28" fontSize="12.5" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">Person +id</text>
+  </g>
+  <path d="M392 172 L310 172" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
+  <path d="M317 167 L308 172 L317 177" fill="none" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
+  <text x="351" y="162" textAnchor="middle" fontSize="11.5" fontWeight="700"
+        fill="var(--ifm-color-emphasis-800)">Serialisierung</text>
+  <text x="351" y="188" textAnchor="middle" fontSize="11" fill="var(--ifm-color-emphasis-700)">Rückgabewert</text>
+
+  <g transform="translate(16,150)">
+    <rect width="290" height="44" rx="9" fill="var(--ifm-color-info)" opacity="0.12"/>
+    <rect width="290" height="44" rx="9" fill="none" stroke="var(--ifm-color-info-dark)" strokeWidth="1.6"/>
+    <text x="14" y="28" fontSize="15" fontWeight="700" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-color-info-dark)">&#123; &#125;</text>
+    <text x="42" y="28" fontSize="12" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">{'{"id":1,"firstname":"Anna", ...}'}</text>
+  </g>
+
+  <text x="16" y="222" fontSize="12.5" fontWeight="700" fill="var(--ifm-color-emphasis-800)">zwei Überquerungen der Grenze — hinein und hinaus</text>
+
+  <path d="M16 240 L704 240" stroke="var(--ifm-color-emphasis-300)" strokeWidth="1.4"/>
+
+  {/* =============== GET =============== */}
+  <text x="16" y="278" fontSize="13.5" fontWeight="700"
+        fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-font-color-base)">GET /api/v1/persons/1</text>
+
+  {/* Hinweg: kein Rumpf */}
+  <g transform="translate(16,292)">
+    <rect width="290" height="44" rx="9" fill="none" stroke="var(--ifm-color-emphasis-400)"
+          strokeWidth="1.6" strokeDasharray="6 5"/>
+    <text x="145" y="28" textAnchor="middle" fontSize="12.5"
+          fill="var(--ifm-color-emphasis-700)">kein Rumpf — nur die Id in der URL</text>
+  </g>
+  <path d="M310 314 L392 314" stroke="var(--ifm-color-emphasis-500)" strokeWidth="2" strokeDasharray="6 5"/>
+  <path d="M385 309 L394 314 L385 319" fill="none" stroke="var(--ifm-color-emphasis-500)" strokeWidth="2"/>
+  <text x="351" y="304" textAnchor="middle" fontSize="11" fontWeight="700"
+        fill="var(--ifm-color-emphasis-600)">kein JSON</text>
+
+  <g transform="translate(396,292)">
+    <rect width="150" height="44" rx="9" fill="var(--ifm-color-emphasis-100)"/>
+    <rect width="150" height="44" rx="9" fill="none" stroke="var(--ifm-color-emphasis-400)" strokeWidth="1.6"/>
+    <text x="75" y="28" textAnchor="middle" fontSize="12"
+          fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">findById(1)</text>
+  </g>
+  <path d="M550 314 L594 314" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
+  <path d="M587 309 L596 314 L587 319" fill="none" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
+
+  <g transform="translate(600,290)">
+    <path d="M0 9 C0 4 22 0 50 0 C78 0 100 4 100 9 L100 39 C100 44 78 48 50 48 C22 48 0 44 0 39 Z"
+          fill="var(--ifm-color-emphasis-200)" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.5"/>
+    <path d="M0 9 C0 14 22 18 50 18 C78 18 100 14 100 9"
+          fill="none" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.5"/>
+    <text x="50" y="38" textAnchor="middle" fontSize="11.5" fill="var(--ifm-font-color-base)">Datenbank</text>
+  </g>
+
+  {/* Rueckweg */}
+  <g transform="translate(396,358)">
+    <rect width="150" height="44" rx="9" fill="var(--ifm-color-primary)" opacity="0.12"/>
+    <rect width="150" height="44" rx="9" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="1.6"/>
+    <g transform="translate(14,10)" stroke="var(--ifm-color-primary)" strokeWidth="1.7" fill="none">
+      <path d="M0 6 L10 0 L20 6 L20 18 L10 24 L0 18 Z"/>
+      <path d="M0 6 L10 12 L20 6 M10 12 L10 24"/>
+    </g>
+    <text x="46" y="28" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">Person</text>
+  </g>
+  <path d="M392 380 L310 380" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
+  <path d="M317 375 L308 380 L317 385" fill="none" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
+  <text x="351" y="370" textAnchor="middle" fontSize="11.5" fontWeight="700"
+        fill="var(--ifm-color-emphasis-800)">Serialisierung</text>
+
+  <g transform="translate(16,358)">
+    <rect width="290" height="44" rx="9" fill="var(--ifm-color-info)" opacity="0.12"/>
+    <rect width="290" height="44" rx="9" fill="none" stroke="var(--ifm-color-info-dark)" strokeWidth="1.6"/>
+    <text x="14" y="28" fontSize="15" fontWeight="700" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-color-info-dark)">&#123; &#125;</text>
+    <text x="42" y="28" fontSize="12" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">{'{"id":1,"firstname":"Anna", ...}'}</text>
+  </g>
+
+  <text x="16" y="430" fontSize="12.5" fontWeight="700" fill="var(--ifm-color-emphasis-800)">nur eine Überquerung — ausschließlich hinaus</text>
+</svg>
+
+:::tip Woran du das im Code wiedererkennst
+Die Zahl der Überquerungen steht in der **Methodensignatur**:
+
+```java
+public Person createPerson(@RequestBody Person person)
+//     ──────              ────────────────────────────
+//     hinaus              herein
+
+public Person getPersonById(@PathVariable Long id)
+//     ──────               ─────────────────────
+//     hinaus               nur eine Zahl aus der URL, kein JSON
+```
+
+Ein Endpunkt mit `@RequestBody` nimmt JSON entgegen, einer ohne nicht. Beide geben JSON zurück, sobald sie ein Objekt zurückliefern.
+:::
+
+:::tip `orElseThrow` statt `isPresent` und `get`
+`findById()` liefert kein `Person`-Objekt, sondern ein `Optional<Person>` — einen Behälter, der ein Objekt enthalten kann oder eben nicht.
+
+Man könnte mit `isPresent()` prüfen und mit `get()` herausholen. Kürzer und sicherer ist `orElseThrow()`: Ist etwas drin, wird es zurückgegeben — sonst wird die angegebene Ausnahme geworfen. Und daraus macht Spring die Antwort **404**.
+:::
+
+<Task id="ab02-a4-run">Starte die Anwendung neu. Sieh dir im Log die `CREATE TABLE`-Anweisung an, die Hibernate erzeugt hat.</Task>
+
+### Aufgabe 5 – Personen anlegen und abrufen
+
+Zum Testen brauchst du ein Werkzeug, das `POST`-Anfragen schicken kann — der Browser kann nur `GET`.
+
+<Task id="ab02-a5-file">Lege im Projekthauptverzeichnis die Datei `requests.http` an:</Task>
+
+```http title="requests.http"
+### Person anlegen
+POST http://localhost:8080/api/v1/persons
+Content-Type: application/json
+
+{
+  "firstname": "Anna",
+  "surname": "Schmidt"
+}
+
+### Zweite Person anlegen
+POST http://localhost:8080/api/v1/persons
+Content-Type: application/json
+
+{
+  "firstname": "Ben",
+  "surname": "Kaya"
+}
+
+### Person mit der Id 1 abrufen
+GET http://localhost:8080/api/v1/persons/1
+
+### Person abrufen, die es nicht gibt
+GET http://localhost:8080/api/v1/persons/99
+```
+
+<Task id="ab02-a5-exec">Führe die Requests der Reihe nach aus und notiere jeweils den Statuscode.</Task>
+
+:::note Was du beobachten solltest
+Beim `POST` schickst du **kein** `id`-Feld mit — in der Antwort ist eines enthalten. Die Datenbank hat es vergeben.
+
+Der letzte Request liefert **404** und eine Fehlerantwort im Format RFC 9457:
+
+```json
+{
+  "type": "about:blank",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "Keine Person mit der Id 99",
+  "instance": "/api/v1/persons/99"
+}
+```
+
+![Fehlerantwort nach RFC 9457 im Browser](/img/04-problem-404.png)
+:::
+
+### Aufgabe 6 – In die Datenbank schauen
+
+<Task id="ab02-a6-open">Rufe `http://localhost:8080/h2-console` auf.</Task>
+
+<Task id="ab02-a6-login">Trage ein: **JDBC URL** `jdbc:h2:mem:persondb`, **User Name** `sa`, **Password** leer lassen. Dann **Connect**.</Task>
+
+![Login-Maske der H2-Console](/img/06-h2-login.png)
+
+<Task id="ab02-a6-select">Führe im rechten Bereich aus:</Task>
+
+```sql
+SELECT * FROM PERSON;
+```
+
+![Ergebnis der SQL-Abfrage in der H2-Console](/img/07-h2-query.png)
+
+:::tip Zwei Wege, dieselben Daten
+Du siehst dieselben Datensätze einmal als JSON über den Webservice und einmal als Tabelle über SQL.
+
+Das ist der Kern des **objektrelationalen Mappings**: Hibernate übersetzt zwischen Java-Objekten und Datenbankzeilen. Du hast nie eine `INSERT`-Anweisung geschrieben — im Log kannst du nachlesen, dass Hibernate sie erzeugt hat.
+
+Wie diese Übersetzung funktioniert und was **JPA**, **Hibernate** und **Spring Data JPA** jeweils dazu beitragen, erklärt das Infoblatt [JPA und Hibernate](../infoblaetter/jpa-hibernate).
+:::
+
+### Aufgabe 7 – Testfälle ausführen
+
+<Task id="ab02-a7-tests">Führe die folgenden Testfälle aus und halte die Ergebnisse fest.</Task>
+
+<TestTable
+  storageKey="ab02-tests"
+  tests={[
+    {
+      id: 'TF-01',
+      beschreibung: 'Tabelle wird beim Start angelegt',
+      vorbedingung: 'Anwendung wurde neu gestartet',
+      schritte: ['Konsolenausgabe beim Start durchsehen'],
+      erwartet: <>Eine Anweisung <code>create table person</code> ist im Log zu finden.</>
+    },
+    {
+      id: 'TF-02',
+      beschreibung: 'Person anlegen',
+      vorbedingung: 'Anwendung läuft, Datenbank ist leer',
+      schritte: ['POST auf /api/v1/persons mit {"firstname":"Anna","surname":"Schmidt"}'],
+      erwartet: <>Status <code>201</code>. Die Antwort enthält zusätzlich ein Feld <code>id</code> mit dem Wert <code>1</code>.</>
+    },
+    {
+      id: 'TF-03',
+      beschreibung: 'Zweite Person bekommt eine andere Id',
+      vorbedingung: 'TF-02 wurde ausgeführt',
+      schritte: ['POST auf /api/v1/persons mit {"firstname":"Ben","surname":"Kaya"}'],
+      erwartet: <>Status <code>201</code>, <code>id</code> ist <code>2</code>.</>
+    },
+    {
+      id: 'TF-04',
+      beschreibung: 'Person per Id abrufen',
+      vorbedingung: 'TF-02 wurde ausgeführt',
+      schritte: ['GET auf /api/v1/persons/1'],
+      erwartet: <>Status <code>200</code>, Antwort enthält <code>"firstname":"Anna"</code>.</>
+    },
+    {
+      id: 'TF-05',
+      beschreibung: 'Unbekannte Id liefert 404',
+      vorbedingung: 'Anwendung läuft',
+      schritte: ['GET auf /api/v1/persons/99'],
+      erwartet: <>Status <code>404</code>. Der Rumpf enthält <code>"detail"</code> mit der Meldung zur Id 99 — <b>nicht</b> Status 200 mit leerem Inhalt.</>
+    },
+    {
+      id: 'TF-06',
+      beschreibung: 'Daten sind in der Datenbank angekommen',
+      vorbedingung: 'TF-02 und TF-03 wurden ausgeführt',
+      schritte: ['H2-Console öffnen und verbinden', 'SELECT * FROM PERSON; ausführen'],
+      erwartet: <>Die Ergebnistabelle zeigt genau zwei Zeilen mit den Ids 1 und 2.</>
+    },
+    {
+      id: 'TF-07',
+      beschreibung: 'Daten sind nach Neustart weg',
+      vorbedingung: 'TF-02 und TF-03 wurden ausgeführt',
+      schritte: ['Anwendung beenden und neu starten', 'GET auf /api/v1/persons/1'],
+      erwartet: <>Status <code>404</code> — die In-Memory-Datenbank war leer beim Start.</>
+    }
+  ]}
+/>
+
+:::note TF-07 ist kein Fehler
+Dass die Daten nach einem Neustart verschwunden sind, ist **gewollt**: `jdbc:h2:mem:` bedeutet Hauptspeicher.
+
+Im nächsten Tutorial stellst du auf eine dateibasierte Datenbank um und siehst den Unterschied.
+:::
+
+## Zusammenfassung
+
+:::tip Das hast du gelernt
+- `@Entity` macht aus einer Java-Klasse eine Datenbanktabelle; `@Id` und `@GeneratedValue` regeln den Primärschlüssel.
+- Ein **Repository** ist nur ein Interface — Spring Data erzeugt die Implementierung zur Laufzeit.
+- **Konstruktor-Injektion**: Spring reicht benötigte Objekte von außen hinein; das Feld kann `final` sein.
+- `@RequestBody` wandelt JSON in ein Java-Objekt, der Rückgabewert wird wieder zu JSON.
+- `201 Created` nach dem Anlegen, `404 Not Found` bei unbekannter Id — nie `200` mit leerem Inhalt.
+- Eine Entität kann **kein Record** sein: Hibernate braucht den parameterlosen Konstruktor und veränderbare Felder.
+:::
+
+## Selbstkontrolle
+
+1. Was passiert beim Anwendungsstart mit einer Klasse, die `@Entity` trägt?
+2. Warum musst du `PersonRepository` nicht implementieren?
+3. Was ist der Unterschied zwischen `@PathVariable` und `@RequestBody`?
+4. Warum liefert `findById()` ein `Optional` und nicht direkt ein `Person`-Objekt?
+5. Ein Kollege gibt bei unbekannter Id `200 OK` mit dem Inhalt `null` zurück. Nenne zwei Nachteile.
+6. Nenne zwei Gründe, warum eine JPA-Entität kein Record sein kann.
+
+<details>
+<summary>Antworten</summary>
+
+1. Hibernate liest die Annotationen und erzeugt eine passende Tabelle. Jedes Attribut wird zu einer Spalte, das mit `@Id` markierte zum Primärschlüssel.
+2. Spring Data erzeugt die Implementierung zur Laufzeit aus dem Interface. Aus `JpaRepository<Person, Long>` leitet es Entitätstyp und Schlüsseltyp ab und stellt alle CRUD-Methoden bereit.
+3. `@PathVariable` bindet einen Teil der **URL** an einen Parameter. `@RequestBody` wandelt den **Rumpf** der Anfrage in ein Java-Objekt um.
+4. Weil es sein kann, dass zu der Id nichts existiert. Das `Optional` macht diesen Fall sichtbar und zwingt den Aufrufer, ihn zu behandeln — statt stillschweigend `null` zurückzugeben.
+5. Erstens muss der Client den Rumpf auswerten, um überhaupt zu merken, dass etwas fehlt — der Statuscode allein sagt „alles in Ordnung". Zweitens lässt sich „nicht gefunden" nicht mehr von „gefunden, aber leer" unterscheiden.
+6. Erstens braucht Hibernate einen parameterlosen Konstruktor, den ein Record nicht hat. Zweitens sind die Felder eines Records `final` — Hibernate muss aber die erzeugte `id` nachträglich setzen und Änderungen erkennen können.
+
+</details>

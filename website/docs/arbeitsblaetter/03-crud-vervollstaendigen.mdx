@@ -1,0 +1,358 @@
+---
+title: "AB 03 – CRUD vervollständigen"
+sidebar_label: "03 – CRUD vervollständigen"
+slug: 03-crud-vervollstaendigen
+sidebar_position: 3
+---
+
+# AB 03 – Die Schnittstelle vervollständigen
+
+## Die Situation
+
+> Anlegen und Abrufen funktionieren. Die Personalabteilung meldet zurück: Man braucht außerdem eine **Übersicht aller** Personen, muss Daten **ändern** können (Namensänderung nach Heirat) und ausgeschiedene Mitarbeiter **löschen**.
+
+## Lernziele
+
+Nach Bearbeitung dieses Arbeitsblatts kannst du:
+
+- die vier CRUD-Operationen vollständig als REST-Endpunkte umsetzen
+- für jede Operation den passenden HTTP-Statuscode wählen und begründen
+- den Unterschied zwischen `PUT` und `POST` an ihrer **Idempotenz** erklären
+- REST-konforme URLs entwerfen und typische Fehler benennen
+- deine Schnittstelle mit einer Sammlung von Testfällen systematisch prüfen
+
+## Die Zuordnung im Überblick
+
+| Operation | HTTP | Pfad | Erfolgsstatus |
+|---|---|---|---|
+| **C**reate | `POST` | `/api/v1/persons` | `201 Created` |
+| **R**ead (alle) | `GET` | `/api/v1/persons` | `200 OK` |
+| **R**ead (eine) | `GET` | `/api/v1/persons/{id}` | `200 OK` |
+| **U**pdate | `PUT` | `/api/v1/persons/{id}` | `200 OK` |
+| **D**elete | `DELETE` | `/api/v1/persons/{id}` | `204 No Content` |
+
+:::tip Sieh dir die Pfade genau an
+Es gibt nur **zwei** verschiedene Pfade — `/persons` und `/persons/{id}`. Fünf Operationen, zwei Adressen. Den Unterschied macht allein die HTTP-Methode.
+
+Genau das meint die *einheitliche Schnittstelle* aus dem Infoblatt [Das REST-Paradigma](../infoblaetter/rest-paradigma).
+:::
+
+## Aufgaben
+
+### Aufgabe 1 – Alle Personen abrufen
+
+<Task id="ab03-a1">Ergänze im `PersonController` einen Endpunkt, der alle Personen zurückgibt.</Task>
+
+```java
+@GetMapping
+public List<Person> getAllPersons() {
+    return repository.findAll();
+}
+```
+
+Beachte: Kein Pfad in der Annotation. Der Endpunkt liegt genau auf dem Klassenpfad `/api/v1/persons`.
+
+![Alle Personen als JSON-Array im Browser](/img/03-persons.png)
+
+:::warning Warum nicht `/persons/all` oder `/getAllPersons`?
+Weil die Sammlung **selbst** schon die Adresse ist. `/persons` bedeutet „die Personen" — alle davon.
+
+`/getAllPersons` wäre gleich doppelt falsch: ein Verb in der URL, obwohl `GET` das Verb schon liefert.
+:::
+
+### Aufgabe 2 – Eine Person ändern
+
+<Task id="ab03-a2">Implementiere den `PUT`-Endpunkt.</Task>
+
+```java
+@PutMapping("/{id}")
+public Person updatePerson(@PathVariable Long id, @RequestBody Person person) {
+    Person existing = repository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "Keine Person mit der Id " + id));
+
+    existing.setFirstname(person.getFirstname());
+    existing.setSurname(person.getSurname());
+
+    return repository.save(existing);
+}
+```
+
+:::danger Ein häufiger Anfängerfehler
+Naheliegend wäre:
+
+```java
+person.setId(id);
+return repository.save(person);   // ❌
+```
+
+Das funktioniert scheinbar — hat aber einen Haken: Es überschreibt **alle** Felder mit dem, was der Client geschickt hat. Kommen später Felder dazu, die der Client gar nicht kennt (etwa ein Anlagedatum), werden sie stillschweigend geleert.
+
+Der Weg über `findById` lädt erst den vorhandenen Stand und ändert gezielt nur, was geändert werden soll.
+:::
+
+### Aufgabe 3 – Eine Person löschen
+
+<Task id="ab03-a3">Implementiere den `DELETE`-Endpunkt.</Task>
+
+```java
+@DeleteMapping("/{id}")
+@ResponseStatus(HttpStatus.NO_CONTENT)
+public void deletePersonById(@PathVariable Long id) {
+    if (!repository.existsById(id)) {
+        throw new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "Keine Person mit der Id " + id);
+    }
+    repository.deleteById(id);
+}
+```
+
+Zwei Besonderheiten:
+
+**Rückgabetyp `void`.** Es gibt nichts zurückzugeben — die Ressource ist weg.
+
+**`204 No Content`** statt `200 OK`. Der Code sagt genau das aus: erfolgreich, aber kein Inhalt in der Antwort.
+
+:::note Warum die Prüfung mit `existsById`?
+`deleteById()` wirft bei einer unbekannten Id **keine** Ausnahme, sondern tut schlicht nichts.
+
+Ohne die Prüfung würde jeder `DELETE` mit `204` antworten — auch für Datensätze, die es nie gab. Der Client könnte dann nicht unterscheiden, ob er etwas gelöscht hat oder ins Leere griff.
+:::
+
+### Aufgabe 4 – Idempotenz beobachten
+
+Jetzt geht es um eine Eigenschaft, die man dem Code nicht ansieht — nur dem Verhalten.
+
+#### Was heißt „idempotent"?
+
+Eine Operation ist **idempotent**, wenn es keinen Unterschied macht, ob man sie **einmal oder mehrfach** ausführt: Danach sieht die Welt genauso aus.
+
+Das Wort kommt aus dem Lateinischen: *idem* = dasselbe, *potens* = wirkend. Also **„dieselbe Wirkung"**, egal wie oft.
+
+Zwei Beispiele aus dem Alltag:
+
+| Handlung | Einmal | Dreimal | |
+|---|---|---|---|
+| Im Aufzug auf **3** drücken | du bist im 3. Stock | du bist im 3. Stock | ✅ idempotent |
+| Ein Stück Kuchen **nehmen** | eins auf dem Teller | drei auf dem Teller | ❌ nicht idempotent |
+
+Bei Anweisungen an einen Server ist es genau dasselbe. Achte auf das Verb:
+
+- „**Setze** den Nachnamen auf Meier." → Danach heißt sie Meier. Ob du es einmal oder zehnmal sagst, ändert nichts. **Idempotent.**
+- „**Lege** eine neue Person an." → Dreimal gesagt, dreimal angelegt. **Nicht idempotent.**
+
+:::warning Ein häufiges Missverständnis
+Idempotent heißt **nicht**, dass nichts passiert. Beim ersten Mal verändert sich sehr wohl etwas.
+
+Es heißt nur: **Wiederholungen verändern nichts zusätzlich.**
+:::
+
+#### Jetzt selbst nachprüfen
+
+Statt es zu glauben, probierst du es aus.
+
+<Task id="ab03-a4-post">Führe denselben `POST`-Request **dreimal** aus. Sieh danach in `GET /api/v1/persons` nach.</Task>
+
+<Task id="ab03-a4-put">Führe denselben `PUT`-Request auf eine vorhandene Id **dreimal** aus. Sieh wieder nach.</Task>
+
+<Task id="ab03-a4-delete">Führe denselben `DELETE`-Request **zweimal** aus. Vergleiche die beiden Statuscodes.</Task>
+
+| Methode | Nach dreimaligem Ausführen | Idempotent? |
+|---|---|---|
+| `POST` | **drei** Datensätze | nein |
+| `PUT` | **ein** Datensatz, unverändert | ja |
+| `DELETE` | weg — beim zweiten Mal `404` | ja |
+
+:::tip Warum das praktisch zählt
+Ein Client schickt eine Bestellung per `POST` und bekommt wegen einer Netzstörung keine Antwort. Darf er es erneut versuchen?
+
+**Nein** — die Bestellung könnte schon angelegt sein. Bei `PUT` und `DELETE` wäre ein zweiter Versuch dagegen unbedenklich.
+
+Das ist der Grund für den Hinweis „Bitte nicht zweimal klicken" auf Bezahlseiten.
+
+Eine Übersicht über alle HTTP-Methoden — und dazu den verwandten Begriff **sicher** — findest du im Infoblatt [Das REST-Paradigma](../infoblaetter/rest-paradigma#sicher-und-idempotent).
+:::
+
+### Aufgabe 5 – Die Request-Sammlung vervollständigen
+
+<Task id="ab03-a5">Ergänze `requests.http` um alle fehlenden Aufrufe.</Task>
+
+```http title="requests.http"
+### Alle Personen
+GET http://localhost:8080/api/v1/persons
+
+### Person ändern
+PUT http://localhost:8080/api/v1/persons/1
+Content-Type: application/json
+
+{
+  "firstname": "Anna",
+  "surname": "Schmidt-Meier"
+}
+
+### Person löschen
+DELETE http://localhost:8080/api/v1/persons/2
+
+### Löschen, was es nicht gibt
+DELETE http://localhost:8080/api/v1/persons/999
+```
+
+:::info Warum eine Datei und nicht nur Klicks in einem Werkzeug?
+`requests.http` liegt **im Projekt**. Die Datei wandert mit in die Versionsverwaltung, jeder im Team hat dieselben Aufrufe, und bei einer Änderung der Schnittstelle sieht man im Diff, was sich geändert hat.
+
+Eine Sammlung, die nur lokal in einem Programm liegt, hat niemand außer dir.
+:::
+
+### Aufgabe 6 – URL-Entwurf beurteilen
+
+<Task id="ab03-a6">Beurteile jede Zeile: REST-konform oder nicht? Formuliere die schlechten um.</Task>
+
+| # | Aufruf | Dein Urteil |
+|---|---|---|
+| 1 | `GET /api/v1/persons/17` | |
+| 2 | `POST /api/v1/deletePerson/17` | |
+| 3 | `GET /api/v1/persons?surname=Schmidt` | |
+| 4 | `GET /api/v1/person/all` | |
+| 5 | `PUT /api/v1/persons/17` | |
+| 6 | `POST /api/v1/persons/17/setSurname` | |
+
+<details>
+<summary>Auflösung</summary>
+
+1. ✅ Korrekt. Substantiv in der Mehrzahl, Id als Pfadbestandteil.
+2. ❌ Verb in der URL, und `POST` für ein Löschen. Richtig: `DELETE /api/v1/persons/17`.
+3. ✅ Korrekt. Ein **Filter** gehört als Abfrageparameter an die Sammlung — die Ressource bleibt dieselbe.
+4. ❌ Einzahl und ein überflüssiges `/all`. Richtig: `GET /api/v1/persons`.
+5. ✅ Korrekt.
+6. ❌ Verb in der URL, und für eine Änderung ist `PUT` zuständig. Richtig: `PUT /api/v1/persons/17` mit dem neuen Stand im Rumpf.
+
+</details>
+
+### Aufgabe 7 – Vollständige Abnahme
+
+<Task id="ab03-a7">Führe alle Testfälle aus. Alle müssen bestehen, bevor du das Tutorial abschließt.</Task>
+
+<TestTable
+  storageKey="ab03-tests"
+  tests={[
+    {
+      id: 'TF-01',
+      beschreibung: 'Leere Sammlung abrufen',
+      vorbedingung: 'Anwendung frisch gestartet, keine Daten angelegt',
+      schritte: ['GET auf /api/v1/persons'],
+      erwartet: <>Status <code>200</code>, Rumpf ist <code>[]</code> — <b>nicht</b> 404.</>
+    },
+    {
+      id: 'TF-02',
+      beschreibung: 'Alle Personen abrufen',
+      vorbedingung: 'Zwei Personen wurden angelegt',
+      schritte: ['GET auf /api/v1/persons'],
+      erwartet: <>Status <code>200</code>, ein JSON-Array mit genau zwei Objekten.</>
+    },
+    {
+      id: 'TF-03',
+      beschreibung: 'Person ändern',
+      vorbedingung: 'Person mit Id 1 existiert',
+      schritte: ['PUT auf /api/v1/persons/1 mit geändertem Nachnamen', 'GET auf /api/v1/persons/1'],
+      erwartet: <>Status <code>200</code>. Der GET liefert den <b>neuen</b> Nachnamen, die <code>id</code> bleibt <code>1</code>.</>
+    },
+    {
+      id: 'TF-04',
+      beschreibung: 'Nicht vorhandene Person ändern',
+      vorbedingung: 'Es gibt keine Person mit Id 999',
+      schritte: ['PUT auf /api/v1/persons/999'],
+      erwartet: <>Status <code>404</code>. Es wird <b>keine</b> neue Person angelegt.</>
+    },
+    {
+      id: 'TF-05',
+      beschreibung: 'Person löschen',
+      vorbedingung: 'Person mit Id 2 existiert',
+      schritte: ['DELETE auf /api/v1/persons/2', 'GET auf /api/v1/persons/2'],
+      erwartet: <>DELETE liefert <code>204</code> ohne Rumpf, der anschließende GET liefert <code>404</code>.</>
+    },
+    {
+      id: 'TF-06',
+      beschreibung: 'Zweimal löschen',
+      vorbedingung: 'TF-05 wurde ausgeführt',
+      schritte: ['DELETE auf /api/v1/persons/2 erneut ausführen'],
+      erwartet: <>Status <code>404</code> — nicht erneut 204.</>
+    },
+    {
+      id: 'TF-07',
+      beschreibung: 'POST ist nicht idempotent',
+      vorbedingung: 'Datenbank ist leer',
+      schritte: ['Denselben POST dreimal ausführen', 'GET auf /api/v1/persons'],
+      erwartet: <>Drei Objekte mit <b>verschiedenen</b> Ids.</>
+    },
+    {
+      id: 'TF-08',
+      beschreibung: 'PUT ist idempotent',
+      vorbedingung: 'Person mit Id 1 existiert',
+      schritte: ['Denselben PUT dreimal ausführen', 'GET auf /api/v1/persons'],
+      erwartet: <>Weiterhin genau <b>ein</b> Datensatz, unverändert.</>
+    },
+    {
+      id: 'TF-09',
+      beschreibung: 'Fehlerhaftes JSON wird abgewiesen',
+      vorbedingung: 'Anwendung läuft',
+      schritte: ['POST auf /api/v1/persons mit dem Rumpf {"firstname": '],
+      erwartet: <>Status <code>400</code> (Bad Request) — nicht 500.</>
+    },
+    {
+      id: 'TF-10',
+      beschreibung: 'Falsche Methode auf der Sammlung',
+      vorbedingung: 'Anwendung läuft',
+      schritte: ['DELETE auf /api/v1/persons (ohne Id)'],
+      erwartet: <>Status <code>405</code> (Method Not Allowed).</>
+    }
+  ]}
+/>
+
+:::warning TF-01 ist der Testfall, den man am ehesten falsch baut
+Eine leere Sammlung ist **kein Fehler**. `/persons` existiert, sie ist nur gerade leer — also `200 OK` mit `[]`.
+
+`404` würde bedeuten, dass es die Sammlung gar nicht gibt. Das ist etwas anderes.
+
+Der Unterschied zwischen `[]` und `null` ist im Infoblatt [JSON](../infoblaetter/json) genauer beschrieben.
+:::
+
+## Ausblick
+
+Deine Schnittstelle ist vollständig, aber noch nicht robust. Diese Fragen bleiben offen:
+
+- Was passiert, wenn jemand eine Person **ohne Namen** anlegt? *(→ Validierung)*
+- Warum verschwinden alle Daten beim Neustart? *(→ dauerhafte Speicherung)*
+- Der Controller redet direkt mit der Datenbank — wohin gehört eigentlich die Fachlogik? *(→ Service-Schicht)*
+- Du hast alle Testfälle **von Hand** ausgeführt. Beim nächsten Mal wieder? *(→ automatisierte Tests)*
+
+Damit geht es im nächsten Tutorial weiter.
+
+## Zusammenfassung
+
+:::tip Das hast du gelernt
+- Alle vier CRUD-Operationen liegen auf **zwei** Pfaden; unterschieden wird über die HTTP-Methode.
+- `201` beim Anlegen, `200` beim Lesen und Ändern, `204` beim Löschen, `404` bei unbekannter Id.
+- Eine **leere Sammlung** ist `200` mit `[]`, nicht `404`.
+- `POST` ist **nicht idempotent**, `PUT` und `DELETE` sind es.
+- In REST-URLs gehören **Substantive**; Filter kommen als Abfrageparameter an die Sammlung.
+- `deleteById()` wirft bei unbekannter Id keine Ausnahme — deshalb vorher prüfen.
+:::
+
+## Selbstkontrolle
+
+1. Warum liegt der Endpunkt für „alle Personen" auf demselben Pfad wie der zum Anlegen?
+2. Welchen Statuscode liefert ein erfolgreiches `DELETE` und warum nicht `200`?
+3. Erkläre an einem Beispiel, warum `POST` nicht idempotent ist.
+4. Wie unterscheidet ein Client „Sammlung ist leer" von „Sammlung gibt es nicht"?
+5. Warum ist `PUT /persons/17` besser als `POST /persons/17/setSurname`?
+
+<details>
+<summary>Antworten</summary>
+
+1. Weil beide auf dieselbe **Ressource** wirken — die Sammlung aller Personen. Unterschieden wird über die Methode: `GET` liest sie, `POST` fügt ihr etwas hinzu.
+2. `204 No Content`. Es gibt nichts zurückzugeben; `200` würde einen Inhalt ankündigen, der nicht kommt.
+3. Dreimal `POST /persons` mit denselben Daten erzeugt **drei** Datensätze mit drei verschiedenen Ids. Das Ergebnis hängt davon ab, wie oft man die Anfrage schickt — genau das ist nicht idempotent.
+4. Über den Statuscode: `200` mit `[]` heißt „gibt es, ist leer". `404` heißt „gibt es nicht".
+5. Weil `setSurname` ein Verb in der URL ist und eine einzelne Methode nach außen sichtbar macht. `PUT` drückt „ersetze diese Ressource" bereits aus; welche Felder sich ändern, steht im Rumpf. Sonst bräuchte man für jedes Feld einen eigenen Endpunkt.
+
+</details>
