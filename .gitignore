@@ -40,3 +40,6 @@ Thumbs.db
 # Zwischenstände
 # ---------------------------------------------------------------
 _screenshots/dia-*.png
+
+# Lokale Vorschau-Verknuepfungen (nur zum Pruefen der Produktiv-Pfade)
+_serve/
