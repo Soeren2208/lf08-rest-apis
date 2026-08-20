@@ -84,7 +84,7 @@ löst sofort eine Veröffentlichung aus — das ist möglich, aber ungeprüft.
 
 ---
 
-## Zwei Dinge, die man wissen muss
+## Drei Dinge, die man wissen muss
 
 ### 1. Die Infoblätter liegen doppelt
 
@@ -107,6 +107,55 @@ future: {
 Mit `v4: true` werden **Admonitions** (`:::info`, `:::tip`, `:::warning` …) nicht
 mehr geparst und erscheinen als roher Text mit sichtbaren Doppelpunkten.
 Nachgewiesen mit Docusaurus 3.10.2. Bitte nicht umstellen, ohne das zu prüfen.
+
+### 3. In SVG-Diagrammen darf `<text>` nur ein Kind haben
+
+Die Diagramme in den Arbeits- und Infoblättern sind handgezeichnetes SVG,
+direkt im Markdown. Dabei gibt es eine Falle, die **ohne Fehlermeldung**
+zuschlägt: Ein `<text>`-Element rendert nur, wenn es **genau ein** Kind hat.
+
+Sobald sich Text und ein JSX-Ausdruck mischen — oder der Inhalt über mehrere
+Zeilen verteilt ist — erscheint die Zeile im fertigen Bild **gar nicht**.
+Der Build läuft trotzdem grün durch.
+
+```jsx
+{/* ❌ rendert nichts: Text und Ausdruck gemischt */}
+<text x="20" y="40">{"{"} "id": 1,</text>
+
+{/* ❌ rendert nichts: Inhalt über mehrere Zeilen */}
+<text x="20" y="40">
+  das Feld ist final
+</text>
+
+{/* ✅ genau ein Textknoten */}
+<text x="20" y="40">das Feld ist final</text>
+
+{/* ✅ genau ein Ausdruck — so schreibt man Zeichen wie { } */}
+<text x="20" y="40">{'{ "id": 1,'}</text>
+```
+
+Weitere Konventionen für diese Diagramme:
+
+- Farben immer über die Docusaurus-Variablen (`var(--ifm-color-primary)`,
+  `var(--ifm-color-emphasis-300)` …), damit Hell- und Dunkelmodus funktionieren.
+- **Ausnahme:** Text auf farbigen Flächen — etwa eine Ziffer in einem grünen
+  Kreis — bekommt `fill="#ffffff"`. `var(--ifm-background-color)` greift dort
+  im Hellmodus nicht.
+- JSX-Schreibweise beachten: `strokeWidth`, `textAnchor`, `fontSize`,
+  `strokeDasharray` — nicht die Bindestrich-Varianten.
+- Jedes Diagramm bekommt `role="img"` und ein `aria-label`.
+
+**Immer nachsehen, nicht nur bauen.** Ob ein Diagramm wirklich stimmt, zeigt nur
+das gerenderte Bild:
+
+```bash
+cd _screenshots
+node infoblaetter.mjs          # alle Infoblätter, hell und dunkel
+node infoblaetter.mjs json     # nur ein bestimmtes
+```
+
+Das Skript erwartet eine laufende Vorschau unter den Produktiv-Pfaden
+(siehe Kommentar im Skript).
 
 ---
 
