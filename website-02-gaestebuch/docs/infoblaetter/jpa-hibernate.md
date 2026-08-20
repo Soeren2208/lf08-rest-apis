@@ -56,15 +56,89 @@ Diese 15 Zeilen holen **einen** Datensatz. Dazu kämen `save`, `update`, `delete
 
 Ein **objektrelationaler Mapper** (kurz **O/R-Mapper** oder **ORM**) übernimmt genau diese Übersetzung. Du sagst, *was* passieren soll — er erzeugt das passende SQL.
 
-```mermaid
-flowchart LR
-    A["Dein Code<br/>repository.save(person)"] --> B["O/R-Mapper<br/>(Hibernate)"]
-    B --> C["SQL<br/>insert into person ..."]
-    C --> D[(Datenbank)]
-    D --> C2["Ergebniszeilen"]
-    C2 --> B
-    B --> A2["Java-Objekte"]
-```
+<svg viewBox="0 0 720 400" width="100%" role="img"
+     aria-label="Hibernate übersetzt zwischen der Objektwelt und der Tabellenwelt"
+     fontFamily="var(--ifm-font-family-base)">
+
+  {/* ---- linke Welt: Objekte ---- */}
+  <text x="112" y="24" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ifm-color-primary)">Welt der Objekte</text>
+  <g transform="translate(14,38)">
+    <rect width="196" height="196" rx="12" fill="var(--ifm-color-primary)" opacity="0.10"/>
+    <rect width="196" height="196" rx="12" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="1.8"/>
+    <g transform="translate(24,24)" stroke="var(--ifm-color-primary)" strokeWidth="1.8" fill="none">
+      <path d="M0 8 L14 0 L28 8 L28 24 L14 32 L0 24 Z"/>
+      <path d="M0 8 L14 16 L28 8 M14 16 L14 32"/>
+    </g>
+    <text x="66" y="44" fontSize="13.5" fontWeight="700" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-font-color-base)">Person</text>
+    <text x="24" y="86" fontSize="11.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">id = 1</text>
+    <text x="24" y="106" fontSize="11.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">firstname = "Anna"</text>
+    <text x="24" y="126" fontSize="11.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">surname = "Schmidt"</text>
+    <text x="24" y="160" fontSize="11" fill="var(--ifm-color-emphasis-700)">Referenzen, Vererbung,</text>
+    <text x="24" y="176" fontSize="11" fill="var(--ifm-color-emphasis-700)">Methoden</text>
+  </g>
+
+  {/* ---- Hibernate in der Mitte ---- */}
+  <g transform="translate(238,38)">
+    <rect width="244" height="196" rx="12" fill="var(--ifm-color-emphasis-100)" stroke="var(--ifm-color-emphasis-500)" strokeWidth="2"/>
+    <text x="122" y="34" textAnchor="middle" fontSize="15" fontWeight="700" fill="var(--ifm-font-color-base)">Hibernate</text>
+    <text x="122" y="54" textAnchor="middle" fontSize="11.5" fill="var(--ifm-color-emphasis-700)">der O/R-Mapper — übersetzt</text>
+
+    <rect x="24" y="76" width="196" height="42" rx="8" fill="var(--ifm-background-color)" stroke="var(--ifm-color-emphasis-400)"/>
+    <text x="122" y="94" textAnchor="middle" fontSize="11" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">repository.save(person)</text>
+    <text x="122" y="110" textAnchor="middle" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">du schreibst das</text>
+
+    <path d="M136 122 L136 136" stroke="var(--ifm-color-emphasis-600)" strokeWidth="1.8"/>
+    <path d="M131 130 L136 138 L141 130" fill="none" stroke="var(--ifm-color-emphasis-600)" strokeWidth="1.8"/>
+
+    <rect x="24" y="140" width="196" height="42" rx="8" fill="var(--ifm-background-color)" stroke="var(--ifm-color-emphasis-400)"/>
+    <text x="122" y="158" textAnchor="middle" fontSize="10.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">insert into person ...</text>
+    <text x="122" y="174" textAnchor="middle" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">Hibernate erzeugt das</text>
+  </g>
+
+  {/* Pfeile zwischen den Welten */}
+  <path d="M214 118 L232 118" stroke="var(--ifm-color-emphasis-600)" strokeWidth="2"/>
+  <path d="M225 113 L234 118 L225 123" fill="none" stroke="var(--ifm-color-emphasis-600)" strokeWidth="2"/>
+  <path d="M488 118 L506 118" stroke="var(--ifm-color-emphasis-600)" strokeWidth="2"/>
+  <path d="M499 113 L508 118 L499 123" fill="none" stroke="var(--ifm-color-emphasis-600)" strokeWidth="2"/>
+
+  {/* ---- rechte Welt: Tabelle ---- */}
+  <text x="608" y="24" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ifm-color-emphasis-700)">Welt der Tabellen</text>
+  <g transform="translate(510,38)">
+    <rect width="196" height="196" rx="12" fill="var(--ifm-color-emphasis-200)" opacity="0.5"/>
+    <rect width="196" height="196" rx="12" fill="none" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.8"/>
+    <text x="98" y="30" textAnchor="middle" fontSize="12.5" fontWeight="700" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-font-color-base)">PERSON</text>
+
+    <rect x="18" y="44" width="160" height="26" fill="var(--ifm-color-emphasis-300)"/>
+    <rect x="18" y="70" width="160" height="26" fill="var(--ifm-background-color)"/>
+    <rect x="18" y="96" width="160" height="26" fill="var(--ifm-background-color)"/>
+    <path d="M18 44 L178 44 L178 122 L18 122 Z M18 70 L178 70 M18 96 L178 96 M50 44 L50 122 M114 44 L114 122"
+          fill="none" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.2"/>
+    <text x="26" y="61" fontSize="9" fontWeight="700" fill="var(--ifm-color-emphasis-800)">ID</text>
+    <text x="57" y="61" fontSize="9" fontWeight="700" fill="var(--ifm-color-emphasis-800)">FIRSTNAME</text>
+    <text x="121" y="61" fontSize="9" fontWeight="700" fill="var(--ifm-color-emphasis-800)">SURNAME</text>
+    <text x="26" y="87" fontSize="10" fill="var(--ifm-color-emphasis-800)">1</text>
+    <text x="58" y="87" fontSize="10" fill="var(--ifm-color-emphasis-800)">Anna</text>
+    <text x="122" y="87" fontSize="10" fill="var(--ifm-color-emphasis-800)">Schmidt</text>
+    <text x="26" y="113" fontSize="10" fill="var(--ifm-color-emphasis-800)">2</text>
+    <text x="58" y="113" fontSize="10" fill="var(--ifm-color-emphasis-800)">Ben</text>
+    <text x="122" y="113" fontSize="10" fill="var(--ifm-color-emphasis-800)">Kaya</text>
+
+    <text x="18" y="150" fontSize="11" fill="var(--ifm-color-emphasis-700)">Fremdschlüssel, Zeilen,</text>
+    <text x="18" y="166" fontSize="11" fill="var(--ifm-color-emphasis-700)">keine Vererbung</text>
+  </g>
+
+  {/* Rueckweg */}
+  <path d="M600 246 C600 286 360 286 360 246" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2" strokeDasharray="6 4"/>
+  <path d="M355 254 L360 244 L365 254" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2"/>
+  <path d="M232 246 C232 286 120 286 120 246" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2" strokeDasharray="6 4"/>
+  <path d="M115 254 L120 244 L125 254" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2"/>
+  <text x="360" y="304" textAnchor="middle" fontSize="11.5" fill="var(--ifm-color-primary)">und denselben Weg zurück: aus Zeilen werden wieder Objekte</text>
+
+  {/* Fazit */}
+  <rect x="14" y="326" width="692" height="60" rx="10" fill="var(--ifm-color-emphasis-100)" stroke="var(--ifm-color-emphasis-300)"/>
+  <text x="360" y="350" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="var(--ifm-color-emphasis-800)">Du schreibst nur die linke Seite — das SQL entsteht von selbst</text>
+  <text x="360" y="372" textAnchor="middle" fontSize="11.5" fill="var(--ifm-color-emphasis-700)">Mit spring.jpa.show-sql=true kannst du im Log mitlesen, was Hibernate daraus macht</text>
+</svg>
 
 Der O/R-Mapper in deinem Projekt heißt **Hibernate**. Er ist der verbreitetste der Java-Welt.
 
@@ -121,13 +195,61 @@ Genau solche Entscheidungen nimmt dir ein O/R-Mapper ab.
 
 In deinem Projekt tauchen drei Bezeichnungen auf, die scheinbar dasselbe meinen. Sie meinen aber **drei verschiedene Ebenen**:
 
-```mermaid
-flowchart TD
-    A["<b>Spring Data JPA</b><br/>Der Komfort obendrauf.<br/>Erzeugt Repositories aus einem Interface."] --> B
-    B["<b>JPA</b> — Jakarta Persistence API<br/>Die <i>Spezifikation</i>. Legt Annotationen und<br/>Methoden fest, enthält aber keinen Code."] --> C
-    C["<b>Hibernate</b><br/>Die <i>Implementierung</i>. Erzeugt das SQL<br/>und redet mit der Datenbank."] --> D
-    D[(Datenbank)]
-```
+<svg viewBox="0 0 720 400" width="100%" role="img"
+     aria-label="Drei Ebenen: Spring Data JPA, die Spezifikation JPA und die Implementierung Hibernate"
+     fontFamily="var(--ifm-font-family-base)">
+
+  <text x="16" y="22" fontSize="12.5" fontWeight="700" fill="var(--ifm-color-emphasis-700)">Dein Code steht ganz oben</text>
+
+  {/* Ebene 1 */}
+  <g transform="translate(14,34)">
+    <rect width="692" height="80" rx="11" fill="var(--ifm-color-primary)" opacity="0.14"/>
+    <rect width="692" height="80" rx="11" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2"/>
+    <text x="24" y="32" fontSize="15" fontWeight="700" fill="var(--ifm-font-color-base)">Spring Data JPA</text>
+    <text x="24" y="54" fontSize="12" fill="var(--ifm-color-emphasis-800)">Der Komfort obendrauf — erzeugt aus deinem Interface ein fertiges Repository</text>
+    <text x="24" y="70" fontSize="11" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-primary)">interface PersonRepository extends JpaRepository</text>
+    <rect x="560" y="20" width="108" height="42" rx="8" fill="var(--ifm-background-color)" stroke="var(--ifm-color-primary)"/>
+    <text x="614" y="38" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--ifm-color-primary)">von Spring</text>
+    <text x="614" y="53" textAnchor="middle" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">bequem</text>
+  </g>
+  <path d="M360 118 L360 134" stroke="var(--ifm-color-emphasis-600)" strokeWidth="2"/>
+  <path d="M355 128 L360 137 L365 128" fill="none" stroke="var(--ifm-color-emphasis-600)" strokeWidth="2"/>
+
+  {/* Ebene 2 */}
+  <g transform="translate(14,140)">
+    <rect width="692" height="80" rx="11" fill="var(--ifm-background-color)" stroke="var(--ifm-color-emphasis-500)" strokeWidth="2" strokeDasharray="7 5"/>
+    <text x="24" y="32" fontSize="15" fontWeight="700" fill="var(--ifm-font-color-base)">JPA — Jakarta Persistence API</text>
+    <text x="24" y="54" fontSize="12" fill="var(--ifm-color-emphasis-800)">Die Spezifikation. Legt fest, was Annotationen bedeuten — führt selbst nichts aus.</text>
+    <text x="24" y="70" fontSize="11" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-700)">@Entity  @Id  @GeneratedValue</text>
+    <rect x="560" y="20" width="108" height="42" rx="8" fill="var(--ifm-color-emphasis-100)" stroke="var(--ifm-color-emphasis-500)"/>
+    <text x="614" y="38" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--ifm-color-emphasis-800)">nur Regeln</text>
+    <text x="614" y="53" textAnchor="middle" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">kein Code</text>
+  </g>
+  <path d="M360 224 L360 240" stroke="var(--ifm-color-emphasis-600)" strokeWidth="2"/>
+  <path d="M355 234 L360 243 L365 234" fill="none" stroke="var(--ifm-color-emphasis-600)" strokeWidth="2"/>
+
+  {/* Ebene 3 */}
+  <g transform="translate(14,246)">
+    <rect width="692" height="80" rx="11" fill="var(--ifm-color-emphasis-200)" opacity="0.6"/>
+    <rect width="692" height="80" rx="11" fill="none" stroke="var(--ifm-color-emphasis-600)" strokeWidth="2"/>
+    <text x="24" y="32" fontSize="15" fontWeight="700" fill="var(--ifm-font-color-base)">Hibernate</text>
+    <text x="24" y="54" fontSize="12" fill="var(--ifm-color-emphasis-800)">Die Implementierung. Hält sich an die Regeln, erzeugt das SQL und redet mit der Datenbank.</text>
+    <text x="24" y="70" fontSize="11" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-700)">insert into person (firstname, surname, id) values (?, ?, ?)</text>
+    <rect x="560" y="20" width="108" height="42" rx="8" fill="var(--ifm-background-color)" stroke="var(--ifm-color-emphasis-600)"/>
+    <text x="614" y="38" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--ifm-color-emphasis-800)">macht die</text>
+    <text x="614" y="53" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--ifm-color-emphasis-800)">Arbeit</text>
+  </g>
+  <path d="M360 330 L360 346" stroke="var(--ifm-color-emphasis-600)" strokeWidth="2"/>
+  <path d="M355 340 L360 349 L365 340" fill="none" stroke="var(--ifm-color-emphasis-600)" strokeWidth="2"/>
+
+  {/* Datenbank */}
+  <g transform="translate(298,352)">
+    <path d="M0 8 C0 3 27 0 62 0 C97 0 124 3 124 8 L124 38 C124 43 97 46 62 46 C27 46 0 43 0 38 Z"
+          fill="var(--ifm-color-emphasis-200)" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.6"/>
+    <path d="M0 8 C0 13 27 16 62 16 C97 16 124 13 124 8" fill="none" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.6"/>
+    <text x="62" y="36" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="var(--ifm-font-color-base)">Datenbank</text>
+  </g>
+</svg>
 
 | Name | Was es ist | Woher kommt es |
 |---|---|---|

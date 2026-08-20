@@ -162,16 +162,90 @@ Die zweite Anfrage trägt ihren Ausweis **selbst mit sich**. Der Server muss sic
 
 Warum ist das so wichtig? Weil man dadurch **beliebig viele Server** hinstellen kann:
 
-```mermaid
-flowchart LR
-    C[Client] --> LB{Lastverteiler}
-    LB --> S1[Server A]
-    LB --> S2[Server B]
-    LB --> S3[Server C]
-    S1 --> DB[(Datenbank)]
-    S2 --> DB
-    S3 --> DB
-```
+<svg viewBox="0 0 720 380" width="100%" role="img"
+     aria-label="Jede Anfrage bringt ihren Ausweis mit und kann deshalb auf jedem Server landen"
+     fontFamily="var(--ifm-font-family-base)">
+
+  {/* Client mit drei Anfragen */}
+  <g transform="translate(14,120)">
+    <rect width="136" height="118" rx="11" fill="var(--ifm-color-emphasis-100)" stroke="var(--ifm-color-emphasis-300)" strokeWidth="1.5"/>
+    <g transform="translate(54,20)" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2" fill="none">
+      <rect x="0" y="0" width="28" height="20" rx="2.5"/>
+      <path d="M-4 25 L32 25" strokeLinecap="round"/>
+    </g>
+    <text x="68" y="70" textAnchor="middle" fontSize="14" fontWeight="700" fill="var(--ifm-font-color-base)">Client</text>
+    <text x="68" y="92" textAnchor="middle" fontSize="11.5" fill="var(--ifm-color-emphasis-700)">schickt drei Anfragen</text>
+  </g>
+
+  {/* drei Anfragen mit Ausweis */}
+  <g transform="translate(160,66)">
+    <rect width="118" height="30" rx="6" fill="var(--ifm-color-primary)" opacity="0.14"/>
+    <rect width="118" height="30" rx="6" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="1.4"/>
+    <rect x="8" y="8" width="15" height="14" rx="2" fill="var(--ifm-color-primary)"/>
+    <text x="32" y="20" fontSize="11" fill="var(--ifm-font-color-base)">Anfrage + Ausweis</text>
+  </g>
+  <g transform="translate(160,164)">
+    <rect width="118" height="30" rx="6" fill="var(--ifm-color-primary)" opacity="0.14"/>
+    <rect width="118" height="30" rx="6" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="1.4"/>
+    <rect x="8" y="8" width="15" height="14" rx="2" fill="var(--ifm-color-primary)"/>
+    <text x="32" y="20" fontSize="11" fill="var(--ifm-font-color-base)">Anfrage + Ausweis</text>
+  </g>
+  <g transform="translate(160,262)">
+    <rect width="118" height="30" rx="6" fill="var(--ifm-color-primary)" opacity="0.14"/>
+    <rect width="118" height="30" rx="6" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="1.4"/>
+    <rect x="8" y="8" width="15" height="14" rx="2" fill="var(--ifm-color-primary)"/>
+    <text x="32" y="20" fontSize="11" fill="var(--ifm-font-color-base)">Anfrage + Ausweis</text>
+  </g>
+
+  <path d="M150 168 C170 168 150 81 158 81" fill="none" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.6"/>
+  <path d="M150 179 L158 179" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.6"/>
+  <path d="M150 190 C170 190 150 277 158 277" fill="none" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.6"/>
+
+  {/* Lastverteiler */}
+  <g transform="translate(300,138)">
+    <rect width="96" height="82" rx="10" fill="var(--ifm-color-emphasis-200)" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.6"/>
+    <text x="48" y="34" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="var(--ifm-font-color-base)">Last-</text>
+    <text x="48" y="52" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="var(--ifm-font-color-base)">verteiler</text>
+    <text x="48" y="70" textAnchor="middle" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">wählt frei</text>
+  </g>
+  <path d="M278 81 L296 160" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.6"/>
+  <path d="M278 179 L296 179" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.6"/>
+  <path d="M278 277 L296 198" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.6"/>
+
+  {/* drei Server */}
+  <g transform="translate(440,58)">
+    <rect width="128" height="56" rx="9" fill="var(--ifm-background-color)" stroke="var(--ifm-color-primary)" strokeWidth="1.6"/>
+    <text x="64" y="26" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ifm-font-color-base)">Server A</text>
+    <text x="64" y="44" textAnchor="middle" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">merkt sich nichts</text>
+  </g>
+  <g transform="translate(440,151)">
+    <rect width="128" height="56" rx="9" fill="var(--ifm-background-color)" stroke="var(--ifm-color-primary)" strokeWidth="1.6"/>
+    <text x="64" y="26" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ifm-font-color-base)">Server B</text>
+    <text x="64" y="44" textAnchor="middle" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">merkt sich nichts</text>
+  </g>
+  <g transform="translate(440,244)">
+    <rect width="128" height="56" rx="9" fill="var(--ifm-background-color)" stroke="var(--ifm-color-primary)" strokeWidth="1.6"/>
+    <text x="64" y="26" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ifm-font-color-base)">Server C</text>
+    <text x="64" y="44" textAnchor="middle" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">merkt sich nichts</text>
+  </g>
+  <path d="M396 160 L436 86" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.6"/>
+  <path d="M396 179 L436 179" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.6"/>
+  <path d="M396 198 L436 272" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.6"/>
+
+  {/* Datenbank */}
+  <g transform="translate(600,140)">
+    <path d="M0 11 C0 5 24 0 52 0 C80 0 104 5 104 11 L104 56 C104 62 80 67 52 67 C24 67 0 62 0 56 Z"
+          fill="var(--ifm-color-emphasis-200)" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.6"/>
+    <path d="M0 11 C0 17 24 22 52 22 C80 22 104 17 104 11" fill="none" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.6"/>
+    <text x="52" y="48" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="var(--ifm-font-color-base)">Datenbank</text>
+  </g>
+  <path d="M568 86 L596 160" stroke="var(--ifm-color-emphasis-400)" strokeWidth="1.4"/>
+  <path d="M568 179 L596 174" stroke="var(--ifm-color-emphasis-400)" strokeWidth="1.4"/>
+  <path d="M568 272 L596 190" stroke="var(--ifm-color-emphasis-400)" strokeWidth="1.4"/>
+
+  <text x="360" y="348" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="var(--ifm-color-emphasis-800)">Weil jede Anfrage ihren Ausweis mitbringt, ist es egal, wo sie landet</text>
+  <text x="360" y="368" textAnchor="middle" fontSize="12" fill="var(--ifm-color-emphasis-700)">Genau deshalb lassen sich beliebig viele Server hinstellen</text>
+</svg>
 
 Landet die erste Anfrage auf Server A und die zweite auf Server C, ist das völlig egal — jede Anfrage bringt alles mit. Bei einem zustandsbehafteten Server müsste Anfrage 2 zwingend wieder bei A landen, sonst kennt niemand die Sitzung.
 
@@ -224,14 +298,70 @@ Das ist der Grund, warum Bezahlseiten „Bitte nicht zweimal klicken" anzeigen.
 
 Leonard Richardson hat eine Leiter mit vier Stufen beschrieben. Dieses Modell ist nützlich, um eine API einzuordnen.
 
-```mermaid
-flowchart BT
-    L0["<b>Stufe 0</b> — Ein einziger Endpunkt<br/>Alles per POST an /api. RPC über HTTP."]
-    L1["<b>Stufe 1</b> — Ressourcen<br/>/persons, /articles bekommen eigene URLs."]
-    L2["<b>Stufe 2</b> — HTTP-Methoden und Statuscodes<br/>GET/POST/PUT/DELETE mit richtiger Bedeutung, 200/201/404 …"]
-    L3["<b>Stufe 3</b> — HATEOAS<br/>Antworten enthalten Links zu den nächsten möglichen Schritten."]
-    L0 --> L1 --> L2 --> L3
-```
+<svg viewBox="0 0 720 400" width="100%" role="img"
+     aria-label="Reifegradmodell nach Richardson als Treppe mit vier Stufen"
+     fontFamily="var(--ifm-font-family-base)">
+
+  {/* Stufe 0 */}
+  <g transform="translate(16,268)">
+    <rect width="164" height="112" rx="10" fill="var(--ifm-color-emphasis-200)" stroke="var(--ifm-color-emphasis-400)" strokeWidth="1.5"/>
+    <text x="14" y="26" fontSize="13" fontWeight="700" fill="var(--ifm-color-emphasis-800)">Stufe 0</text>
+    <text x="14" y="48" fontSize="12" fill="var(--ifm-color-emphasis-800)">Ein einziger</text>
+    <text x="14" y="64" fontSize="12" fill="var(--ifm-color-emphasis-800)">Endpunkt</text>
+    <text x="14" y="88" fontSize="11" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-700)">POST /api</text>
+  </g>
+
+  {/* Stufe 1 */}
+  <g transform="translate(196,212)">
+    <rect width="164" height="168" rx="10" fill="var(--ifm-color-emphasis-200)" stroke="var(--ifm-color-emphasis-400)" strokeWidth="1.5"/>
+    <text x="14" y="26" fontSize="13" fontWeight="700" fill="var(--ifm-color-emphasis-800)">Stufe 1</text>
+    <text x="14" y="48" fontSize="12" fill="var(--ifm-color-emphasis-800)">Ressourcen</text>
+    <text x="14" y="72" fontSize="11" fill="var(--ifm-color-emphasis-700)">Jedes Ding bekommt</text>
+    <text x="14" y="88" fontSize="11" fill="var(--ifm-color-emphasis-700)">eine eigene Adresse</text>
+    <text x="14" y="114" fontSize="11" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-700)">/persons</text>
+    <text x="14" y="132" fontSize="11" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-700)">/articles</text>
+  </g>
+
+  {/* Stufe 2 - hervorgehoben */}
+  <g transform="translate(376,156)">
+    <rect width="164" height="224" rx="10" fill="var(--ifm-color-primary)" opacity="0.16"/>
+    <rect width="164" height="224" rx="10" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2.4"/>
+    <text x="14" y="26" fontSize="13" fontWeight="700" fill="var(--ifm-color-primary)">Stufe 2</text>
+    <text x="14" y="48" fontSize="12" fontWeight="700" fill="var(--ifm-font-color-base)">HTTP-Methoden</text>
+    <text x="14" y="65" fontSize="12" fontWeight="700" fill="var(--ifm-font-color-base)">und Statuscodes</text>
+    <text x="14" y="90" fontSize="11" fill="var(--ifm-color-emphasis-800)">GET, POST, PUT und</text>
+    <text x="14" y="106" fontSize="11" fill="var(--ifm-color-emphasis-800)">DELETE bedeuten das,</text>
+    <text x="14" y="122" fontSize="11" fill="var(--ifm-color-emphasis-800)">was sie sagen</text>
+    <text x="14" y="148" fontSize="11" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">200 · 201 · 404</text>
+    <text x="14" y="184" fontSize="11.5" fontWeight="700" fill="var(--ifm-color-primary)">Das bauen wir</text>
+    <text x="14" y="201" fontSize="11.5" fontWeight="700" fill="var(--ifm-color-primary)">in diesen Tutorials</text>
+  </g>
+
+  {/* Stufe 3 */}
+  <g transform="translate(556,100)">
+    <rect width="150" height="280" rx="10" fill="var(--ifm-background-color)" stroke="var(--ifm-color-emphasis-400)" strokeWidth="1.5" strokeDasharray="6 5"/>
+    <text x="14" y="26" fontSize="13" fontWeight="700" fill="var(--ifm-color-emphasis-700)">Stufe 3</text>
+    <text x="14" y="48" fontSize="12" fill="var(--ifm-color-emphasis-800)">HATEOAS</text>
+    <text x="14" y="72" fontSize="11" fill="var(--ifm-color-emphasis-700)">Antworten enthalten</text>
+    <text x="14" y="88" fontSize="11" fill="var(--ifm-color-emphasis-700)">Links zu den nächsten</text>
+    <text x="14" y="104" fontSize="11" fill="var(--ifm-color-emphasis-700)">möglichen Schritten</text>
+    <text x="14" y="140" fontSize="11" fontWeight="700" fill="var(--ifm-color-emphasis-600)">In der Praxis</text>
+    <text x="14" y="156" fontSize="11" fontWeight="700" fill="var(--ifm-color-emphasis-600)">kaum verbreitet</text>
+  </g>
+
+  {/* Markierung "hier steht die Praxis" */}
+  <g transform="translate(376,104)">
+    <rect width="164" height="34" rx="17" fill="var(--ifm-color-primary)"/>
+    <text x="82" y="22" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="#ffffff">Hier steht die Praxis</text>
+  </g>
+  <path d="M458 138 L458 152" stroke="var(--ifm-color-primary)" strokeWidth="2.4"/>
+  <path d="M452 146 L458 156 L464 146" fill="var(--ifm-color-primary)" stroke="none"/>
+
+  {/* Pfeil "mehr REST" */}
+  <path d="M20 42 L700 42" stroke="var(--ifm-color-emphasis-500)" strokeWidth="2"/>
+  <path d="M692 36 L702 42 L692 48" fill="none" stroke="var(--ifm-color-emphasis-500)" strokeWidth="2"/>
+  <text x="20" y="30" fontSize="12.5" fontWeight="700" fill="var(--ifm-color-emphasis-700)">zunehmend REST-konform</text>
+</svg>
 
 **Wo steht die Praxis?** Ganz überwiegend auf **Stufe 2** — und dort bleibt sie meistens auch. Stufe 3 (HATEOAS) ist der akademisch reine Zustand, hat sich aber breit nicht durchgesetzt; die Aufgabe, einem Client zu erklären, was er als Nächstes tun kann, hat in der Praxis die API-Dokumentation im OpenAPI-Format übernommen.
 

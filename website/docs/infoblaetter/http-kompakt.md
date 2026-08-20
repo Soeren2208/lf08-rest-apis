@@ -11,13 +11,52 @@ HTTP ist die Sprache, in der Client und Server miteinander reden. Jeder Webservi
 
 ## Ein Aufruf besteht aus zwei Nachrichten
 
-```mermaid
-sequenceDiagram
-    participant C as Client
-    participant S as Server
-    C->>S: Request (Anfrage)
-    S-->>C: Response (Antwort)
-```
+<svg viewBox="0 0 720 300" width="100%" role="img"
+     aria-label="Zwei getrennte Aufrufe: nach jeder Antwort ist die Verbindung beendet"
+     fontFamily="var(--ifm-font-family-base)">
+
+  {/* Köpfe */}
+  <g transform="translate(20,10)">
+    <rect width="150" height="40" rx="9" fill="var(--ifm-color-emphasis-100)" stroke="var(--ifm-color-emphasis-300)" strokeWidth="1.5"/>
+    <text x="75" y="26" textAnchor="middle" fontSize="14" fontWeight="700" fill="var(--ifm-font-color-base)">Client</text>
+  </g>
+  <g transform="translate(550,10)">
+    <rect width="150" height="40" rx="9" fill="var(--ifm-color-primary)" opacity="0.12"/>
+    <rect width="150" height="40" rx="9" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="1.6"/>
+    <text x="75" y="26" textAnchor="middle" fontSize="14" fontWeight="700" fill="var(--ifm-font-color-base)">Server</text>
+  </g>
+  <path d="M95 50 L95 290" stroke="var(--ifm-color-emphasis-300)" strokeWidth="1.6" strokeDasharray="5 5"/>
+  <path d="M625 50 L625 290" stroke="var(--ifm-color-primary)" strokeWidth="1.6" strokeDasharray="5 5" opacity="0.5"/>
+
+  {/* Erster Aufruf */}
+  <rect x="70" y="70" width="580" height="76" rx="10" fill="var(--ifm-color-emphasis-100)" opacity="0.6"/>
+  <text x="82" y="88" fontSize="11.5" fontWeight="700" fill="var(--ifm-color-emphasis-700)">Erster Aufruf</text>
+  <path d="M108 108 L611 108" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
+  <path d="M604 103 L613 108 L604 113" fill="none" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
+  <text x="360" y="102" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="var(--ifm-font-color-base)">Request — die Anfrage</text>
+  <path d="M611 132 L108 132" stroke="var(--ifm-color-primary)" strokeWidth="2" strokeDasharray="6 4"/>
+  <path d="M115 127 L106 132 L115 137" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2"/>
+  <text x="360" y="126" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="var(--ifm-color-primary)">Response — die Antwort</text>
+
+  {/* Trennung */}
+  <path d="M70 166 L650 166" stroke="var(--ifm-color-danger)" strokeWidth="1.6" strokeDasharray="7 5"/>
+  <g transform="translate(283,152)">
+    <rect width="154" height="28" rx="14" fill="var(--ifm-background-color)" stroke="var(--ifm-color-danger)" strokeWidth="1.5"/>
+    <text x="77" y="19" textAnchor="middle" fontSize="11.5" fontWeight="700" fill="var(--ifm-color-danger)">Verbindung beendet</text>
+  </g>
+
+  {/* Zweiter Aufruf */}
+  <rect x="70" y="192" width="580" height="76" rx="10" fill="var(--ifm-color-emphasis-100)" opacity="0.6"/>
+  <text x="82" y="210" fontSize="11.5" fontWeight="700" fill="var(--ifm-color-emphasis-700)">Zweiter Aufruf — beginnt bei null</text>
+  <path d="M108 230 L611 230" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
+  <path d="M604 225 L613 230 L604 235" fill="none" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
+  <text x="360" y="224" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="var(--ifm-font-color-base)">Request — die Anfrage</text>
+  <path d="M611 254 L108 254" stroke="var(--ifm-color-primary)" strokeWidth="2" strokeDasharray="6 4"/>
+  <path d="M115 249 L106 254 L115 259" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2"/>
+  <text x="360" y="248" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="var(--ifm-color-primary)">Response — die Antwort</text>
+
+  <text x="360" y="290" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="var(--ifm-color-emphasis-800)">Der Server erinnert sich an den ersten Aufruf nicht — das ist Zustandslosigkeit</text>
+</svg>
 
 Mehr passiert nicht. Der Client fragt, der Server antwortet, die Verbindung ist erledigt. Für die nächste Frage beginnt alles von vorn — genau das meint **Zustandslosigkeit**.
 
@@ -73,6 +112,62 @@ In diesen Tutorials verwenden wir `PUT`.
 ## Statuscodes
 
 Jede Antwort trägt einen dreistelligen Code. Die **erste Ziffer** sagt schon das Wichtigste:
+
+<svg viewBox="0 0 720 250" width="100%" role="img"
+     aria-label="Die fünf Statuscode-Gruppen: 1xx Information, 2xx Erfolg, 3xx Umleitung, 4xx Client-Fehler, 5xx Server-Fehler"
+     fontFamily="var(--ifm-font-family-base)">
+
+  <g transform="translate(14,14)">
+    <rect width="130" height="152" rx="11" fill="var(--ifm-color-emphasis-300)" opacity="0.35"/>
+    <rect width="130" height="152" rx="11" fill="none" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.6"/>
+    <text x="65" y="46" textAnchor="middle" fontSize="26" fontWeight="800" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-700)">1xx</text>
+    <text x="65" y="76" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ifm-font-color-base)">Information</text>
+    <text x="65" y="106" textAnchor="middle" fontSize="11.5" fill="var(--ifm-color-emphasis-700)">Moment noch …</text>
+    <text x="65" y="134" textAnchor="middle" fontSize="10.5" fill="var(--ifm-color-emphasis-600)">selten</text>
+  </g>
+
+  <g transform="translate(154,14)">
+    <rect width="130" height="152" rx="11" fill="var(--ifm-color-success)" opacity="0.18"/>
+    <rect width="130" height="152" rx="11" fill="none" stroke="var(--ifm-color-success-dark)" strokeWidth="1.8"/>
+    <text x="65" y="46" textAnchor="middle" fontSize="26" fontWeight="800" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-success-dark)">2xx</text>
+    <text x="65" y="76" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ifm-font-color-base)">Erfolg</text>
+    <text x="65" y="106" textAnchor="middle" fontSize="11.5" fill="var(--ifm-color-emphasis-800)">Hat geklappt.</text>
+    <text x="65" y="134" textAnchor="middle" fontSize="10.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-700)">200 · 201 · 204</text>
+  </g>
+
+  <g transform="translate(294,14)">
+    <rect width="130" height="152" rx="11" fill="var(--ifm-color-info)" opacity="0.18"/>
+    <rect width="130" height="152" rx="11" fill="none" stroke="var(--ifm-color-info-dark)" strokeWidth="1.8"/>
+    <text x="65" y="46" textAnchor="middle" fontSize="26" fontWeight="800" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-info-dark)">3xx</text>
+    <text x="65" y="76" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ifm-font-color-base)">Umleitung</text>
+    <text x="65" y="106" textAnchor="middle" fontSize="11.5" fill="var(--ifm-color-emphasis-800)">Schau woanders</text>
+    <text x="65" y="122" textAnchor="middle" fontSize="11.5" fill="var(--ifm-color-emphasis-800)">nach.</text>
+  </g>
+
+  <g transform="translate(434,14)">
+    <rect width="130" height="152" rx="11" fill="var(--ifm-color-warning)" opacity="0.22"/>
+    <rect width="130" height="152" rx="11" fill="none" stroke="var(--ifm-color-warning-dark)" strokeWidth="1.8"/>
+    <text x="65" y="46" textAnchor="middle" fontSize="26" fontWeight="800" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-warning-dark)">4xx</text>
+    <text x="65" y="76" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ifm-font-color-base)">Client-Fehler</text>
+    <text x="65" y="106" textAnchor="middle" fontSize="11.5" fontWeight="700" fill="var(--ifm-color-emphasis-800)">Du hast Mist gebaut.</text>
+    <text x="65" y="134" textAnchor="middle" fontSize="10.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-700)">400 · 404 · 405</text>
+  </g>
+
+  <g transform="translate(574,14)">
+    <rect width="132" height="152" rx="11" fill="var(--ifm-color-danger)" opacity="0.18"/>
+    <rect width="132" height="152" rx="11" fill="none" stroke="var(--ifm-color-danger-dark)" strokeWidth="1.8"/>
+    <text x="66" y="46" textAnchor="middle" fontSize="26" fontWeight="800" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-danger-dark)">5xx</text>
+    <text x="66" y="76" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ifm-font-color-base)">Server-Fehler</text>
+    <text x="66" y="106" textAnchor="middle" fontSize="11.5" fontWeight="700" fill="var(--ifm-color-emphasis-800)">Ich habe Mist gebaut.</text>
+    <text x="66" y="134" textAnchor="middle" fontSize="10.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-700)">500</text>
+  </g>
+
+  {/* Die entscheidende Trennlinie */}
+  <path d="M429 178 L429 206" stroke="var(--ifm-color-emphasis-500)" strokeWidth="2" strokeDasharray="6 5"/>
+  <text x="220" y="198" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="var(--ifm-color-emphasis-800)">alles in Ordnung</text>
+  <text x="574" y="198" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="var(--ifm-color-emphasis-800)">etwas ist schiefgegangen</text>
+  <text x="360" y="232" textAnchor="middle" fontSize="12" fill="var(--ifm-color-emphasis-700)">Die wichtigste Frage im Fehlerfall: Liegt es an mir oder am Server?</text>
+</svg>
 
 | Gruppe | Bedeutung | Merkhilfe |
 |---|---|---|
@@ -133,16 +228,64 @@ Bei einem `POST` stehen oft beide in der Anfrage: „Ich schicke JSON *und* möc
 
 Solange eine API nur JSON kennt, gibt es nichts zu verhandeln. Interessant wird es, sobald ein Endpunkt **mehrere** Formate bedienen kann — etwa JSON für die App, CSV für den Export in die Tabellenkalkulation und XML für einen älteren Partnerdienst:
 
-```mermaid
-flowchart LR
-    A["App<br/>Accept: application/json"] --> S
-    B["Excel-Export<br/>Accept: text/csv"] --> S
-    C["Partnerdienst<br/>Accept: application/xml"] --> S
-    S{{"ein einziger Endpunkt<br/>GET /api/v1/persons"}}
-    S --> A2["JSON"]
-    S --> B2["CSV"]
-    S --> C2["XML"]
-```
+<svg viewBox="0 0 720 330" width="100%" role="img"
+     aria-label="Drei Clients verlangen über den Accept-Header drei verschiedene Formate vom selben Endpunkt"
+     fontFamily="var(--ifm-font-family-base)">
+
+  {/* Clients links */}
+  <g transform="translate(14,14)">
+    <rect width="196" height="70" rx="10" fill="var(--ifm-color-emphasis-100)" stroke="var(--ifm-color-emphasis-300)" strokeWidth="1.5"/>
+    <text x="16" y="26" fontSize="13" fontWeight="700" fill="var(--ifm-font-color-base)">App</text>
+    <text x="16" y="50" fontSize="10.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-700)">Accept: application/json</text>
+  </g>
+  <g transform="translate(14,128)">
+    <rect width="196" height="70" rx="10" fill="var(--ifm-color-emphasis-100)" stroke="var(--ifm-color-emphasis-300)" strokeWidth="1.5"/>
+    <text x="16" y="26" fontSize="13" fontWeight="700" fill="var(--ifm-font-color-base)">Excel-Export</text>
+    <text x="16" y="50" fontSize="10.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-700)">Accept: text/csv</text>
+  </g>
+  <g transform="translate(14,242)">
+    <rect width="196" height="70" rx="10" fill="var(--ifm-color-emphasis-100)" stroke="var(--ifm-color-emphasis-300)" strokeWidth="1.5"/>
+    <text x="16" y="26" fontSize="13" fontWeight="700" fill="var(--ifm-font-color-base)">Partnerdienst</text>
+    <text x="16" y="50" fontSize="10.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-700)">Accept: application/xml</text>
+  </g>
+
+  <path d="M212 49 C250 49 252 148 288 148" fill="none" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.8"/>
+  <path d="M212 163 L288 163" fill="none" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.8"/>
+  <path d="M212 277 C250 277 252 178 288 178" fill="none" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.8"/>
+
+  {/* ein Endpunkt */}
+  <g transform="translate(292,118)">
+    <rect width="136" height="90" rx="12" fill="var(--ifm-color-primary)" opacity="0.14"/>
+    <rect width="136" height="90" rx="12" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2.2"/>
+    <text x="68" y="30" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="var(--ifm-font-color-base)">ein einziger</text>
+    <text x="68" y="48" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="var(--ifm-font-color-base)">Endpunkt</text>
+    <text x="68" y="72" textAnchor="middle" fontSize="10.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-primary)">GET /persons</text>
+  </g>
+
+  <path d="M432 148 C468 148 470 49 506 49" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="1.8"/>
+  <path d="M432 163 L506 163" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="1.8"/>
+  <path d="M432 178 C468 178 470 277 506 277" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="1.8"/>
+  <path d="M499 44 L508 49 L499 54" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="1.8"/>
+  <path d="M499 158 L508 163 L499 168" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="1.8"/>
+  <path d="M499 272 L508 277 L499 282" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="1.8"/>
+
+  {/* Formate rechts */}
+  <g transform="translate(512,20)">
+    <rect width="194" height="58" rx="10" fill="var(--ifm-background-color)" stroke="var(--ifm-color-primary)" strokeWidth="1.6"/>
+    <text x="18" y="26" fontSize="14" fontWeight="700" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-primary)">JSON</text>
+    <text x="18" y="45" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">für Programme</text>
+  </g>
+  <g transform="translate(512,134)">
+    <rect width="194" height="58" rx="10" fill="var(--ifm-background-color)" stroke="var(--ifm-color-primary)" strokeWidth="1.6"/>
+    <text x="18" y="26" fontSize="14" fontWeight="700" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-primary)">CSV</text>
+    <text x="18" y="45" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">für Tabellenkalkulation</text>
+  </g>
+  <g transform="translate(512,248)">
+    <rect width="194" height="58" rx="10" fill="var(--ifm-background-color)" stroke="var(--ifm-color-primary)" strokeWidth="1.6"/>
+    <text x="18" y="26" fontSize="14" fontWeight="700" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-primary)">XML</text>
+    <text x="18" y="45" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">für ältere Systeme</text>
+  </g>
+</svg>
 
 Dieselbe Ressource, dieselbe URL — das Format bestimmt der Client über den `Accept`-Header. In Spring gibt man die möglichen Formate am Endpunkt an:
 

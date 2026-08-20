@@ -78,12 +78,52 @@ Vier Testfälle statt tausend Einzelwerte — und die Abdeckung ist besser als b
 
 Fehler sitzen an den **Rändern** der Klassen, nicht in ihrer Mitte. Wenn ein Kommentar zwischen 5 und 500 Zeichen lang sein darf, prüfst du:
 
-```text
-        4        5              500      501
-        ↓        ↓               ↓        ↓
-   ─────┼────────┼───────────────┼────────┼─────
-      ungültig │      gültig      │  ungültig
-```
+<svg viewBox="0 0 720 210" width="100%" role="img"
+     aria-label="Zahlenstrahl mit den vier Grenzwerten 4, 5, 500 und 501"
+     fontFamily="var(--ifm-font-family-base)">
+
+  {/* Bereiche */}
+  <rect x="16" y="70" width="150" height="44" fill="var(--ifm-color-danger)" opacity="0.15"/>
+  <rect x="166" y="70" width="388" height="44" fill="var(--ifm-color-success)" opacity="0.18"/>
+  <rect x="554" y="70" width="150" height="44" fill="var(--ifm-color-danger)" opacity="0.15"/>
+
+  <text x="91" y="98" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ifm-color-danger-dark)">zu kurz</text>
+  <text x="360" y="98" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ifm-color-success-dark)">gültig — 5 bis 500 Zeichen</text>
+  <text x="629" y="98" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ifm-color-danger-dark)">zu lang</text>
+
+  {/* Zahlenstrahl */}
+  <path d="M16 130 L704 130" stroke="var(--ifm-color-emphasis-600)" strokeWidth="2"/>
+  <path d="M697 125 L706 130 L697 135" fill="none" stroke="var(--ifm-color-emphasis-600)" strokeWidth="2"/>
+
+  {/* Grenzmarkierungen */}
+  <path d="M166 62 L166 122" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
+  <path d="M554 62 L554 122" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
+
+  {/* die vier Pruefwerte */}
+  <g transform="translate(140,130)">
+    <circle cx="0" cy="0" r="9" fill="var(--ifm-color-danger)"/>
+    <text x="0" y="30" textAnchor="middle" fontSize="15" fontWeight="800" fill="var(--ifm-color-danger-dark)">4</text>
+    <text x="0" y="50" textAnchor="middle" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">knapp darunter</text>
+  </g>
+  <g transform="translate(192,130)">
+    <circle cx="0" cy="0" r="9" fill="var(--ifm-color-success-dark)"/>
+    <text x="0" y="30" textAnchor="middle" fontSize="15" fontWeight="800" fill="var(--ifm-color-success-dark)">5</text>
+    <text x="0" y="50" textAnchor="middle" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">auf der Grenze</text>
+  </g>
+  <g transform="translate(528,130)">
+    <circle cx="0" cy="0" r="9" fill="var(--ifm-color-success-dark)"/>
+    <text x="0" y="30" textAnchor="middle" fontSize="15" fontWeight="800" fill="var(--ifm-color-success-dark)">500</text>
+    <text x="0" y="50" textAnchor="middle" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">auf der Grenze</text>
+  </g>
+  <g transform="translate(580,130)">
+    <circle cx="0" cy="0" r="9" fill="var(--ifm-color-danger)"/>
+    <text x="0" y="30" textAnchor="middle" fontSize="15" fontWeight="800" fill="var(--ifm-color-danger-dark)">501</text>
+    <text x="0" y="50" textAnchor="middle" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">knapp darüber</text>
+  </g>
+
+  <text x="360" y="30" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="var(--ifm-color-emphasis-800)">Geprüft wird nicht die Mitte, sondern beidseitig jede Grenze</text>
+  <text x="360" y="50" textAnchor="middle" fontSize="11.5" fill="var(--ifm-color-emphasis-700)">Ein Wert wie 250 findet keinen einzigen typischen Fehler</text>
+</svg>
 
 Also genau vier Werte: `4`, `5`, `500`, `501` — jeweils direkt unter und auf der Grenze.
 
@@ -95,12 +135,75 @@ Weil dort die Vergleichsoperatoren sitzen. Ein `<` statt `<=` verschiebt die Gre
 
 Bei einem Webservice reicht es nicht, auf den Inhalt zu schauen. Zu jedem Aufruf gehören drei Ebenen:
 
-```mermaid
-flowchart TD
-    R["Antwort des Servers"] --> S["<b>1. Statuscode</b><br/>200? 201? 404?"]
-    R --> H["<b>2. Header</b><br/>Content-Type richtig?<br/>Location gesetzt?"]
-    R --> B["<b>3. Rumpf</b><br/>Sind die Felder da?<br/>Stimmen die Werte?"]
-```
+<svg viewBox="0 0 720 340" width="100%" role="img"
+     aria-label="Eine HTTP-Antwort wird auf drei Ebenen geprüft: Statuszeile, Header und Rumpf"
+     fontFamily="var(--ifm-font-family-base)">
+
+  {/* die Antwort als Dokument */}
+  <g transform="translate(14,20)">
+    <rect width="360" height="196" rx="10" fill="var(--ifm-background-color)" stroke="var(--ifm-color-emphasis-400)" strokeWidth="1.8"/>
+    <text x="16" y="26" fontSize="11.5" fontWeight="700" fill="var(--ifm-color-emphasis-700)">Antwort des Servers</text>
+
+    {/* Statuszeile */}
+    <rect x="12" y="38" width="336" height="32" rx="6" fill="var(--ifm-color-success)" opacity="0.16"/>
+    <text x="24" y="59" fontSize="12.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">HTTP/1.1 201 Created</text>
+
+    {/* Header */}
+    <rect x="12" y="76" width="336" height="54" rx="6" fill="var(--ifm-color-info)" opacity="0.16"/>
+    <text x="24" y="96" fontSize="11.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">Content-Type: application/json</text>
+    <text x="24" y="118" fontSize="11.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">Location: /api/v1/persons/1</text>
+
+    {/* Rumpf */}
+    <rect x="12" y="136" width="336" height="48" rx="6" fill="var(--ifm-color-primary)" opacity="0.14"/>
+    <text x="24" y="166" fontSize="11.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">{'{"id":1,"firstname":"Anna"}'}</text>
+  </g>
+
+  {/* Ebene 1 */}
+  <path d="M378 74 L424 74" stroke="var(--ifm-color-success-dark)" strokeWidth="2"/>
+  <path d="M417 69 L426 74 L417 79" fill="none" stroke="var(--ifm-color-success-dark)" strokeWidth="2"/>
+  <g transform="translate(430,44)">
+    <rect width="276" height="60" rx="9" fill="var(--ifm-color-success)" opacity="0.14"/>
+    <rect width="276" height="60" rx="9" fill="none" stroke="var(--ifm-color-success-dark)" strokeWidth="1.6"/>
+    <circle cx="26" cy="30" r="13" fill="var(--ifm-color-success-dark)"/>
+    <text x="26" y="35" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="#ffffff">1</text>
+    <text x="50" y="26" fontSize="13" fontWeight="700" fill="var(--ifm-font-color-base)">Statuscode</text>
+    <text x="50" y="45" fontSize="11.5" fill="var(--ifm-color-emphasis-800)">201? 200? 404? Der richtige?</text>
+  </g>
+
+  {/* Ebene 2 */}
+  <path d="M378 122 L424 138" stroke="var(--ifm-color-info-dark)" strokeWidth="2"/>
+  <path d="M416 135 L426 139 L418 145" fill="none" stroke="var(--ifm-color-info-dark)" strokeWidth="2"/>
+  <g transform="translate(430,116)">
+    <rect width="276" height="60" rx="9" fill="var(--ifm-color-info)" opacity="0.14"/>
+    <rect width="276" height="60" rx="9" fill="none" stroke="var(--ifm-color-info-dark)" strokeWidth="1.6"/>
+    <circle cx="26" cy="30" r="13" fill="var(--ifm-color-info-dark)"/>
+    <text x="26" y="35" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="#ffffff">2</text>
+    <text x="50" y="26" fontSize="13" fontWeight="700" fill="var(--ifm-font-color-base)">Header</text>
+    <text x="50" y="45" fontSize="11.5" fill="var(--ifm-color-emphasis-800)">Format richtig? Location gesetzt?</text>
+  </g>
+
+  {/* Ebene 3 */}
+  <path d="M378 176 L424 210" stroke="var(--ifm-color-primary)" strokeWidth="2"/>
+  <path d="M415 206 L426 212 L419 218" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2"/>
+  <g transform="translate(430,188)">
+    <rect width="276" height="60" rx="9" fill="var(--ifm-color-primary)" opacity="0.14"/>
+    <rect width="276" height="60" rx="9" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="1.6"/>
+    <circle cx="26" cy="30" r="13" fill="var(--ifm-color-primary)"/>
+    <text x="26" y="35" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="#ffffff">3</text>
+    <text x="50" y="26" fontSize="13" fontWeight="700" fill="var(--ifm-font-color-base)">Rumpf</text>
+    <text x="50" y="45" fontSize="11.5" fill="var(--ifm-color-emphasis-800)">Sind die Felder da? Stimmen die Werte?</text>
+  </g>
+
+  {/* Ebene 4 - die vergessene */}
+  <g transform="translate(14,248)">
+    <rect width="692" height="76" rx="10" fill="var(--ifm-color-warning)" opacity="0.16"/>
+    <rect width="692" height="76" rx="10" fill="none" stroke="var(--ifm-color-warning-dark)" strokeWidth="1.8" strokeDasharray="7 5"/>
+    <circle cx="40" cy="38" r="14" fill="var(--ifm-color-warning-dark)"/>
+    <text x="40" y="43" textAnchor="middle" fontSize="13" fontWeight="700" fill="#ffffff">4</text>
+    <text x="68" y="32" fontSize="13.5" fontWeight="700" fill="var(--ifm-font-color-base)">Der Zustand danach — die Ebene, die am häufigsten vergessen wird</text>
+    <text x="68" y="56" fontSize="11.5" fill="var(--ifm-color-emphasis-800)">Ist der Datensatz wirklich in der Datenbank? Eine 201 allein beweist das nicht.</text>
+  </g>
+</svg>
 
 Dazu kommt eine vierte, die man leicht vergisst:
 

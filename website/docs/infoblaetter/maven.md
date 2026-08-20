@@ -75,14 +75,79 @@ Der Zusatz kennzeichnet eine Version **in Entwicklung**, die sich noch ändern d
 
 Maven lädt sie aus einem **Repository** — einem öffentlichen Archiv im Internet. Der Standard heißt **Maven Central** und enthält Millionen von Bibliotheken.
 
-```mermaid
-flowchart LR
-    P["Dein Projekt<br/>pom.xml"] -->|"1. Was brauche ich?"| M["Maven"]
-    M -->|"2. Ist es schon da?"| L["Lokales Repository<br/>.m2/repository"]
-    L -.->|"nein"| C["Maven Central<br/>(Internet)"]
-    C -->|"3. herunterladen"| L
-    L -->|"4. bereitstellen"| P
-```
+<svg viewBox="0 0 720 330" width="100%" role="img"
+     aria-label="Maven prüft erst das lokale Repository und lädt nur bei Bedarf aus Maven Central"
+     fontFamily="var(--ifm-font-family-base)">
+
+  {/* Projekt */}
+  <g transform="translate(14,116)">
+    <rect width="156" height="94" rx="11" fill="var(--ifm-color-emphasis-100)" stroke="var(--ifm-color-emphasis-300)" strokeWidth="1.5"/>
+    <g transform="translate(20,18)" stroke="var(--ifm-color-emphasis-700)" strokeWidth="1.8" fill="none">
+      <path d="M0 0 L16 0 L24 8 L24 30 L0 30 Z"/>
+      <path d="M16 0 L16 8 L24 8"/>
+    </g>
+    <text x="56" y="30" fontSize="13" fontWeight="700" fill="var(--ifm-font-color-base)">Dein Projekt</text>
+    <text x="20" y="66" fontSize="11.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-700)">pom.xml</text>
+    <text x="20" y="84" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">listet die Wünsche</text>
+  </g>
+
+  {/* Schritt 1 */}
+  <path d="M176 148 L242 148" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
+  <path d="M235 143 L244 148 L235 153" fill="none" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
+  <circle cx="209" cy="130" r="11" fill="var(--ifm-color-primary)"/>
+  <text x="209" y="134" textAnchor="middle" fontSize="11" fontWeight="700" fill="#ffffff">1</text>
+  <text x="209" y="172" textAnchor="middle" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">Was brauche ich?</text>
+
+  {/* Maven */}
+  <g transform="translate(248,124)">
+    <rect width="112" height="78" rx="11" fill="var(--ifm-color-primary)" opacity="0.14"/>
+    <rect width="112" height="78" rx="11" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2"/>
+    <text x="56" y="34" textAnchor="middle" fontSize="15" fontWeight="700" fill="var(--ifm-font-color-base)">Maven</text>
+    <text x="56" y="56" textAnchor="middle" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">beschafft</text>
+  </g>
+
+  {/* Schritt 2 */}
+  <path d="M366 148 L432 148" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
+  <path d="M425 143 L434 148 L425 153" fill="none" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
+  <circle cx="399" cy="130" r="11" fill="var(--ifm-color-primary)"/>
+  <text x="399" y="134" textAnchor="middle" fontSize="11" fontWeight="700" fill="#ffffff">2</text>
+  <text x="399" y="172" textAnchor="middle" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">Schon da?</text>
+
+  {/* Lokales Repository */}
+  <g transform="translate(438,110)">
+    <rect width="150" height="106" rx="11" fill="var(--ifm-color-emphasis-100)" stroke="var(--ifm-color-emphasis-400)" strokeWidth="1.8"/>
+    <g transform="translate(18,18)" stroke="var(--ifm-color-emphasis-700)" strokeWidth="1.8" fill="none">
+      <rect x="0" y="0" width="26" height="28" rx="2.5"/>
+      <path d="M0 9 L26 9 M0 19 L26 19"/>
+    </g>
+    <text x="54" y="32" fontSize="12.5" fontWeight="700" fill="var(--ifm-font-color-base)">Lokales</text>
+    <text x="54" y="48" fontSize="12.5" fontWeight="700" fill="var(--ifm-font-color-base)">Repository</text>
+    <text x="18" y="76" fontSize="10.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-700)">.m2/repository</text>
+    <text x="18" y="94" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">auf deinem Rechner</text>
+  </g>
+
+  {/* Schritt 3: nur falls nicht vorhanden */}
+  <path d="M513 106 L513 66" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.8" strokeDasharray="6 4"/>
+  <path d="M508 74 L513 64 L518 74" fill="none" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.8"/>
+  <circle cx="547" cy="88" r="11" fill="var(--ifm-color-emphasis-600)"/>
+  <text x="547" y="92" textAnchor="middle" fontSize="11" fontWeight="700" fill="#ffffff">3</text>
+  <text x="565" y="92" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">nur falls sie fehlt</text>
+
+  <g transform="translate(438,14)">
+    <rect width="268" height="50" rx="10" fill="var(--ifm-background-color)" stroke="var(--ifm-color-emphasis-400)" strokeWidth="1.6" strokeDasharray="6 5"/>
+    <text x="18" y="22" fontSize="12.5" fontWeight="700" fill="var(--ifm-font-color-base)">Maven Central</text>
+    <text x="18" y="40" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">das öffentliche Archiv im Internet</text>
+  </g>
+
+  {/* Schritt 4: zurück ans Projekt */}
+  <path d="M512 220 C512 268 92 268 92 222" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2"/>
+  <path d="M87 230 L92 220 L97 230" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2"/>
+  <circle cx="302" cy="264" r="11" fill="var(--ifm-color-primary)"/>
+  <text x="302" y="268" textAnchor="middle" fontSize="11" fontWeight="700" fill="#ffffff">4</text>
+  <text x="324" y="268" fontSize="11" fill="var(--ifm-color-emphasis-800)">bereitstellen — ab jetzt ohne Internet</text>
+
+  <text x="360" y="312" textAnchor="middle" fontSize="12" fill="var(--ifm-color-emphasis-700)">Deshalb dauert nur der erste Start lange, jeder weitere nur Sekunden</text>
+</svg>
 
 Heruntergeladene Bibliotheken landen im **lokalen Repository** auf deinem Rechner (`C:\Users\<name>\.m2\repository`). Deshalb dauert der erste Projektstart lange und jeder weitere nur noch Sekunden — beim zweiten Mal ist alles schon da.
 
@@ -102,6 +167,31 @@ spring-boot-starter-webmvc
 └── spring-boot-starter-tomcat
     └── tomcat-embed-core             ← der eingebaute Webserver
 ```
+
+<svg viewBox="0 0 720 230" width="100%" role="img"
+     aria-label="Aus 8 deklarierten Abhängigkeiten werden 124 tatsächlich geladene Dateien"
+     fontFamily="var(--ifm-font-family-base)">
+
+  {/* obere Leiste: was du schreibst */}
+  <text x="16" y="26" fontSize="12.5" fontWeight="700" fill="var(--ifm-color-emphasis-800)">Das schreibst du in die pom.xml</text>
+  <rect x="16" y="38" width="43" height="36" rx="6" fill="var(--ifm-color-primary)"/>
+  <text x="72" y="55" fontSize="19" fontWeight="800" fill="var(--ifm-color-primary)">8</text>
+  <text x="94" y="55" fontSize="13" fill="var(--ifm-color-emphasis-800)">Abhängigkeiten</text>
+  <text x="94" y="72" fontSize="11" fill="var(--ifm-color-emphasis-700)">vier Starter, H2 und drei Test-Bausteine</text>
+
+  {/* untere Leiste: was Maven laedt */}
+  <text x="16" y="120" fontSize="12.5" fontWeight="700" fill="var(--ifm-color-emphasis-800)">Das lädt Maven tatsächlich herunter</text>
+  <rect x="16" y="132" width="688" height="36" rx="6" fill="var(--ifm-color-emphasis-300)"/>
+  <rect x="16" y="132" width="43" height="36" rx="6" fill="var(--ifm-color-primary)"/>
+  <text x="16" y="192" fontSize="19" fontWeight="800" fill="var(--ifm-color-emphasis-800)">124</text>
+  <text x="58" y="192" fontSize="13" fill="var(--ifm-color-emphasis-800)">JAR-Dateien</text>
+
+  {/* Beschriftung der beiden Anteile */}
+  <path d="M37 176 L37 168" stroke="var(--ifm-color-primary)" strokeWidth="1.6"/>
+  <path d="M380 176 L380 168" stroke="var(--ifm-color-emphasis-600)" strokeWidth="1.6"/>
+  <text x="380" y="192" textAnchor="middle" fontSize="12" fontWeight="700" fill="var(--ifm-color-emphasis-700)">116 kommen automatisch mit</text>
+  <text x="380" y="216" textAnchor="middle" fontSize="12" fill="var(--ifm-color-emphasis-700)">Das sind die transitiven Abhängigkeiten — Maven verfolgt die Kette für dich</text>
+</svg>
 
 :::info Die Zahl in deinem Projekt
 In deiner `pom.xml` stehen **8 Abhängigkeiten**. Tatsächlich lädt Maven **124 JAR-Dateien** — alles Weitere sind transitive Abhängigkeiten.

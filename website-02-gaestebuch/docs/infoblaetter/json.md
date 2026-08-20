@@ -12,12 +12,61 @@ Zwei Programme wollen Daten austauschen. Das eine ist in Java geschrieben, das a
 
 Also braucht es eine Vereinbarung, wie man ein Objekt als Text aufschreibt und wie der Empfänger daraus wieder ein Objekt macht. Diese Vereinbarung ist ein **Datenformat**. Das heute verbreitetste heißt **JSON** (*JavaScript Object Notation*).
 
-```mermaid
-flowchart LR
-    A["Java-Objekt<br/>im Server"] -->|Serialisierung| B["JSON-Text<br/>{&quot;id&quot;:1,...}"]
-    B -->|über das Netz| C["JSON-Text<br/>{&quot;id&quot;:1,...}"]
-    C -->|Deserialisierung| D["Objekt<br/>im Client"]
-```
+<svg viewBox="0 0 720 300" width="100%" role="img"
+     aria-label="Ein Objekt wird zu Text, geht durch das Netz und wird wieder zu einem Objekt"
+     fontFamily="var(--ifm-font-family-base)">
+
+  {/* Objekt im Server */}
+  <g transform="translate(14,60)">
+    <rect width="176" height="132" rx="11" fill="var(--ifm-color-primary)" opacity="0.12"/>
+    <rect width="176" height="132" rx="11" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="1.8"/>
+    <g transform="translate(20,18)" stroke="var(--ifm-color-primary)" strokeWidth="1.8" fill="none">
+      <path d="M0 7 L12 0 L24 7 L24 21 L12 28 L0 21 Z"/>
+      <path d="M0 7 L12 14 L24 7 M12 14 L12 28"/>
+    </g>
+    <text x="56" y="36" fontSize="13.5" fontWeight="700" fill="var(--ifm-font-color-base)">Java-Objekt</text>
+    <text x="20" y="70" fontSize="11.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">id = 1</text>
+    <text x="20" y="90" fontSize="11.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">firstname = "Anna"</text>
+    <text x="20" y="110" fontSize="11.5" fill="var(--ifm-color-emphasis-700)">im Server</text>
+  </g>
+
+  <path d="M196 126 L256 126" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
+  <path d="M249 121 L258 126 L249 131" fill="none" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
+  <text x="226" y="112" textAnchor="middle" fontSize="11.5" fontWeight="700" fill="var(--ifm-color-emphasis-800)">Serialisierung</text>
+  <text x="226" y="148" textAnchor="middle" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">Jackson</text>
+
+  {/* Text durch das Netz */}
+  <g transform="translate(262,44)">
+    <rect width="196" height="164" rx="11" fill="var(--ifm-color-info)" opacity="0.12"/>
+    <rect width="196" height="164" rx="11" fill="none" stroke="var(--ifm-color-info-dark)" strokeWidth="1.8" strokeDasharray="7 5"/>
+    <text x="98" y="28" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ifm-color-info-dark)">nur noch Text</text>
+    <text x="16" y="66" fontSize="11.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">{'{"id":1,'}</text>
+    <text x="16" y="86" fontSize="11.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">{' "firstname":'}</text>
+    <text x="16" y="106" fontSize="11.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">{' "Anna"}'}</text>
+    <text x="98" y="140" textAnchor="middle" fontSize="11" fill="var(--ifm-color-emphasis-700)">geht durch das Netzwerk</text>
+  </g>
+
+  <path d="M464 126 L524 126" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
+  <path d="M517 121 L526 126 L517 131" fill="none" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
+  <text x="494" y="112" textAnchor="middle" fontSize="11.5" fontWeight="700" fill="var(--ifm-color-emphasis-800)">Deserialisierung</text>
+
+  {/* Objekt im Client */}
+  <g transform="translate(530,60)">
+    <rect width="176" height="132" rx="11" fill="var(--ifm-color-primary)" opacity="0.12"/>
+    <rect width="176" height="132" rx="11" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="1.8"/>
+    <g transform="translate(20,18)" stroke="var(--ifm-color-primary)" strokeWidth="1.8" fill="none">
+      <path d="M0 7 L12 0 L24 7 L24 21 L12 28 L0 21 Z"/>
+      <path d="M0 7 L12 14 L24 7 M12 14 L12 28"/>
+    </g>
+    <text x="56" y="36" fontSize="13.5" fontWeight="700" fill="var(--ifm-font-color-base)">Objekt</text>
+    <text x="20" y="70" fontSize="11.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">id = 1</text>
+    <text x="20" y="90" fontSize="11.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">firstname = "Anna"</text>
+    <text x="20" y="110" fontSize="11.5" fill="var(--ifm-color-emphasis-700)">im Client</text>
+  </g>
+
+  <text x="360" y="252" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="var(--ifm-color-emphasis-800)">Durch die Leitung geht nur Text — Objekte gibt es nur an den beiden Enden</text>
+  <text x="360" y="276" textAnchor="middle" fontSize="12" fill="var(--ifm-color-emphasis-700)">Die beiden Programme können sogar in verschiedenen Sprachen geschrieben sein</text>
+</svg>
 
 :::info Zwei Begriffe, die du brauchst
 **Serialisierung** — ein Objekt in Text umwandeln (hinausgehend).
