@@ -36,7 +36,7 @@ Dieses Tutorial setzt die Personenverwaltung voraus. Du solltest einen REST-Cont
 | Feld | Wert |
 |---|---|
 | Project / Language | **Maven** / **Java** |
-| Spring Boot | **4.1.0** |
+| Spring Boot | die neueste **4.1.x** |
 | Group | `de.szut` |
 | Artifact | `gaestebuch` |
 | Package name | `de.szut.gaestebuch` |
@@ -61,7 +61,7 @@ public class GuestbookEntry {
 }
 ```
 
-Daraus macht der Compiler: Getter und Setter für alle drei Attribute, einen parameterlosen Konstruktor, `toString()`, `equals()` und `hashCode()`.
+Daraus macht der Compiler: Getter und Setter für alle drei Attribute, `toString()`, `equals()` und `hashCode()` — und einen Konstruktor mit allen `final`-Feldern (hier gibt es keine, also einen parameterlosen).
 
 :::warning Zwei Dinge musst du wissen
 1. **Der erzeugte Code steht nirgends in deinen Dateien.** Er entsteht erst beim Kompilieren. Suche nicht danach.
@@ -125,11 +125,13 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "guestbook_entry")
 @Data
+@NoArgsConstructor
 public class GuestbookEntry {
 
     @Id
@@ -157,11 +159,26 @@ Vier Annotationen sind neu:
 | `@Column(length = 2000)` | Erweitert die Spalte; ohne Angabe wären es nur 255 Zeichen |
 | `@Column(nullable = false, updatable = false)` | Das Datum muss gesetzt sein und darf nie geändert werden |
 | `@CreationTimestamp` | Hibernate setzt den Zeitpunkt automatisch beim ersten Speichern |
+| `@NoArgsConstructor` | Der parameterlose Konstruktor, den Hibernate braucht. `@Data` allein liefert ihn **nicht** — siehe Infoblatt [Lombok](/infoblaetter/lombok) |
 
 :::tip Warum `updatable = false` beim Datum?
-Weil ein Eintrag zu einem bestimmten Zeitpunkt verfasst wurde — und dieser Zeitpunkt sich nachträglich nicht ändert. Die Datenbank verhindert das jetzt, unabhängig davon, was ein Programm später versucht.
+Weil ein Eintrag zu einem bestimmten Zeitpunkt verfasst wurde — und dieser Zeitpunkt sich nachträglich nicht ändert. Hibernate lässt die Spalte deshalb in jeder `UPDATE`-Anweisung aus, die es erzeugt. Selbst wenn dein Code später `setDate(...)` aufruft, kommt die Änderung nicht in der Datenbank an.
 
-Solche Regeln möglichst weit unten festzulegen ist gute Praxis: Sie gelten dann für **jeden** Zugriffsweg.
+**Wie weit reicht dieser Schutz?** Genau so weit wie Hibernate. Sieh dir die `CREATE TABLE`-Anweisung im Log an:
+
+```sql
+date timestamp(6) not null
+```
+
+Dort steht `not null` — das kommt von `nullable = false` und ist eine echte Regel der Datenbank. Von `updatable` steht dort **nichts**. Wer die H2-Console öffnet und
+
+```sql
+UPDATE guestbook_entry SET date = '2020-01-01 00:00:00' WHERE id = 1;
+```
+
+ausführt, ändert das Datum ohne Weiteres.
+
+Merke dir den Unterschied: `nullable` wird zu einer Regel **in der Datenbank**, `updatable` ist eine Anweisung **an Hibernate**. Wer eine Regel wirklich auf jedem Zugriffsweg durchsetzen will, braucht dafür die Datenbank selbst — Rechte oder einen Trigger.
 :::
 
 #### `IDENTITY` statt `AUTO`
@@ -271,7 +288,7 @@ Lege noch einen dritten Eintrag an und achte auf die Id: Sie zählt dort weiter,
       beschreibung: 'Ids sind fortlaufend',
       vorbedingung: 'Datenbank ist neu',
       schritte: ['Drei Einträge nacheinander anlegen'],
-      erwartet: <>Die Ids lauten <code>1</code>, <code>2</code>, <code>3</code> — ohne Sprünge.</>
+      erwartet: <>Die Ids lauten <code>1</code>, <code>2</code>, <code>3</code> — jede Zahl unmittelbar nach der vorigen.</>
     },
     {
       id: 'TF-05',
@@ -304,8 +321,8 @@ Lege noch einen dritten Eintrag an und achte auf die Id: Sie zählt dort weiter,
 - `jdbc:h2:file:` speichert in eine **Datei**, `jdbc:h2:mem:` nur im Hauptspeicher.
 - `ddl-auto=update` erhält vorhandene Tabellen; `create-drop` löscht sie bei jedem Start.
 - `@Table` und `@Column` legen Namen und Eigenschaften in der Datenbank ausdrücklich fest.
-- `@CreationTimestamp` setzt einen Zeitstempel automatisch, `updatable = false` schützt ihn vor Änderungen.
-- `IDENTITY` liefert fortlaufende Ids, `AUTO` kann wegen der Vorratshaltung Sprünge erzeugen.
+- `@CreationTimestamp` setzt einen Zeitstempel automatisch; `updatable = false` hält ihn aus Hibernates `UPDATE`-Anweisungen heraus — es ist keine Regel der Datenbank.
+- `IDENTITY` zählt pro Tabelle einzeln hoch, `AUTO` holt Werte auf Vorrat und erzeugt dadurch größere Sprünge. Lückenlos ist aber auch `IDENTITY` nicht: Wird ein Eintrag gelöscht oder eine Transaktion zurückgerollt, fehlt die Nummer für immer. Zugesichert ist nur die **Eindeutigkeit**.
 :::
 
 ## Selbstkontrolle
@@ -322,7 +339,7 @@ Lege noch einen dritten Eintrag an und achte auf die Id: Sie zählt dort weiter,
 1. Nirgends im Quelltext. Er entsteht beim Kompilieren und steht nur im Bytecode. Deshalb braucht die Entwicklungsumgebung ein Plugin, um ihn anzuzeigen.
 2. Weil `ddl-auto=create-drop` die Tabelle bei jedem Start löschen und neu anlegen würde — dann wäre die Datei zwar vorhanden, aber jedes Mal leer. Es braucht zusätzlich `update`.
 3. Weil der Zeitpunkt, zu dem ein Eintrag verfasst wurde, sich nicht nachträglich ändert. Die Regel gilt in der Datenbank und damit für jeden Zugriffsweg.
-4. `IDENTITY` vergibt fortlaufende Nummern ohne Sprünge. `AUTO` holt sich Werte auf Vorrat, wodurch nach einem Neustart Lücken entstehen können.
+4. `IDENTITY` vergibt die Nummern einzeln und damit dicht aufeinanderfolgend. `AUTO` holt sich 50 Werte auf Vorrat, wodurch nach einem Neustart größere Lücken entstehen. Garantiert lückenlos ist keine der beiden Strategien — nach einem Löschen oder einem Rollback fehlt die Nummer.
 5. Weil er Daten enthält, keinen Quelltext. Jeder Entwickler hat andere Testdaten, und die Datei ändert sich bei jedem Start.
 
 </details>

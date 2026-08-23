@@ -78,7 +78,7 @@ Der Compiler baut aus dem Quelltext zunächst eine Baumstruktur. Lombok verände
 | `@AllArgsConstructor` | Konstruktor mit allen Attributen |
 | `@ToString` | `toString()` |
 | `@EqualsAndHashCode` | `equals()` und `hashCode()` |
-| `@Data` | **alle** der oben genannten zusammen |
+| `@Data` | Getter, Setter, `toString()`, `equals()`/`hashCode()` — und `@RequiredArgsConstructor` |
 | `@RequiredArgsConstructor` | Konstruktor mit allen `final`-Attributen |
 
 ### `@Data` ist ein Bündel
@@ -86,10 +86,25 @@ Der Compiler baut aus dem Quelltext zunächst eine Baumstruktur. Lombok verände
 ```java
 @Data
 // entspricht:
-// @Getter @Setter @NoArgsConstructor @ToString @EqualsAndHashCode
+// @Getter @Setter @ToString @EqualsAndHashCode @RequiredArgsConstructor
 ```
 
 Das ist bequem — und genau darin liegt auch das Risiko: Man bekommt Methoden, über die man nicht nachgedacht hat.
+
+:::danger `@Data` erzeugt **keinen** parameterlosen Konstruktor
+Das ist die Falle, die am häufigsten zuschnappt. `@RequiredArgsConstructor` erzeugt einen Konstruktor mit allen `final`- und `@NonNull`-Feldern.
+
+Hat eine Klasse **kein** solches Feld, ist dieser Konstruktor zufällig parameterlos — und alles funktioniert. Sobald aber ein einziges `final`-Feld dazukommt, ist der parameterlose Konstruktor weg. Für eine JPA-Entität heißt das: Sie lässt sich nicht mehr laden, mit einer schwer lesbaren Fehlermeldung beim Start.
+
+**Deshalb schreibt man an eine Entität immer beides:**
+
+```java
+@Entity
+@Data
+@NoArgsConstructor
+public class GuestbookEntry { ... }
+```
+:::
 
 ### Einzelne Attribute steuern
 
@@ -118,8 +133,10 @@ Lombok nimmt Arbeit ab, aber nicht Verantwortung. Zwei Stellen sind heikel.
 - Der Vergleich zieht die `id` mit ein. Ein noch nicht gespeichertes Objekt hat `id = null` — nach dem Speichern eine Nummer. Damit ändert sich sein `hashCode()`, obwohl es dasselbe Objekt ist.
 - Hat eine Entität Beziehungen zu anderen, laufen `toString()` und `equals()` in die Referenzen hinein. Zeigen zwei Entitäten aufeinander, entsteht eine **Endlosschleife**.
 
-:::tip Für dieses Tutorial ist `@Data` in Ordnung
-Das Gästebuch hat genau **eine** Entität ohne Beziehungen. Die Falle kann nicht zuschnappen.
+:::tip Für dieses Tutorial ist `@Data` vertretbar
+Das Gästebuch hat genau **eine** Entität ohne Beziehungen. Die Endlosschleife kann hier nicht entstehen.
+
+Der erste Punkt gilt allerdings weiterhin: Auch ohne jede Beziehung ändert sich der `hashCode()` in dem Moment, in dem die Datenbank die `id` vergibt. Wer eine noch nicht gespeicherte Entität in ein `HashSet` legt, findet sie nach dem Speichern nicht mehr wieder. In diesem Tutorial passiert das nicht — wissen sollte man es trotzdem.
 
 Sobald Entitäten aufeinander verweisen, nimmt man stattdessen die einzelnen Annotationen:
 
