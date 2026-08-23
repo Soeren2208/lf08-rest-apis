@@ -72,7 +72,7 @@ Also braucht es eine Vereinbarung, wie man ein Objekt als Text aufschreibt und w
 **Serialisierung** — ein Objekt in Text umwandeln (hinausgehend).
 **Deserialisierung** — aus Text wieder ein Objekt bauen (hereinkommend).
 
-In Spring erledigt das eine Bibliothek namens **Jackson**. Du bindest sie nie selbst ein; sie kommt mit `spring-boot-starter-web` automatisch mit.
+In Spring erledigt das eine Bibliothek namens **Jackson**. Du bindest sie nie selbst ein; sie kommt mit `spring-boot-starter-webmvc` automatisch mit.
 :::
 
 ## Die Bausteine

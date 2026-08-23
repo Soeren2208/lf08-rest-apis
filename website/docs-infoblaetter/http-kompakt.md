@@ -58,7 +58,13 @@ HTTP ist die Sprache, in der Client und Server miteinander reden. Jeder Webservi
   <text x="360" y="290" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="var(--ifm-color-emphasis-800)">Der Server erinnert sich an den ersten Aufruf nicht — das ist Zustandslosigkeit</text>
 </svg>
 
-Mehr passiert nicht. Der Client fragt, der Server antwortet, die Verbindung ist erledigt. Für die nächste Frage beginnt alles von vorn — genau das meint **Zustandslosigkeit**.
+Mehr passiert nicht. Der Client fragt, der Server antwortet, die Anfrage ist damit abgeschlossen. Für die nächste Frage beginnt alles von vorn — genau das meint **Zustandslosigkeit**.
+
+:::note Abgeschlossen heißt nicht „Leitung gekappt"
+Die **Verbindung** bleibt in der Regel bestehen: HTTP/1.1 hält sie offen, damit nicht für jedes Bild und jede Anfrage neu verbunden werden muss.
+
+Zustandslosigkeit ist eine Aussage über etwas anderes — über das **Gedächtnis** des Servers. Er merkt sich zwischen zwei Anfragen nichts über den Gesprächsverlauf, auch wenn beide über dieselbe Verbindung laufen.
+:::
 
 ## Aufbau einer Anfrage
 

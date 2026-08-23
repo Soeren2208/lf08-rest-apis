@@ -294,7 +294,7 @@ Ein Webservice-Aufruf besteht immer aus zwei Nachrichten: Anfrage hin, Antwort z
   <text x="360" y="157" textAnchor="middle" fontSize="12" fontWeight="700" fill="#ffffff">2</text>
   <path d="M375 152 L611 152" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
   <path d="M604 147 L613 152 L604 157" fill="none" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
-  <text x="493" y="142" textAnchor="middle" fontSize="11.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">{'SELECT * FROM person'}</text>
+  <text x="493" y="142" textAnchor="middle" fontSize="11.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">{'SELECT ... WHERE id = 1'}</text>
 
   {/* Schritt 3 */}
   <circle cx="625" cy="212" r="12" fill="var(--ifm-color-emphasis-600)"/>
