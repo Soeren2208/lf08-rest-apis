@@ -5,6 +5,9 @@
 import {themes as prismThemes} from 'prism-react-renderer';
 import {freigegeben} from './tutorials.js';
 
+// Einmal hier, damit der Impressum-Verweis im Footer denselben Wert benutzt.
+const baseUrl = '/lf08-rest-apis/';
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'REST-APIs mit Spring Boot',
@@ -19,12 +22,24 @@ const config = {
   },
 
   url: 'https://soeren2208.github.io',
-  baseUrl: '/lf08-rest-apis/',
+  baseUrl,
 
   organizationName: 'Soeren2208',
   projectName: 'lf08-rest-apis',
 
   onBrokenLinks: 'throw',
+  // Bleibt auf 'ignore', und das ist eine bewusste Entscheidung:
+  // Die Ankerpruefung kennt nur Ueberschriften aus Markdown. Der Footer
+  // verweist auf /#impressum - ein id-Attribut in der React-Startseite
+  // src/pages/index.js. Diesen funktionierenden Link meldet die Pruefung
+  // auf JEDER Seite als kaputt, egal ob als 'to' oder 'href' geschrieben.
+  // Mit 'throw' bricht der Build ab, mit 'warn' rauschen 20 Fehlalarme durch
+  // jeden Lauf und verdecken echte Meldungen.
+  //
+  // Konsequenz: Wer eine Ueberschrift umbenennt, auf die verwiesen wird, muss
+  // die Verweise von Hand pruefen. Betroffen sind derzeit genau zwei:
+  //   /infoblaetter/http-kompakt#content-negotiation-mehrere-formate
+  //   /infoblaetter/rest-paradigma#sicher-und-idempotent
   onBrokenAnchors: 'ignore',
 
   markdown: {
@@ -146,8 +161,11 @@ const config = {
                 href: 'https://www.szut.de/',
               },
               {
+                // Bewusst href statt to: Die Startseite ist eine React-Seite,
+                // und die Ankerpruefung kennt nur Ueberschriften aus Markdown.
+                // Mit 'to' meldet sie diesen funktionierenden Link als kaputt.
                 label: 'Impressum',
-                to: '/#impressum',
+                href: `${baseUrl}#impressum`,
               },
             ],
           },
