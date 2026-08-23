@@ -28,10 +28,10 @@ Nach Bearbeitung dieses Arbeitsblatts kannst du:
 
 Jede Dokumentation, die getrennt vom Code gepflegt wird, läuft ihm irgendwann hinterher. Jemand ergänzt ein Feld, jemand ändert einen Statuscode — und niemand denkt an die Beschreibung.
 
-Die Lösung: **Die Dokumentation aus dem Code erzeugen.** Dann kann sie nicht veralten, weil sie keine eigene Quelle hat.
+Die Lösung: **Die Dokumentation aus dem Code erzeugen.** Was aus Pfaden, Methoden und Feldern abgeleitet wird, kann dann nicht mehr veralten — es hat keine eigene Quelle, die jemand pflegen müsste.
 
 :::info Was OpenAPI ist
-**OpenAPI** ist ein standardisiertes Format, um REST-Schnittstellen zu beschreiben — welche Pfade es gibt, welche Methoden, welche Felder, welche Antworten. Die Beschreibung selbst ist JSON.
+**OpenAPI** ist ein standardisiertes Format, um REST-Schnittstellen zu beschreiben — welche Pfade es gibt, welche Methoden, welche Felder, welche Antworten. Die Beschreibung selbst ist eine Datei in **JSON oder YAML**; springdoc liefert beides aus (`/v3/api-docs` und `/v3/api-docs.yaml`).
 
 Weil es ein Standard ist, können Werkzeuge etwas damit anfangen: eine Bedienoberfläche daraus bauen, Client-Code erzeugen, Tests ableiten.
 
@@ -122,6 +122,12 @@ public ResponseEntity<GuestbookEntry> createEntry(...) { ... }
 
 <Task id="t2-ab04-a3-check">Lade die Swagger-UI neu und vergleiche.</Task>
 
+:::warning Was du hier ergänzt, ist wieder von Hand gepflegt
+Beachte den Unterschied: Pfade, Methoden und Feldnamen liest springdoc aus dem Code — die veralten nicht. Ein `@ApiResponse(responseCode = "400", …)` dagegen ist eine **Behauptung**, die du selbst aufstellst. Ändert sich das Verhalten, zieht sie niemand automatisch nach.
+
+Erzeugte Dokumentation verkleinert das Problem also, sie beseitigt es nicht.
+:::
+
 :::warning Nicht jeden Endpunkt zutexten
 Annotationen zur Dokumentation blähen den Controller auf. Ergänze sie dort, wo etwas **nicht** aus dem Code hervorgeht — etwa fachliche Bedingungen oder besondere Fehlerfälle.
 
@@ -181,7 +187,7 @@ Dass ein `GET` auf `/{id}` einen Eintrag liefert, sieht man auch ohne Beschreibu
 />
 
 :::note TF-06 ist der eigentliche Punkt
-Er zeigt, warum erzeugte Dokumentation der handgeschriebenen überlegen ist: Sie kann nicht veralten, weil sie keine zweite Quelle hat.
+Er zeigt, warum erzeugte Dokumentation der handgeschriebenen überlegen ist: Das Gerüst kann nicht veralten, weil es keine zweite Quelle hat.
 
 Denk daran, das Testattribut anschließend wieder zu entfernen.
 :::
