@@ -322,7 +322,7 @@ Genau deshalb überlegt man sich Paginierung **früh** — ein späterer Umbau t
       beschreibung: 'Filter greift in der Datenbank',
       vorbedingung: 'Einträge aus dem laufenden Jahr existieren',
       schritte: ['GET auf /api/v1/guestbook?year=2026', 'Log ansehen'],
-      erwartet: <>Das SQL enthält <code>where</code> mit <code>between</code> — <b>nicht</b> ein einfaches select über die ganze Tabelle.</>
+      erwartet: <>Das SQL enthält <code>where date&gt;=? and date&lt;?</code> — <b>nicht</b> ein einfaches select über die ganze Tabelle, und <b>nicht</b> <code>between</code>.</>
     },
     {
       id: 'TF-04',

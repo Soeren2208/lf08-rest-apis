@@ -159,7 +159,7 @@ Vier Annotationen sind neu:
 | `@Column(length = 2000)` | Erweitert die Spalte; ohne Angabe wären es nur 255 Zeichen |
 | `@Column(nullable = false, updatable = false)` | Das Datum muss gesetzt sein und darf nie geändert werden |
 | `@CreationTimestamp` | Hibernate setzt den Zeitpunkt automatisch beim ersten Speichern |
-| `@NoArgsConstructor` | Der parameterlose Konstruktor, den Hibernate braucht. `@Data` allein liefert ihn **nicht** — siehe Infoblatt [Lombok](/infoblaetter/lombok) |
+| `@NoArgsConstructor` | Der parameterlose Konstruktor, den Hibernate braucht. `@Data` liefert ihn hier zufällig mit — aber nur, solange die Klasse kein `final`-Feld hat. Warum man sich darauf nicht verlässt, steht im Infoblatt [Lombok](/infoblaetter/lombok) |
 
 :::tip Warum `updatable = false` beim Datum?
 Weil ein Eintrag zu einem bestimmten Zeitpunkt verfasst wurde — und dieser Zeitpunkt sich nachträglich nicht ändert. Hibernate lässt die Spalte deshalb in jeder `UPDATE`-Anweisung aus, die es erzeugt. Selbst wenn dein Code später `setDate(...)` aufruft, kommt die Änderung nicht in der Datenbank an.
