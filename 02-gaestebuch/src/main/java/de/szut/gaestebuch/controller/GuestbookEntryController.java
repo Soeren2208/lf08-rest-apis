@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 
 import de.szut.gaestebuch.model.GuestbookEntry;
 import de.szut.gaestebuch.repository.GuestbookEntryRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -45,6 +47,9 @@ public class GuestbookEntryController {
      * Legt einen Eintrag an.
      * Antwort: 201 Created samt Location-Kopfzeile mit der Adresse des neuen Eintrags.
      */
+    @Operation(summary = "Legt einen neuen Gaestebucheintrag an")
+    @ApiResponse(responseCode = "201", description = "Eintrag wurde angelegt")
+    @ApiResponse(responseCode = "400", description = "Der Rumpf war fehlerhaft")
     @PostMapping
     public ResponseEntity<GuestbookEntry> createEntry(@RequestBody GuestbookEntry entry) {
         GuestbookEntry saved = repository.save(entry);
@@ -74,7 +79,8 @@ public class GuestbookEntryController {
         LocalDateTime from = LocalDate.of(year, 1, 1).atStartOfDay();
         LocalDateTime to = from.plusYears(1);
 
-        return ResponseEntity.ok(repository.findByDateBetween(from, to, pageable));
+        return ResponseEntity.ok(
+                repository.findByDateGreaterThanEqualAndDateLessThan(from, to, pageable));
     }
 
     /** Liefert einen Eintrag anhand seiner Id. Antwort: 200 OK oder 404 Not Found. */
