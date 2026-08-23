@@ -246,7 +246,13 @@ Eine Sammlung, die nur lokal in einem Programm liegt, hat niemand außer dir.
 
 ### Aufgabe 7 – Vollständige Abnahme
 
-<Task id="ab03-a7">Führe alle Testfälle aus. Alle müssen bestehen, bevor du das Tutorial abschließt.</Task>
+<Task id="ab03-a7">Führe die Testfälle der Reihe nach aus, ohne die Datenbank zwischendurch zurückzusetzen. Bis auf **einen** müssen alle bestehen — welcher das ist und warum, steht direkt unter der Tabelle.</Task>
+
+:::note Die Reihenfolge zählt mit
+Jeder Testfall baut auf dem Zustand auf, den die vorherigen hinterlassen haben. Deshalb nennt keine Vorbedingung mehr „Datenbank ist leer": Notiere stattdessen vor dem Testfall, wie viele Datensätze es gerade gibt, und prüfe hinterher die **Veränderung**.
+
+Das ist auch im Betrieb der Normalfall — Testfälle laufen selten auf einer jungfräulichen Datenbank.
+:::
 
 <TestTable
   storageKey="ab03-tests"
@@ -296,9 +302,9 @@ Eine Sammlung, die nur lokal in einem Programm liegt, hat niemand außer dir.
     {
       id: 'TF-07',
       beschreibung: 'POST ist nicht idempotent',
-      vorbedingung: 'Datenbank ist leer',
+      vorbedingung: 'Anwendung läuft; die Anzahl der Datensätze wurde vorher notiert',
       schritte: ['Denselben POST dreimal ausführen', 'GET auf /api/v1/persons'],
-      erwartet: <>Drei Objekte mit <b>verschiedenen</b> Ids.</>
+      erwartet: <>Es sind <b>drei</b> Datensätze dazugekommen, jeder mit einer eigenen Id.</>
     },
     {
       id: 'TF-08',
