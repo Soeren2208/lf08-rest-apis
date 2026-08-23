@@ -352,7 +352,7 @@ public Person createPerson(@RequestBody Person person) {
 
 Damit kann jeder Aufrufer fremde Datensätze überschreiben, indem er einfach eine Id mitschickt.
 
-**Die Ursache ist grundsätzlicher Art:** Deine Entität `Person` ist gleichzeitig das, was von außen hereinkommt. Der Client bestimmt damit Felder, die ihm nicht gehören. Die saubere Lösung ist ein eigenes Objekt für die Anfrage, in dem `id` schlicht nicht vorkommt — ein **DTO**. Darauf kommen wir im nächsten Tutorial zurück.
+**Die Ursache ist grundsätzlicher Art:** Deine Entität `Person` ist gleichzeitig das, was von außen hereinkommt. Der Client bestimmt damit Felder, die ihm nicht gehören. Die saubere Lösung ist ein eigenes Objekt für die Anfrage, in dem `id` schlicht nicht vorkommt. Solche Objekte heißen **DTO** — *Data Transfer Object*, ein Objekt, das nur dem Datentransport über die Grenze der Anwendung dient und nicht dem Speichern. Darauf kommen wir zurück.
 
 Notiere den Testfall als *nicht bestanden*. Ein Testfall, der einen echten Mangel aufdeckt, hat seine Arbeit getan.
 :::

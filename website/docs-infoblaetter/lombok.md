@@ -181,7 +181,7 @@ In deinem Ausbildungsbetrieb wirst du beides antreffen.
 :::note Das hast du gelernt
 - **Lombok** erzeugt Boilerplate wie Getter, Setter und Konstruktoren **beim Kompilieren**.
 - Der erzeugte Code steht nirgends im Quelltext — die Entwicklungsumgebung braucht dafür ein Plugin.
-- `@Data` bündelt Getter, Setter, parameterlosen Konstruktor, `toString()`, `equals()` und `hashCode()`.
+- `@Data` bündelt Getter, Setter, `toString()`, `equals()`, `hashCode()` — und `@RequiredArgsConstructor`. Einen parameterlosen Konstruktor bekommst du nur, solange die Klasse kein `final`-Feld hat; an eine Entität schreibt man deshalb `@NoArgsConstructor` dazu.
 - Bei Entitäten **mit Beziehungen** ist `@Data` gefährlich (Endlosschleifen, wechselnder `hashCode`) — dort nimmt man die einzelnen Annotationen.
 - **Record** für unveränderliche Objekte, **Lombok** für veränderliche.
 :::

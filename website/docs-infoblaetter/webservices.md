@@ -329,7 +329,7 @@ Content-Type: application/json
 {"id":1,"firstname":"Anna","surname":"Schmidt"}
 ```
 
-Mehr zum Aufbau dieser Nachrichten steht im Infoblatt **HTTP kompakt**.
+Mehr zum Aufbau dieser Nachrichten steht im Infoblatt [HTTP kompakt](/infoblaetter/http-kompakt).
 
 ## Zwei Baustile für Webservices
 
@@ -338,7 +338,7 @@ Webservice sagt noch nichts darüber, **wie** die Nachrichten aufgebaut sind. Da
 - **REST** — der heute vorherrschende Stil für Web- und Mobil-APIs. Damit arbeitest du in diesen Tutorials.
 - **SOAP** — der ältere, streng geregelte Standard. In Banken, Versicherungen und Behörden noch weit verbreitet.
 
-Beide werden im Infoblatt **Das REST-Paradigma** gegenübergestellt.
+Beide werden im Infoblatt [Das REST-Paradigma](/infoblaetter/rest-paradigma) gegenübergestellt.
 
 :::note Das hast du gelernt
 - Ein Webservice stellt Funktionen **für andere Programme** bereit, nicht für Menschen.
