@@ -20,7 +20,7 @@ Damit hast du bereits `save()`, `findById()`, `findAll()`, `deleteById()` und ei
 Ohne Hilfsmittel müsstest du dafür SQL schreiben. Spring Data bietet einen anderen Weg: Du **benennst** die Methode, und die Implementierung entsteht daraus.
 
 :::info Das Prinzip
-**Der Methodenname ist die Abfrage.** Spring Data liest ihn beim Start, zerlegt ihn und baut daraus das SQL. Es gibt keinen Rumpf zu schreiben.
+**Der Methodenname ist die Abfrage.** Spring Data liest ihn beim Start, zerlegt ihn und baut daraus eine JPA-Abfrage. Das eigentliche SQL erzeugt daraus wie immer Hibernate. Es gibt keinen Rumpf zu schreiben.
 :::
 
 ## Wie der Name gelesen wird

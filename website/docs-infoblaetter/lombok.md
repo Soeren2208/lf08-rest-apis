@@ -161,7 +161,7 @@ Beides reduziert Boilerplate, aber für verschiedene Zwecke:
 | | Record | Lombok `@Data` |
 |---|---|---|
 | Veränderbar | **nein**, unveränderlich | ja, mit Settern |
-| Parameterloser Konstruktor | nein | ja |
+| Parameterloser Konstruktor | nein | nur ohne `final`-Felder — sonst `@NoArgsConstructor` |
 | Teil der Sprache | **ja**, seit Java 16 | nein, zusätzliche Bibliothek |
 | Geeignet für | Antwortobjekte, Datenübertragung | Entitäten, veränderliche Objekte |
 

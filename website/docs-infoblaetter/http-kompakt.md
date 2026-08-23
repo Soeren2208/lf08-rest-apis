@@ -7,7 +7,9 @@ sidebar_position: 3
 
 # HTTP kompakt
 
-HTTP ist die Sprache, in der Client und Server miteinander reden. Jeder Webservice-Aufruf ist eine HTTP-Nachricht. Wer HTTP versteht, kann jede REST-API lesen.
+HTTP ist die Sprache, in der Client und Server miteinander reden. Jeder Aufruf einer REST-API ist eine HTTP-Nachricht. Wer HTTP versteht, kann jede REST-API lesen.
+
+(Andere Baustile sind nicht darauf festgelegt — SOAP kann seine Nachrichten auch über andere Wege schicken. Für REST ist HTTP nicht Beiwerk, sondern Teil des Konzepts.)
 
 ## Ein Aufruf besteht aus zwei Nachrichten
 
@@ -42,7 +44,7 @@ HTTP ist die Sprache, in der Client und Server miteinander reden. Jeder Webservi
   <path d="M70 166 L650 166" stroke="var(--ifm-color-danger)" strokeWidth="1.6" strokeDasharray="7 5"/>
   <g transform="translate(283,152)">
     <rect width="154" height="28" rx="14" fill="var(--ifm-background-color)" stroke="var(--ifm-color-danger)" strokeWidth="1.5"/>
-    <text x="77" y="19" textAnchor="middle" fontSize="11.5" fontWeight="700" fill="var(--ifm-color-danger)">Verbindung beendet</text>
+    <text x="77" y="19" textAnchor="middle" fontSize="11.5" fontWeight="700" fill="var(--ifm-color-danger)">Anfrage abgeschlossen</text>
   </g>
 
   {/* Zweiter Aufruf */}
@@ -184,7 +186,9 @@ Jede Antwort trägt einen dreistelligen Code. Die **erste Ziffer** sagt schon da
 | **5xx** | Fehler beim **Server** | „**Ich** habe Mist gebaut." |
 
 :::warning Die wichtigste Unterscheidung
-**4xx heißt: Der Client ist schuld** — falsche Adresse, fehlende Daten, keine Berechtigung. Wiederholen bringt nichts, solange die Anfrage nicht geändert wird.
+**4xx heißt: Es lag an der Anfrage** — falsche Adresse, fehlende Daten, keine Berechtigung. Dieselbe Anfrage unverändert zu wiederholen hilft meist nicht.
+
+„Meist", weil der genaue Code entscheidet: Nach einer Anmeldung verschwindet ein `401`, nach dem Ablauf einer Sperre ein `429`, und ein `404` kann sich in ein `200` verwandeln, sobald jemand den Datensatz anlegt.
 
 **5xx heißt: Der Server ist schuld.** Dieselbe Anfrage kann gleich schon funktionieren.
 :::

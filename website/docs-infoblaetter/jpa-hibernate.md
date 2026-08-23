@@ -394,7 +394,7 @@ Beides begegnet dir, sobald Entitäten Beziehungen zueinander haben. In diesem T
 - Objekte und Tabellen folgen verschiedenen Regeln; die Übersetzung dazwischen heißt **objektrelationales Mapping**.
 - Ein **O/R-Mapper** wie **Hibernate** erzeugt das SQL für dich — sichtbar über `spring.jpa.show-sql=true`.
 - **JPA** ist die Spezifikation, **Hibernate** die Implementierung, **Spring Data JPA** der Komfort darüber.
-- `@Entity` macht aus einer Klasse eine Tabelle, `@Id` kennzeichnet den Primärschlüssel, `@GeneratedValue` überlässt dessen Vergabe der Datenbank.
+- `@Entity` macht eine Klasse dauerhaft speicherbar und bildet sie auf eine Tabelle ab; ob diese Tabelle auch **angelegt** wird, entscheidet `ddl-auto`. `@Id` kennzeichnet den Primärschlüssel, `@GeneratedValue` überlässt dessen Vergabe der Datenbank.
 - Der **parameterlose Konstruktor** ist Pflicht — deshalb kann eine Entität **kein Record** sein.
 - `ddl-auto` steuert, wer das Schema anlegt. Für den Produktivbetrieb nimmt man Flyway oder Liquibase.
 :::

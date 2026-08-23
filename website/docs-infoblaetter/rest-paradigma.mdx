@@ -409,8 +409,7 @@ Die Information „was soll passieren" steckt in der Methode `GET`, „womit" in
 ```xml
 POST /PersonService HTTP/1.1
 Host: beispiel.de
-Content-Type: text/xml; charset=utf-8
-SOAPAction: "http://beispiel.de/getPerson"
+Content-Type: application/soap+xml; charset=utf-8; action="http://beispiel.de/getPerson"
 
 <?xml version="1.0"?>
 <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
@@ -441,6 +440,8 @@ SOAPAction: "http://beispiel.de/getPerson"
 ```
 
 Es ist **immer** `POST` auf **immer denselben** Endpunkt. Was passieren soll, steht im XML-Rumpf.
+
+(Das Beispiel zeigt SOAP 1.2. In älteren Diensten trifft man SOAP 1.1 an — dort lautet der Content-Type `text/xml`, und die Aktion steht in einer eigenen Kopfzeile `SOAPAction`.)
 
 </TabItem>
 </Tabs>

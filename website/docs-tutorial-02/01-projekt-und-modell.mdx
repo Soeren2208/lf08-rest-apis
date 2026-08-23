@@ -338,7 +338,7 @@ Lege noch einen dritten Eintrag an und achte auf die Id: Sie zählt dort weiter,
 
 1. Nirgends im Quelltext. Er entsteht beim Kompilieren und steht nur im Bytecode. Deshalb braucht die Entwicklungsumgebung ein Plugin, um ihn anzuzeigen.
 2. Weil `ddl-auto=create-drop` die Tabelle bei jedem Start löschen und neu anlegen würde — dann wäre die Datei zwar vorhanden, aber jedes Mal leer. Es braucht zusätzlich `update`.
-3. Weil der Zeitpunkt, zu dem ein Eintrag verfasst wurde, sich nicht nachträglich ändert. Die Regel gilt in der Datenbank und damit für jeden Zugriffsweg.
+3. Weil der Zeitpunkt, zu dem ein Eintrag verfasst wurde, sich nicht nachträglich ändert. `updatable = false` hält die Spalte aus allen `UPDATE`-Anweisungen heraus, die Hibernate erzeugt — eine Regel der Datenbank ist es nicht, ein direktes SQL-`UPDATE` käme weiterhin durch.
 4. `IDENTITY` vergibt die Nummern einzeln und damit dicht aufeinanderfolgend. `AUTO` holt sich 50 Werte auf Vorrat, wodurch nach einem Neustart größere Lücken entstehen. Garantiert lückenlos ist keine der beiden Strategien — nach einem Löschen oder einem Rollback fehlt die Nummer.
 5. Weil er Daten enthält, keinen Quelltext. Jeder Entwickler hat andere Testdaten, und die Datei ändert sich bei jedem Start.
 

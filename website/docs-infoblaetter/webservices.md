@@ -242,7 +242,7 @@ Kaum jemand baut seine eigene Kartendarstellung, Adressprüfung oder Bezahlabwic
 | **API** | *Application Programming Interface*, deutsch: Programmierschnittstelle. Die Menge aller Funktionen, die ein Programm nach außen anbietet. Jeder Webservice ist eine API — aber nicht jede API ist ein Webservice (auch eine Java-Bibliothek hat eine API). |
 | **Client** | Das Programm, das **fragt**. |
 | **Server** | Das Programm, das **antwortet**. |
-| **Endpunkt** | Eine einzelne aufrufbare Adresse des Webservice, z. B. `/api/v1/persons/1`. |
+| **Endpunkt** | Eine aufrufbare Kombination aus **Adresse und HTTP-Methode**, z. B. `GET /api/v1/persons/1`. Dieselbe Adresse mit `DELETE` ist ein anderer Endpunkt. |
 | **Request** | Die Anfrage des Clients. |
 | **Response** | Die Antwort des Servers. |
 | **Backend** | Der Teil einer Anwendung, der im Hintergrund läuft und keine Oberfläche hat — meist genau der Webservice. |
