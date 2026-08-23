@@ -175,10 +175,14 @@ Auf der zweiten Seite des Assistenten wählst du aus, welche Bausteine dein Proj
 
 Die Seite ist dreigeteilt: Oben die **Spring-Boot-Version**, in der Mitte die nach Kategorien geordneten Abhängigkeiten, rechts oben die Beschreibung des gerade markierten Eintrags und rechts unten die Liste **Added dependencies** mit dem, was du bereits gewählt hast.
 
-<Task id="ab01-a1-version">Prüfe oben die Spring-Boot-Version: **4.1.0** — also die neueste ohne den Zusatz *SNAPSHOT*.</Task>
+<Task id="ab01-a1-version">Prüfe oben die Spring-Boot-Version: die neueste **4.1.x** ohne den Zusatz *SNAPSHOT*.</Task>
 
 :::warning Was SNAPSHOT bedeutet
 Versionen mit diesem Zusatz sind unfertige Entwicklungsstände, die sich täglich ändern können. Nimm immer eine Version ohne diesen Zusatz.
+:::
+
+:::note Die Abbildungen zeigen eine ältere Nummer
+Spring Boot erscheint mehrmals im Jahr neu. In den Screenshots steht deshalb möglicherweise eine kleinere Versionsnummer als die, die dir angeboten wird. Nimm die neueste **4.1.x** aus der Liste — die Arbeitsblätter passen auf jede davon.
 :::
 
 <Task id="ab01-a1-deps">Hake diese vier Abhängigkeiten an:</Task>
@@ -235,7 +239,7 @@ Der Spring Initializr ist ein Webdienst. IntelliJ benutzt im Hintergrund genau d
 |---|---|
 | Project | **Maven** |
 | Language | **Java** |
-| Spring Boot | **4.1.0** *(die neueste stabile Version ohne den Zusatz SNAPSHOT)* |
+| Spring Boot | die neueste **4.1.x** *(ohne den Zusatz SNAPSHOT)* |
 | Group | `de.szut` |
 | Artifact | `personenverwaltung` |
 | Name | `personenverwaltung` |
@@ -300,11 +304,13 @@ Die Anwendung bietet noch keinen einzigen eigenen Endpunkt an. Der Actuator lief
 
 <Task id="ab01-a3-health">Rufe im Browser `http://localhost:8080/actuator/health` auf.</Task>
 
-Du siehst:
+Du siehst etwas wie:
 
 ```json
-{"status":"UP"}
+{"groups":["liveness","readiness"],"status":"UP"}
 ```
+
+Entscheidend ist `"status":"UP"`. Das Feld `groups` nennt zusätzliche Prüfgruppen, die der Actuator mitbringt — je nach Version kann die Antwort deshalb etwas anders aussehen.
 
 ![Der Health-Endpunkt des Actuators](/img/05-actuator-health.png)
 
@@ -404,7 +410,7 @@ Ab jetzt prüfst du deine Arbeit systematisch. Ein **Testfall** beschreibt, was 
       beschreibung: 'Health-Endpunkt erreichbar',
       vorbedingung: 'Anwendung läuft',
       schritte: ['Im Browser http://localhost:8080/actuator/health aufrufen'],
-      erwartet: <>Status <code>200</code>, Inhalt <code>{'{"status":"UP"}'}</code></>
+      erwartet: <>Status <code>200</code>, die Antwort enthält <code>{'"status":"UP"'}</code></>
     },
     {
       id: 'TF-03',

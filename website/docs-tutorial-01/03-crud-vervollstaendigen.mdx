@@ -86,9 +86,17 @@ person.setId(id);
 return repository.save(person);   // ❌
 ```
 
-Das funktioniert scheinbar — hat aber einen Haken: Es überschreibt **alle** Felder mit dem, was der Client geschickt hat. Kommen später Felder dazu, die der Client gar nicht kennt (etwa ein Anlagedatum), werden sie stillschweigend geleert.
+Das funktioniert scheinbar — hat aber einen Haken: Der Client bestimmt damit **jedes** Feld der Ressource, auch solche, die gar nicht ihm gehören. Kommt später ein Anlagedatum dazu, das der Server selbst setzt, würde es beim Speichern stillschweigend geleert.
 
-Der Weg über `findById` lädt erst den vorhandenen Stand und ändert gezielt nur, was geändert werden soll.
+Der Weg über `findById` lädt erst den vorhandenen Stand und übernimmt daraus **genau die Felder, die der Client ändern darf**. Was der Server verwaltet, bleibt unangetastet.
+:::
+
+:::note Das ist trotzdem ein `PUT`, kein `PATCH`
+Ein `PUT` ersetzt die Ressource vollständig — der Client schickt den kompletten neuen Stand, und fehlende Felder gelten als geleert. Genau so verhält sich dein Endpunkt: Wer `surname` wegläßt, bekommt einen leeren Nachnamen.
+
+Der Unterschied liegt woanders: `id` und später das Anlagedatum sind **keine Felder, die der Client setzen darf**. Sie gehören dem Server. Die Auswahl im Code trennt also nicht „geändert / nicht geändert", sondern „gehört dem Client / gehört dem Server".
+
+Was `PUT` von `PATCH` unterscheidet, steht im Infoblatt [HTTP kompakt](/infoblaetter/http-kompakt).
 :::
 
 ### Aufgabe 3 – Eine Person löschen
@@ -162,6 +170,14 @@ Statt es zu glauben, probierst du es aus.
 | `POST` | **drei** Datensätze | nein |
 | `PUT` | **ein** Datensatz, unverändert | ja |
 | `DELETE` | weg — beim zweiten Mal `404` | ja |
+
+:::danger Die Zeile zu `DELETE` sieht nach einem Widerspruch aus
+Beim ersten Mal `204`, beim zweiten Mal `404` — zwei verschiedene Antworten. Und trotzdem idempotent?
+
+Ja. **Idempotenz ist eine Aussage über den Zustand auf dem Server, nicht über die Antwort.** Nach dem zweiten `DELETE` ist die Welt genau dieselbe wie nach dem ersten: Der Datensatz ist weg. Nur die Auskunft darüber fällt anders aus — beim ersten Mal „habe ich gelöscht", beim zweiten „gibt es nicht".
+
+Prüffrage also nicht „kommt dieselbe Antwort?", sondern **„sieht der Server danach gleich aus?"**
+:::
 
 :::tip Warum das praktisch zählt
 Ein Client schickt eine Bestellung per `POST` und bekommt wegen einer Netzstörung keine Antwort. Darf er es erneut versuchen?
@@ -260,7 +276,7 @@ Eine Sammlung, die nur lokal in einem Programm liegt, hat niemand außer dir.
       id: 'TF-04',
       beschreibung: 'Nicht vorhandene Person ändern',
       vorbedingung: 'Es gibt keine Person mit Id 999',
-      schritte: ['PUT auf /api/v1/persons/999'],
+      schritte: ['PUT auf /api/v1/persons/999 mit einem gültigen Rumpf, z.B. {"firstname":"Test","surname":"Test"}'],
       erwartet: <>Status <code>404</code>. Es wird <b>keine</b> neue Person angelegt.</>
     },
     {
@@ -287,9 +303,9 @@ Eine Sammlung, die nur lokal in einem Programm liegt, hat niemand außer dir.
     {
       id: 'TF-08',
       beschreibung: 'PUT ist idempotent',
-      vorbedingung: 'Person mit Id 1 existiert',
+      vorbedingung: 'Person mit Id 1 existiert; die Anzahl der Datensätze wurde vorher notiert',
       schritte: ['Denselben PUT dreimal ausführen', 'GET auf /api/v1/persons'],
-      erwartet: <>Weiterhin genau <b>ein</b> Datensatz, unverändert.</>
+      erwartet: <>Die <b>Anzahl</b> der Datensätze ist unverändert, und Person 1 sieht nach dem dritten Mal genauso aus wie nach dem ersten.</>
     },
     {
       id: 'TF-09',
@@ -300,6 +316,13 @@ Eine Sammlung, die nur lokal in einem Programm liegt, hat niemand außer dir.
     },
     {
       id: 'TF-10',
+      beschreibung: 'POST mit mitgeschickter Id',
+      vorbedingung: 'Es existiert eine Person mit Id 1',
+      schritte: ['POST auf /api/v1/persons mit dem Rumpf {"id":1,"firstname":"Test","surname":"Test"}', 'GET auf /api/v1/persons'],
+      erwartet: <>Es <b>sollte</b> ein neuer Datensatz mit neuer Id entstehen und Person 1 unberührt bleiben. Prüfe, ob das wirklich passiert.</>
+    },
+    {
+      id: 'TF-11',
       beschreibung: 'Falsche Methode auf der Sammlung',
       vorbedingung: 'Anwendung läuft',
       schritte: ['DELETE auf /api/v1/persons (ohne Id)'],
@@ -307,6 +330,26 @@ Eine Sammlung, die nur lokal in einem Programm liegt, hat niemand außer dir.
     }
   ]}
 />
+
+:::danger TF-10 besteht nicht — und das ist der Punkt
+Probier es aus: Person 1 heißt danach *Test*, und es ist **kein** neuer Datensatz entstanden. Der Statuscode lautet trotzdem `201 Created`.
+
+Der Grund steht in deinem Controller:
+
+```java
+public Person createPerson(@RequestBody Person person) {
+    return repository.save(person);
+}
+```
+
+`@RequestBody` füllt **alle** Felder aus dem JSON — auch `id`. Und `save()` sieht eine gesetzte Id, hält das Objekt für bekannt und macht daraus ein `UPDATE` statt eines `INSERT`.
+
+Damit kann jeder Aufrufer fremde Datensätze überschreiben, indem er einfach eine Id mitschickt.
+
+**Die Ursache ist grundsätzlicher Art:** Deine Entität `Person` ist gleichzeitig das, was von außen hereinkommt. Der Client bestimmt damit Felder, die ihm nicht gehören. Die saubere Lösung ist ein eigenes Objekt für die Anfrage, in dem `id` schlicht nicht vorkommt — ein **DTO**. Darauf kommen wir im nächsten Tutorial zurück.
+
+Notiere den Testfall als *nicht bestanden*. Ein Testfall, der einen echten Mangel aufdeckt, hat seine Arbeit getan.
+:::
 
 :::warning TF-01 ist der Testfall, den man am ehesten falsch baut
 Eine leere Sammlung ist **kein Fehler**. `/persons` existiert, sie ist nur gerade leer — also `200 OK` mit `[]`.
@@ -323,6 +366,7 @@ Deine Schnittstelle ist vollständig, aber noch nicht robust. Diese Fragen bleib
 - Was passiert, wenn jemand eine Person **ohne Namen** anlegt? *(→ Validierung)*
 - Warum verschwinden alle Daten beim Neustart? *(→ dauerhafte Speicherung)*
 - Der Controller redet direkt mit der Datenbank — wohin gehört eigentlich die Fachlogik? *(→ Service-Schicht)*
+- Wie verhindert man, dass ein Client Felder setzt, die ihm nicht gehören — siehe TF-10? *(→ DTOs)*
 - Du hast alle Testfälle **von Hand** ausgeführt. Beim nächsten Mal wieder? *(→ automatisierte Tests)*
 
 Damit geht es im nächsten Tutorial weiter.
