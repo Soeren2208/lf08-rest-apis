@@ -144,7 +144,11 @@ spring.datasource.password=
 # --- H2-Console im Browser ---
 spring.h2.console.enabled=true
 
-# --- Hibernate: erzeugte SQL-Anweisungen mitlesen ---
+# --- Hibernate ---
+# Legt die Tabellen beim Start an und raeumt beim Beenden auf.
+# Das ist auch die Voreinstellung fuer eine eingebettete Datenbank -
+# hier steht sie ausdruecklich da, damit man sie spaeter aendern kann.
+spring.jpa.hibernate.ddl-auto=create-drop
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.format_sql=true
 spring.jpa.open-in-view=false
@@ -161,6 +165,7 @@ Was die wichtigen Zeilen bewirken:
 | `jdbc:h2:mem:persondb` | H2 läuft **im Hauptspeicher** (`mem`). Die Daten sind nach dem Beenden weg. Für die Entwicklung ideal, weil nichts installiert werden muss. |
 | `username=sa`, `password=` | Zugangsdaten. Genau diese trägst du gleich in der H2-Console ein. |
 | `spring.h2.console.enabled=true` | Schaltet die Weboberfläche der Datenbank frei. |
+| `ddl-auto=create-drop` | Hibernate legt die Tabellen beim Start an und löscht sie beim Beenden. Für eine eingebettete Datenbank ist das ohnehin die Voreinstellung. |
 | `spring.jpa.show-sql=true` | Zeigt dir im Log, welches SQL Hibernate erzeugt. Sehr lehrreich. |
 | `problemdetails.enabled=true` | Fehler werden im Standardformat RFC 9457 zurückgegeben. |
 | `include-stacktrace=never` | Verhindert, dass interne Programmdetails nach außen gelangen. |
@@ -210,7 +215,7 @@ Die Annotationen im Einzelnen:
 |---|---|
 | `@Entity` | Macht die Klasse zu einer JPA-Entität. Hibernate legt beim Start automatisch eine Tabelle `PERSON` an, jedes Attribut wird eine Spalte. |
 | `@Id` | Kennzeichnet das Attribut als **Primärschlüssel**. |
-| `@GeneratedValue` | Der Wert wird automatisch vergeben, nicht vom Programm gesetzt. `AUTO` überlässt die Wahl des Verfahrens der Datenbank. |
+| `@GeneratedValue` | Der Wert wird automatisch vergeben, nicht vom Programm gesetzt. Bei `AUTO` wählt **Hibernate** das Verfahren, das zur Datenbank passt. |
 
 :::danger Der parameterlose Konstruktor muss bleiben
 Hibernate erzeugt Objekte über den parameterlosen Konstruktor und füllt sie anschließend. Fehlt er, bekommst du beim Start eine schwer verständliche Fehlermeldung.
@@ -599,7 +604,7 @@ Man könnte mit `isPresent()` prüfen und mit `get()` herausholen. Kürzer und s
 
 ### Aufgabe 5 – Personen anlegen und abrufen
 
-Zum Testen brauchst du ein Werkzeug, das `POST`-Anfragen schicken kann — der Browser kann nur `GET`.
+Zum Testen brauchst du ein Werkzeug, das `POST`-Anfragen schicken kann — über die Adresszeile des Browsers geht nur `GET`.
 
 <Task id="ab02-a5-file">Lege im Projekthauptverzeichnis die Datei `requests.http` an:</Task>
 
