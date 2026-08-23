@@ -147,7 +147,7 @@ Sobald Entitäten aufeinander verweisen, nimmt man stattdessen die einzelnen Ann
 public class ArticleEntity { ... }
 ```
 
-Darauf kommen wir im nächsten Tutorial zurück, wenn Lieferanten und Artikel aufeinander zeigen.
+Sobald Entitäten aufeinander verweisen — etwa Lieferanten und ihre Artikel — wird das wichtig.
 :::
 
 ### Fachliche Regeln gehören nicht in einen Setter

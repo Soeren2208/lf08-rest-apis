@@ -33,7 +33,7 @@ Nach Bearbeitung dieses Arbeitsblatts kannst du:
 
 <Task id="t2-ab03-a1-beobachten">Lege vier Einträge nacheinander an und rufe die Sammlung ab. In welcher Reihenfolge kommen sie zurück?</Task>
 
-Die Einträge erscheinen in der Reihenfolge ihrer Ids — der älteste zuerst. Für ein Gästebuch ist das genau verkehrt herum.
+Vermutlich erscheinen die Einträge in der Reihenfolge ihrer Ids — der älteste zuerst. Für ein Gästebuch ist das genau verkehrt herum.
 
 :::note Genau genommen ist die Reihenfolge gar nicht zugesichert
 Ohne `ORDER BY` darf die Datenbank die Zeilen in beliebiger Reihenfolge liefern. Dass hier die Ids aufsteigend erscheinen, ist ein Zufall der aktuellen H2-Version — kein Versprechen, auf das man sich verlassen darf.
@@ -300,6 +300,12 @@ Genau deshalb überlegt man sich Paginierung **früh** — ein späterer Umbau t
 
 <Task id="t2-ab03-a7">Führe die Testfälle aus.</Task>
 
+:::note Deine Datenbank ist nicht leer
+Anders als im ersten Tutorial überlebt der Datenbestand hier jeden Neustart — deine Einträge aus den vorigen Arbeitsblättern stehen alle noch da. Die Testfälle prüfen deshalb **Verhältnisse** statt fester Zahlen: „so viele wie vorher", „zwei pro Seite", „nur die aus diesem Jahr".
+
+Notiere dir vor der Abnahme einmal, wie viele Einträge es gerade gibt (`totalElements` bei einem Aufruf ohne Parameter). Diese Zahl brauchst du in mehreren Testfällen.
+:::
+
 <TestTable
   storageKey="t2-ab03-tests"
   tests={[
@@ -341,16 +347,16 @@ Genau deshalb überlegt man sich Paginierung **früh** — ein späterer Umbau t
     {
       id: 'TF-06',
       beschreibung: 'Seitengröße wirkt',
-      vorbedingung: 'Vier Einträge existieren',
+      vorbedingung: 'Mindestens vier Einträge existieren; ihre Anzahl wurde notiert',
       schritte: ['GET auf /api/v1/guestbook?size=2'],
-      erwartet: <><code>content</code> enthält 2 Einträge, <code>totalElements</code> ist 4, <code>totalPages</code> ist 2.</>
+      erwartet: <><code>content</code> enthält genau 2 Einträge. <code>totalElements</code> entspricht der notierten Gesamtzahl, <code>totalPages</code> ist diese Zahl aufgerundet durch 2.</>
     },
     {
       id: 'TF-07',
       beschreibung: 'Blättern',
       vorbedingung: 'TF-06 wurde ausgeführt',
       schritte: ['GET auf /api/v1/guestbook?size=2&page=1'],
-      erwartet: <>Andere Einträge als auf Seite 0. <code>number</code> ist <code>1</code>, <code>last</code> ist <code>true</code>.</>
+      erwartet: <>Andere Einträge als auf Seite 0, <code>number</code> ist <code>1</code>. <code>last</code> ist <code>true</code>, sobald du auf der letzten Seite bist — bei mehr als vier Einträgen brauchst du dafür eine höhere <code>page</code>.</>
     },
     {
       id: 'TF-08',

@@ -86,9 +86,15 @@ Was Postman weiterhin besser kann: Anfragen speichern, in Sammlungen ordnen und 
 
 Diese Datei ist es, die du der Partnerfirma schickst. Aus ihr kann deren Werkzeugkette automatisch Client-Code erzeugen.
 
+:::warning Ein Vorbehalt, den du mitschicken solltest
+Das Schema beschreibt deine **Entität** — also die Klasse, die auch deine Datenbanktabelle abbildet. Änderst du später eine Spalte, ändert sich damit auch der Vertrag, auf den sich die Partnerfirma verlassen hat.
+
+Deshalb trennt man in echten Projekten beides: Die Datenbank hat ihre Klasse, die Schnittstelle eine eigene. Die Frage steht im Ausblick unten.
+:::
+
 ### Aufgabe 3 – Die Beschreibung verbessern
 
-Die erzeugte Dokumentation ist vollständig, aber unpersönlich: Die Anwendung heißt „OpenAPI definition", und bei den Endpunkten steht nur, wie die Java-Methode heißt.
+Die erzeugte Dokumentation erfasst alle Endpunkte, ist aber unpersönlich: Die Anwendung heißt „OpenAPI definition", und bei den Endpunkten steht nur, wie die Java-Methode heißt.
 
 <Task id="t2-ab04-a3-info">Lege im Package `config` eine Klasse `OpenApiConfig` an:</Task>
 
@@ -180,7 +186,7 @@ Dass ein `GET` auf `/{id}` einen Eintrag liefert, sieht man auch ohne Beschreibu
       id: 'TF-06',
       beschreibung: 'Dokumentation folgt dem Code',
       vorbedingung: 'Anwendung läuft',
-      schritte: ['Der Entität ein neues Attribut hinzufügen, z.B. rating', 'Anwendung neu starten', 'Swagger-UI neu laden'],
+      schritte: ['Der Entität ein neues Attribut hinzufügen, z.B. private Integer rating;', 'Anwendung neu starten', 'Swagger-UI neu laden'],
       erwartet: <>Das neue Feld erscheint <b>ohne</b> weiteres Zutun im Schema.</>
     }
   ]}
@@ -201,7 +207,7 @@ Dein Gästebuch ist funktionsfähig und dokumentiert. Diese Fragen bleiben offen
 - Du hast alle Testfälle **von Hand** ausgeführt. Beim nächsten Mal wieder? *(→ automatisierte Tests)*
 - Die API gibt die Entität **unverändert** nach außen. Was, wenn sich die Datenbankstruktur ändert? *(→ DTOs)*
 
-Damit geht es im nächsten Tutorial weiter.
+Diese vier Fragen sind kein Restposten, sondern der Stoff, mit dem es weitergeht — im Unterricht und in deinem Ausbildungsbetrieb. Wenn dir dort eine Service-Klasse, ein DTO oder ein `@SpringBootTest` begegnet: Genau davon ist hier die Rede.
 
 ## Zusammenfassung
 
