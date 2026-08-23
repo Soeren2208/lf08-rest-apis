@@ -1,0 +1,60 @@
+### Person anlegen
+POST http://localhost:8080/api/v1/persons
+Content-Type: application/json
+
+{
+  "firstname": "Anna",
+  "surname": "Schmidt"
+}
+
+### Zweite Person anlegen
+POST http://localhost:8080/api/v1/persons
+Content-Type: application/json
+
+{
+  "firstname": "Ben",
+  "surname": "Kaya"
+}
+
+### Alle Personen
+GET http://localhost:8080/api/v1/persons
+
+### Person mit der Id 1 abrufen
+GET http://localhost:8080/api/v1/persons/1
+
+### Person abrufen, die es nicht gibt
+GET http://localhost:8080/api/v1/persons/99
+
+### Person ändern
+PUT http://localhost:8080/api/v1/persons/1
+Content-Type: application/json
+
+{
+  "firstname": "Anna",
+  "surname": "Schmidt-Meier"
+}
+
+### Ändern, was es nicht gibt (404, nicht 400 - der Rumpf muss mit)
+PUT http://localhost:8080/api/v1/persons/999
+Content-Type: application/json
+
+{
+  "firstname": "Test",
+  "surname": "Test"
+}
+
+### TF-10: POST mit mitgeschickter Id - ueberschreibt Person 1
+POST http://localhost:8080/api/v1/persons
+Content-Type: application/json
+
+{
+  "id": 1,
+  "firstname": "Test",
+  "surname": "Test"
+}
+
+### Person löschen
+DELETE http://localhost:8080/api/v1/persons/2
+
+### Löschen, was es nicht gibt
+DELETE http://localhost:8080/api/v1/persons/999
