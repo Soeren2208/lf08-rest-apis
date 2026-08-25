@@ -33,7 +33,13 @@ Nach Bearbeitung dieses Arbeitsblatts kannst du:
 
 <Task id="t2-ab03-a1-beobachten">Lege vier Einträge nacheinander an und rufe die Sammlung ab. In welcher Reihenfolge kommen sie zurück?</Task>
 
-Die Einträge erscheinen in der Reihenfolge ihrer Ids — der älteste zuerst. Für ein Gästebuch ist das genau verkehrt herum.
+Vermutlich erscheinen die Einträge in der Reihenfolge ihrer Ids — der älteste zuerst. Für ein Gästebuch ist das genau verkehrt herum.
+
+:::note Genau genommen ist die Reihenfolge gar nicht zugesichert
+Ohne `ORDER BY` darf die Datenbank die Zeilen in beliebiger Reihenfolge liefern. Dass hier die Ids aufsteigend erscheinen, ist ein Zufall der aktuellen H2-Version — kein Versprechen, auf das man sich verlassen darf.
+
+Das macht die Aufgabe nur dringlicher: Wer eine bestimmte Reihenfolge braucht, muss sie **anfordern**.
+:::
 
 Eine naheliegende Lösung wäre, im Controller zu sortieren:
 
@@ -86,10 +92,12 @@ Alles nach dem `?` ist ein **Request-Parameter**. Im Unterschied zur Pfadvariabl
 
 | | Pfadvariable | Request-Parameter |
 |---|---|---|
-| Beispiel | `/guestbook/**7**` | `/guestbook?**year=2026**` |
+| Beispiel | `/guestbook/7` — die **7** ist die Pfadvariable | `/guestbook?year=2026` — **year=2026** ist der Parameter |
 | Annotation | `@PathVariable` | `@RequestParam` |
 | Bedeutung | *welche* Ressource | *wie* eingeschränkt |
 | Pflicht? | ja, Teil des Pfades | meist optional |
+
+Als Zwischenschritt bekommt der Filter gleich noch eine eigene Adresse — `/guestbook/jahr`. Sie verschwindet in Aufgabe 5 wieder; hier geht es erst einmal darum, dass überhaupt gefiltert wird.
 
 <Task id="t2-ab03-a3-naiv">Implementiere den Filter zunächst so:</Task>
 
@@ -103,7 +111,7 @@ public ResponseEntity<List<GuestbookEntry>> findByYear(@RequestParam Integer yea
 }
 ```
 
-<Task id="t2-ab03-a3-test">Probiere den Endpunkt aus. Er liefert das richtige Ergebnis.</Task>
+<Task id="t2-ab03-a3-test">Probiere den Endpunkt aus — er liegt jetzt unter <code>http://localhost:8080/api/v1/guestbook/jahr?year=2026</code>, nicht unter der Adresse von oben. Er liefert das richtige Ergebnis.</Task>
 
 :::warning Dasselbe Problem wie in Aufgabe 1 — nur schlimmer
 `repository.findAll()` holt **jeden einzelnen Eintrag** aus der Datenbank. Anschließend wirft der Filter die meisten davon weg.
@@ -120,7 +128,8 @@ Spring Data kann die Abfrage aus dem **Methodennamen** ableiten. Du schreibst nu
 <Task id="t2-ab03-a4-repo">Ergänze im `GuestbookEntryRepository`:</Task>
 
 ```java
-List<GuestbookEntry> findByDateBetween(LocalDateTime from, LocalDateTime to);
+List<GuestbookEntry> findByDateGreaterThanEqualAndDateLessThan(
+        LocalDateTime from, LocalDateTime to);
 ```
 
 Mehr nicht. Kein Rumpf, kein SQL.
@@ -128,13 +137,21 @@ Mehr nicht. Kein Rumpf, kein SQL.
 So liest Spring Data den Namen:
 
 ```text
-findBy      Date        Between
-────────    ────        ───────
-"suche"     Attribut    Vergleich
-            date        between ? and ?
+findBy   Date       GreaterThanEqual   And   Date       LessThan
+──────   ────       ────────────────   ───   ────       ────────
+"suche"  Attribut   Vergleich          und   Attribut   Vergleich
+         date       >= ?                     date       < ?
 ```
 
-Daraus wird `... where date between ? and ?`.
+Daraus wird `... where date >= ? and date < ?`.
+
+:::danger Warum nicht `findByDateBetween`?
+Der Name wäre kürzer, und die Vorschlagsliste bietet ihn zuerst an. Er ist hier aber **falsch**.
+
+`Between` schließt **beide** Grenzen ein — `date >= ? and date <= ?`. Die obere Grenze ist der 1. Januar des Folgejahres um 00:00 Uhr. Ein Eintrag, der genau in dieser Sekunde verfasst wurde, gehört dann zu **beiden** Jahren: Er erscheint bei `?year=2026` und bei `?year=2027`.
+
+Ein einziges Zeichen Unterschied — `<` statt `<=` — und der Fehler zeigt sich nur an einem Wert von Milliarden. Genau darum geht es bei der **Grenzwertanalyse** im Infoblatt [Testfälle formulieren](/infoblaetter/testfaelle).
+:::
 
 :::tip Lass dir die Möglichkeiten zeigen
 Tippe im Repository `findBy` und warte auf die Vorschlagsliste deiner Entwicklungsumgebung. Sie kennt die Attribute deiner Entität und schlägt gültige Fortsetzungen vor — `findByAuthor`, `findByTitleContaining`, `findByDateAfter` und viele mehr.
@@ -170,7 +187,8 @@ public ResponseEntity<List<GuestbookEntry>> findAllEntries(
 
     LocalDateTime from = LocalDate.of(year, 1, 1).atStartOfDay();
     LocalDateTime to   = from.plusYears(1);
-    return ResponseEntity.ok(repository.findByDateBetween(from, to));
+    return ResponseEntity.ok(
+            repository.findByDateGreaterThanEqualAndDateLessThan(from, to));
 }
 ```
 
@@ -198,7 +216,8 @@ Spring Data bringt das mit: Statt einer `List` gibt man eine **`Page`** zurück 
 <Task id="t2-ab03-a6-repo">Ändere die Repository-Methode so, dass sie seitenweise arbeitet:</Task>
 
 ```java
-Page<GuestbookEntry> findByDateBetween(LocalDateTime from, LocalDateTime to, Pageable pageable);
+Page<GuestbookEntry> findByDateGreaterThanEqualAndDateLessThan(
+        LocalDateTime from, LocalDateTime to, Pageable pageable);
 ```
 
 <Task id="t2-ab03-a6-controller">Passe den Controller an:</Task>
@@ -216,7 +235,8 @@ public ResponseEntity<Page<GuestbookEntry>> findAllEntries(
 
     LocalDateTime from = LocalDate.of(year, 1, 1).atStartOfDay();
     LocalDateTime to   = from.plusYears(1);
-    return ResponseEntity.ok(repository.findByDateBetween(from, to, pageable));
+    return ResponseEntity.ok(
+            repository.findByDateGreaterThanEqualAndDateLessThan(from, to, pageable));
 }
 ```
 
@@ -255,6 +275,21 @@ Die Antwort sieht jetzt anders aus:
 | `size` | wie viele pro Seite |
 | `first` / `last` | ob dies die erste bzw. letzte Seite ist |
 
+:::warning Im Log erscheint jetzt eine Warnung
+Beim ersten Aufruf schreibt Spring Data eine lange Zeile ins Log:
+
+```text
+Serializing PageImpl instances as-is is not supported, meaning that there is
+no guarantee about the stability of the resulting JSON structure!
+```
+
+Sie ist berechtigt: `Page` ist eine interne Klasse von Spring Data, und ihre JSON-Form darf sich in einer künftigen Version ändern. Wer sie direkt nach außen gibt, macht eine Framework-Klasse zum Vertrag mit dem Client.
+
+Für dieses Tutorial lassen wir es dabei — der Aufbau ist so am besten zu erkennen. In einem echten Projekt nimmt man `PagedModel` oder ein eigenes Antwortobjekt.
+
+**Warnungen im Log liest man.** Sie stehen dort, weil jemand einen Grund hatte, sie zu schreiben.
+:::
+
 :::warning Die Antwortstruktur hat sich geändert
 Vorher kam ein Array, jetzt ein Objekt mit den Einträgen unter `content`. Ein Client, der bisher direkt über die Antwort gelaufen ist, muss angepasst werden.
 
@@ -264,6 +299,12 @@ Genau deshalb überlegt man sich Paginierung **früh** — ein späterer Umbau t
 ### Aufgabe 7 – Testfälle
 
 <Task id="t2-ab03-a7">Führe die Testfälle aus.</Task>
+
+:::note Deine Datenbank ist nicht leer
+Anders als im ersten Tutorial überlebt der Datenbestand hier jeden Neustart — deine Einträge aus den vorigen Arbeitsblättern stehen alle noch da. Die Testfälle prüfen deshalb **Verhältnisse** statt fester Zahlen: „so viele wie vorher", „zwei pro Seite", „nur die aus diesem Jahr".
+
+Notiere dir vor der Abnahme einmal, wie viele Einträge es gerade gibt (`totalElements` bei einem Aufruf ohne Parameter). Diese Zahl brauchst du in mehreren Testfällen.
+:::
 
 <TestTable
   storageKey="t2-ab03-tests"
@@ -287,7 +328,7 @@ Genau deshalb überlegt man sich Paginierung **früh** — ein späterer Umbau t
       beschreibung: 'Filter greift in der Datenbank',
       vorbedingung: 'Einträge aus dem laufenden Jahr existieren',
       schritte: ['GET auf /api/v1/guestbook?year=2026', 'Log ansehen'],
-      erwartet: <>Das SQL enthält <code>where</code> mit <code>between</code> — <b>nicht</b> ein einfaches select über die ganze Tabelle.</>
+      erwartet: <>Das SQL enthält <code>where date&gt;=? and date&lt;?</code> — <b>nicht</b> ein einfaches select über die ganze Tabelle, und <b>nicht</b> <code>between</code>.</>
     },
     {
       id: 'TF-04',
@@ -306,16 +347,16 @@ Genau deshalb überlegt man sich Paginierung **früh** — ein späterer Umbau t
     {
       id: 'TF-06',
       beschreibung: 'Seitengröße wirkt',
-      vorbedingung: 'Vier Einträge existieren',
+      vorbedingung: 'Mindestens vier Einträge existieren; ihre Anzahl wurde notiert',
       schritte: ['GET auf /api/v1/guestbook?size=2'],
-      erwartet: <><code>content</code> enthält 2 Einträge, <code>totalElements</code> ist 4, <code>totalPages</code> ist 2.</>
+      erwartet: <><code>content</code> enthält genau 2 Einträge. <code>totalElements</code> entspricht der notierten Gesamtzahl, <code>totalPages</code> ist diese Zahl aufgerundet durch 2.</>
     },
     {
       id: 'TF-07',
       beschreibung: 'Blättern',
       vorbedingung: 'TF-06 wurde ausgeführt',
       schritte: ['GET auf /api/v1/guestbook?size=2&page=1'],
-      erwartet: <>Andere Einträge als auf Seite 0. <code>number</code> ist <code>1</code>, <code>last</code> ist <code>true</code>.</>
+      erwartet: <>Andere Einträge als auf Seite 0, <code>number</code> ist <code>1</code>. <code>last</code> ist <code>true</code>, sobald du auf der letzten Seite bist — bei mehr als vier Einträgen brauchst du dafür eine höhere <code>page</code>.</>
     },
     {
       id: 'TF-08',
@@ -331,7 +372,8 @@ Genau deshalb überlegt man sich Paginierung **früh** — ein späterer Umbau t
 
 :::tip Das hast du gelernt
 - Sortieren und Filtern gehören in die **Datenbank**, nicht in den Controller.
-- **Abgeleitete Abfragen** entstehen aus dem Methodennamen: `findByDateBetween` wird zu `where date between ? and ?`.
+- **Abgeleitete Abfragen** entstehen aus dem Methodennamen: `findByDateGreaterThanEqualAndDateLessThan` wird zu `where date >= ? and date < ?`.
+- `Between` schließt **beide** Grenzen ein und ist für einen Zeitraum, der vor der oberen Grenze endet, das falsche Werkzeug.
 - `@RequestParam` nimmt Werte aus der URL entgegen; `required = false` macht sie optional.
 - Ein **Filter** rechtfertigt keinen eigenen Endpunkt — er schränkt eine vorhandene Ressource ein.
 - `Pageable` und `Page` liefern Ergebnisse **seitenweise**; `@PageableDefault` setzt Standardwerte.
@@ -342,7 +384,7 @@ Genau deshalb überlegt man sich Paginierung **früh** — ein späterer Umbau t
 ## Selbstkontrolle
 
 1. Warum ist Sortieren im Controller schlechter Stil?
-2. Wie wird aus `findByDateBetween` eine SQL-Abfrage?
+2. Wie wird aus `findByDateGreaterThanEqualAndDateLessThan` eine SQL-Abfrage — und warum steht dort nicht `Between`?
 3. Wann nimmt man eine Pfadvariable, wann einen Request-Parameter?
 4. Warum bekommt der Jahresfilter keinen eigenen Endpunkt?
 5. Welchen Wert hat `number` auf der ersten Seite?
@@ -352,7 +394,7 @@ Genau deshalb überlegt man sich Paginierung **früh** — ein späterer Umbau t
 <summary>Antworten</summary>
 
 1. Weil die Anwendung dafür alle Datensätze aus der Datenbank holen und in den Hauptspeicher übertragen muss. Die Datenbank kann das schneller und mit weniger Datenverkehr.
-2. Spring Data zerlegt den Namen beim Start: `findBy` leitet die Abfrage ein, `Date` benennt das Attribut, `Between` den Vergleich. Daraus entsteht `where date between ? and ?`.
+2. Spring Data zerlegt den Namen beim Start: `findBy` leitet die Abfrage ein, `Date` benennt jeweils das Attribut, `GreaterThanEqual` und `LessThan` die Vergleiche. Daraus entsteht `where date >= ? and date < ?`. `Between` wäre falsch, weil es beide Grenzen einschließt — ein Eintrag exakt am 1. Januar des Folgejahres um 00:00 Uhr fiele dann in zwei Jahre.
 3. Eine Pfadvariable bezeichnet **welche** Ressource gemeint ist (`/guestbook/7`). Ein Request-Parameter schränkt eine Sammlung ein (`?year=2026`).
 4. Weil er keinen neuen Anwendungsfall darstellt. Gefragt sind weiterhin Gästebucheinträge — nur eine Teilmenge davon. Deshalb dieselbe Adresse mit optionalem Parameter.
 5. `0`. Die Zählung beginnt bei null.

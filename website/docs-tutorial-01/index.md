@@ -26,7 +26,7 @@ Arbeite sie der Reihe nach ab. Jedes endet mit einer lauffähigen Anwendung und 
 ## Was du am Ende kannst
 
 - ein Spring-Boot-Projekt aufsetzen und seinen Aufbau erklären
-- Daten über JPA und ein Repository dauerhaft ablegen
+- Daten über JPA und ein Repository speichern und wieder auslesen
 - REST-Endpunkte für alle vier CRUD-Operationen bauen
 - passende HTTP-Statuscodes wählen und begründen
 - deine Schnittstelle mit Testfällen systematisch prüfen

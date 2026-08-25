@@ -20,7 +20,7 @@ Damit hast du bereits `save()`, `findById()`, `findAll()`, `deleteById()` und ei
 Ohne Hilfsmittel müsstest du dafür SQL schreiben. Spring Data bietet einen anderen Weg: Du **benennst** die Methode, und die Implementierung entsteht daraus.
 
 :::info Das Prinzip
-**Der Methodenname ist die Abfrage.** Spring Data liest ihn beim Start, zerlegt ihn und baut daraus das SQL. Es gibt keinen Rumpf zu schreiben.
+**Der Methodenname ist die Abfrage.** Spring Data liest ihn beim Start, zerlegt ihn und baut daraus eine JPA-Abfrage. Das eigentliche SQL erzeugt daraus wie immer Hibernate. Es gibt keinen Rumpf zu schreiben.
 :::
 
 ## Wie der Name gelesen wird
@@ -77,8 +77,9 @@ Das ist unangenehm, aber immer noch besser als bei handgeschriebenem SQL in eine
 | `Containing` | `like %?%` | `findByTitleContaining` |
 | `StartingWith` | `like ?%` | `findByAuthorStartingWith` |
 | `GreaterThan` | `> ?` | `findByDateGreaterThan` |
+| `GreaterThanEqual` | `>= ?` | `findByDateGreaterThanEqual` |
 | `LessThan` | `< ?` | `findByDateLessThan` |
-| `Between` | `between ? and ?` | `findByDateBetween` |
+| `Between` | `between ? and ?` — **beide Grenzen eingeschlossen** | `findByDateBetween` |
 | `After` / `Before` | `> ?` / `< ?` | `findByDateAfter` |
 | `IsNull` | `is null` | `findByCommentIsNull` |
 | `In` | `in (?, ?, …)` | `findByAuthorIn` |
@@ -103,8 +104,9 @@ List<GuestbookEntry> findByAuthorOrderByDateDesc(String author);
 // Titel enthält ein Wort, Groß-/Kleinschreibung egal
 List<GuestbookEntry> findByTitleContainingIgnoreCase(String wort);
 
-// alle aus einem Zeitraum, seitenweise
-Page<GuestbookEntry> findByDateBetween(LocalDateTime from, LocalDateTime to, Pageable pageable);
+// alle aus einem Zeitraum, seitenweise - untere Grenze eingeschlossen, obere nicht
+Page<GuestbookEntry> findByDateGreaterThanEqualAndDateLessThan(
+        LocalDateTime from, LocalDateTime to, Pageable pageable);
 
 // die drei neuesten
 List<GuestbookEntry> findTop3ByOrderByDateDesc();
@@ -115,6 +117,12 @@ long countByAuthor(String author);
 // gibt es überhaupt einen?
 boolean existsByAuthor(String author);
 ```
+
+:::danger `Between` schließt beide Grenzen ein
+Das ist die häufigste Falle bei Zeiträumen. Ein Jahr reicht vom 1. Januar 00:00 Uhr **bis vor** den 1. Januar des Folgejahres. Mit `Between` gehört der erste Augenblick des Folgejahres noch dazu — ein Eintrag genau in dieser Sekunde fällt in beide Jahre.
+
+Für Zeiträume nimmt man deshalb `GreaterThanEqual` für den Anfang und `LessThan` für das Ende. Für abzählbare Werte („Note zwischen 1 und 4") ist `Between` dagegen genau richtig.
+:::
 
 :::tip Lass dir die Möglichkeiten vorschlagen
 Tippe im Repository `findBy` und warte. Deine Entwicklungsumgebung kennt die Attribute deiner Entität und schlägt gültige Fortsetzungen vor.

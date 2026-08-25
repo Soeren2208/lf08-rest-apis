@@ -8,9 +8,9 @@ sidebar_position: 4
 
 ## Wozu ein Datenformat?
 
-Zwei Programme wollen Daten austauschen. Das eine ist in Java geschrieben, das andere vielleicht in JavaScript, Python oder C#. Ein Java-Objekt lässt sich aber nicht durch ein Netzwerkkabel schicken — durch eine Leitung geht nur **Text**.
+Zwei Programme wollen Daten austauschen. Das eine ist in Java geschrieben, das andere vielleicht in JavaScript, Python oder C#. Ein Java-Objekt lässt sich aber nicht durch ein Netzwerkkabel schicken — übertragen werden **Bytes**, und ein Java-Objekt ist keine Folge von Bytes.
 
-Also braucht es eine Vereinbarung, wie man ein Objekt als Text aufschreibt und wie der Empfänger daraus wieder ein Objekt macht. Diese Vereinbarung ist ein **Datenformat**. Das heute verbreitetste heißt **JSON** (*JavaScript Object Notation*).
+Also braucht es eine Vereinbarung, wie man ein Objekt aufschreibt und wie der Empfänger daraus wieder ein Objekt macht. JSON wählt dafür **Text** — man kann eine JSON-Nachricht lesen, ohne ein Werkzeug zu brauchen. (Es gibt auch binäre Formate, etwa bei gRPC; die sind kleiner und schneller, aber für Menschen unlesbar.) Diese Vereinbarung ist ein **Datenformat**. Das heute verbreitetste heißt **JSON** (*JavaScript Object Notation*).
 
 <svg viewBox="0 0 720 300" width="100%" role="img"
      aria-label="Ein Objekt wird zu Text, geht durch das Netz und wird wieder zu einem Objekt"
@@ -72,7 +72,7 @@ Also braucht es eine Vereinbarung, wie man ein Objekt als Text aufschreibt und w
 **Serialisierung** — ein Objekt in Text umwandeln (hinausgehend).
 **Deserialisierung** — aus Text wieder ein Objekt bauen (hereinkommend).
 
-In Spring erledigt das eine Bibliothek namens **Jackson**. Du bindest sie nie selbst ein; sie kommt mit `spring-boot-starter-web` automatisch mit.
+In Spring erledigt das eine Bibliothek namens **Jackson**. Du bindest sie nie selbst ein; sie kommt mit `spring-boot-starter-webmvc` automatisch mit.
 :::
 
 ## Die Bausteine

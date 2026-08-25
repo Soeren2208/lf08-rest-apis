@@ -28,7 +28,7 @@ Die Beschreibung des Projekts steht in einer einzigen Datei: der `pom.xml`.
 
 ## Die `pom.xml`
 
-*POM* steht für **P**roject **O**bject **M**odel. Die Datei beschreibt, **was** das Projekt ist und **was es braucht** — nicht, wie gebaut wird. Das weiß Maven selbst.
+*POM* steht für **P**roject **O**bject **M**odel. Die Datei beschreibt vor allem, **was** das Projekt ist und **was es braucht**. Wie gebaut wird, muss man dagegen selten aufschreiben: Maven bringt dafür einen Standardablauf mit. (Wo es nötig ist, lässt er sich in der `pom.xml` anpassen — im Gästebuch-Projekt steht so ein Eintrag für Lombok.)
 
 ```xml
 <project>
@@ -148,6 +148,17 @@ Maven lädt sie aus einem **Repository** — einem öffentlichen Archiv im Inter
 
   <text x="360" y="312" textAnchor="middle" fontSize="12" fill="var(--ifm-color-emphasis-700)">Deshalb dauert nur der erste Start lange, jeder weitere nur Sekunden</text>
 </svg>
+
+:::warning Dasselbe Wort, zwei völlig verschiedene Dinge
+Dir begegnet **Repository** in diesem Kurs zweimal, und die beiden haben nichts miteinander zu tun:
+
+| | Was es ist |
+|---|---|
+| **Maven-Repository** | Ein Archiv mit `.jar`-Dateien — hier auf dieser Seite gemeint |
+| **Spring-Data-Repository** | Ein Java-Interface für den Datenbankzugriff, etwa `PersonRepository` |
+
+Wer aus dem ersten Lehrjahr `DAO` kennt: Das Spring-Data-Repository ist dasselbe Konzept. Mit Maven hat es nichts zu tun.
+:::
 
 Heruntergeladene Bibliotheken landen im **lokalen Repository** auf deinem Rechner (`C:\Users\<name>\.m2\repository`). Deshalb dauert der erste Projektstart lange und jeder weitere nur noch Sekunden — beim zweiten Mal ist alles schon da.
 

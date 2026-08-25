@@ -242,7 +242,7 @@ Kaum jemand baut seine eigene Kartendarstellung, Adressprüfung oder Bezahlabwic
 | **API** | *Application Programming Interface*, deutsch: Programmierschnittstelle. Die Menge aller Funktionen, die ein Programm nach außen anbietet. Jeder Webservice ist eine API — aber nicht jede API ist ein Webservice (auch eine Java-Bibliothek hat eine API). |
 | **Client** | Das Programm, das **fragt**. |
 | **Server** | Das Programm, das **antwortet**. |
-| **Endpunkt** | Eine einzelne aufrufbare Adresse des Webservice, z. B. `/api/v1/persons/1`. |
+| **Endpunkt** | Eine aufrufbare Kombination aus **Adresse und HTTP-Methode**, z. B. `GET /api/v1/persons/1`. Dieselbe Adresse mit `DELETE` ist ein anderer Endpunkt. |
 | **Request** | Die Anfrage des Clients. |
 | **Response** | Die Antwort des Servers. |
 | **Backend** | Der Teil einer Anwendung, der im Hintergrund läuft und keine Oberfläche hat — meist genau der Webservice. |
@@ -294,7 +294,7 @@ Ein Webservice-Aufruf besteht immer aus zwei Nachrichten: Anfrage hin, Antwort z
   <text x="360" y="157" textAnchor="middle" fontSize="12" fontWeight="700" fill="#ffffff">2</text>
   <path d="M375 152 L611 152" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
   <path d="M604 147 L613 152 L604 157" fill="none" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
-  <text x="493" y="142" textAnchor="middle" fontSize="11.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">{'SELECT * FROM person'}</text>
+  <text x="493" y="142" textAnchor="middle" fontSize="11.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">{'SELECT ... WHERE id = 1'}</text>
 
   {/* Schritt 3 */}
   <circle cx="625" cy="212" r="12" fill="var(--ifm-color-emphasis-600)"/>
@@ -329,7 +329,7 @@ Content-Type: application/json
 {"id":1,"firstname":"Anna","surname":"Schmidt"}
 ```
 
-Mehr zum Aufbau dieser Nachrichten steht im Infoblatt **HTTP kompakt**.
+Mehr zum Aufbau dieser Nachrichten steht im Infoblatt [HTTP kompakt](/infoblaetter/http-kompakt).
 
 ## Zwei Baustile für Webservices
 
@@ -338,7 +338,7 @@ Webservice sagt noch nichts darüber, **wie** die Nachrichten aufgebaut sind. Da
 - **REST** — der heute vorherrschende Stil für Web- und Mobil-APIs. Damit arbeitest du in diesen Tutorials.
 - **SOAP** — der ältere, streng geregelte Standard. In Banken, Versicherungen und Behörden noch weit verbreitet.
 
-Beide werden im Infoblatt **Das REST-Paradigma** gegenübergestellt.
+Beide werden im Infoblatt [Das REST-Paradigma](/infoblaetter/rest-paradigma) gegenübergestellt.
 
 :::note Das hast du gelernt
 - Ein Webservice stellt Funktionen **für andere Programme** bereit, nicht für Menschen.

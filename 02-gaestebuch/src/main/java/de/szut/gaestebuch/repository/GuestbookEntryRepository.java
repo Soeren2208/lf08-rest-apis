@@ -14,11 +14,17 @@ public interface GuestbookEntryRepository extends JpaRepository<GuestbookEntry, 
 
     /**
      * Abgeleitete Abfrage: Spring Data liest den Methodennamen und baut daraus
-     * das passende SQL. "findBy" + "Date" + "Between" wird zu
+     * das passende SQL. "findBy" + "Date" + "GreaterThanEqual" + "And" +
+     * "Date" + "LessThan" wird zu
      *
-     *   ... where date between ? and ?
+     *   ... where date >= ? and date < ?
      *
      * Es gibt keine Implementierung - der Name IST die Abfrage.
+     *
+     * Bewusst NICHT "Between": das waere beidseitig einschliessend
+     * (date >= ? and date <= ?). Ein Eintrag exakt am 1. Januar des
+     * Folgejahres um 00:00 Uhr wuerde dann in beide Jahre fallen.
      */
-    Page<GuestbookEntry> findByDateBetween(LocalDateTime from, LocalDateTime to, Pageable pageable);
+    Page<GuestbookEntry> findByDateGreaterThanEqualAndDateLessThan(
+            LocalDateTime from, LocalDateTime to, Pageable pageable);
 }

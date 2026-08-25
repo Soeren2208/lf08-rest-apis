@@ -9,17 +9,23 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 /**
  * Ein Eintrag im Gaestebuch.
  *
  * Die Lombok-Annotation @Data erzeugt beim Kompilieren Getter, Setter,
- * einen parameterlosen Konstruktor sowie toString(), equals() und hashCode().
+ * toString(), equals() und hashCode() - sowie einen Konstruktor mit allen
+ * final-Feldern (@RequiredArgsConstructor), NICHT den parameterlosen.
+ *
+ * Den braucht Hibernate aber, um Objekte aus der Datenbank zu erzeugen.
+ * Deshalb steht @NoArgsConstructor ausdruecklich daneben.
  */
 @Entity
 @Table(name = "guestbook_entry")
 @Data
+@NoArgsConstructor
 public class GuestbookEntry {
 
     /**

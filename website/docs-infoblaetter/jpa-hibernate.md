@@ -186,7 +186,9 @@ update person set firstname=?, surname=? where id=?
 ```
 
 :::tip Beachte den Unterschied
-Zweimal derselbe Aufruf `save()` — einmal wird daraus ein `INSERT`, einmal ein `UPDATE`. Hibernate entscheidet das anhand der `id`: Ist sie noch leer, ist das Objekt neu.
+Zweimal derselbe Aufruf `save()` — einmal wird daraus ein `INSERT`, einmal ein `UPDATE`. Entschieden wird das anhand der `id`: Ist sie noch leer, gilt das Objekt als neu. (Genau genommen trifft diese Entscheidung Spring Data JPA, das je nachdem `persist` oder `merge` aufruft; Hibernate führt sie aus.)
+
+Das hat eine Kehrseite: Schickt ein Client eine `id` mit, die es schon gibt, wird aus einem vermeintlichen Anlegen ein Überschreiben. Mehr dazu in Tutorial 1, Arbeitsblatt 3, Testfall TF-10.
 
 Genau solche Entscheidungen nimmt dir ein O/R-Mapper ab.
 :::
@@ -392,7 +394,7 @@ Beides begegnet dir, sobald Entitäten Beziehungen zueinander haben. In diesem T
 - Objekte und Tabellen folgen verschiedenen Regeln; die Übersetzung dazwischen heißt **objektrelationales Mapping**.
 - Ein **O/R-Mapper** wie **Hibernate** erzeugt das SQL für dich — sichtbar über `spring.jpa.show-sql=true`.
 - **JPA** ist die Spezifikation, **Hibernate** die Implementierung, **Spring Data JPA** der Komfort darüber.
-- `@Entity` macht aus einer Klasse eine Tabelle, `@Id` kennzeichnet den Primärschlüssel, `@GeneratedValue` überlässt dessen Vergabe der Datenbank.
+- `@Entity` macht eine Klasse dauerhaft speicherbar und bildet sie auf eine Tabelle ab; ob diese Tabelle auch **angelegt** wird, entscheidet `ddl-auto`. `@Id` kennzeichnet den Primärschlüssel, `@GeneratedValue` überlässt dessen Vergabe der Datenbank.
 - Der **parameterlose Konstruktor** ist Pflicht — deshalb kann eine Entität **kein Record** sein.
 - `ddl-auto` steuert, wer das Schema anlegt. Für den Produktivbetrieb nimmt man Flyway oder Liquibase.
 :::

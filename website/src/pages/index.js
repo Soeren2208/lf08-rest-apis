@@ -126,7 +126,8 @@ export default function Home() {
           <Heading as="h2">Tutorials</Heading>
           <p>
             Arbeite die Tutorials der Reihe nach ab. Jedes enthält Aufgaben,
-            die du abhaken kannst, um deinen Fortschritt zu verfolgen.
+            die du abhaken kannst — die Haken bleiben in deinem Browser
+            erhalten, solange du dasselbe Gerät benutzt.
           </p>
           <div className={styles.cardGrid}>
             {freigegeben.map((t) => (
