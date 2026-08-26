@@ -37,6 +37,22 @@ Nicht dass es *schlecht* wäre. Sondern dass **jeder Dienst neu erklärt werden 
 
 ## Die Kernidee von REST
 
+:::info Wofür REST steht
+**RE**presentational **S**tate **T**ransfer — auf Deutsch etwa „Übertragung von Zustandsdarstellungen".
+
+Der Name klingt sperrig, sagt aber genau, was passiert. Er zerfällt in drei Teile:
+
+| Teil | Bedeutung |
+|---|---|
+| **State** — Zustand | Auf dem Server liegt eine Person mit einem bestimmten Zustand: Id 1, Anna Schmidt. |
+| **Representational** — als Darstellung | Diesen Zustand bekommst du nie selbst, sondern immer nur eine **Darstellung** davon — zum Beispiel als JSON. Dieselbe Person könnte auch als XML oder CSV dargestellt werden. |
+| **Transfer** — Übertragung | Diese Darstellung wird über das Netz übertragen. |
+
+Kurz: Du bekommst **eine Darstellung des Zustands einer Ressource übertragen** — nicht das Objekt selbst.
+
+Geprägt hat den Begriff Roy Fielding im Jahr 2000 in seiner Doktorarbeit; auf ihn gehen auch die sechs Prinzipien weiter unten zurück.
+:::
+
 REST dreht die Frage um.
 
 > **RPC fragt:** Welche Funktion muss ich aufrufen?
@@ -118,7 +134,7 @@ Man liest es von links nach rechts wie einen Pfad im Dateisystem: *Lieferant 7, 
 
 ## Die sechs Prinzipien
 
-REST wurde im Jahr 2000 von Roy Fielding in seiner Doktorarbeit beschrieben. Er nannte sechs Bedingungen. Fünf davon sind Pflicht, die sechste ist freiwillig.
+In derselben Arbeit nannte Fielding sechs Bedingungen. Fünf davon sind Pflicht, die sechste ist freiwillig.
 
 ### 1. Client-Server
 
