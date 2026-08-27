@@ -129,9 +129,44 @@ Jeder `DELETE` würde dann mit `204` antworten — auch für Datensätze, die es
 Deshalb wird der Datensatz erst geholt. Das ist **dasselbe Muster wie bei `GET /{id}` und `PUT /{id}`**: holen — oder mit `404` abbrechen. Alle drei Endpunkte, die eine Id entgegennehmen, beginnen jetzt mit denselben zwei Zeilen.
 :::
 
-### Aufgabe 4 – Idempotenz beobachten
+{/* Pflegehinweis: Die Task-Ids (ab03-a5 in Aufgabe 4, ab03-a4-* in Aufgabe 5)
+    stammen aus der frueheren Reihenfolge, in der die Idempotenz-Aufgabe vor der
+    Request-Sammlung stand. Sie sind absichtlich unveraendert geblieben: An ihnen
+    haengt der Abhak-Zustand im Browser der Schueler. */}
 
-Jetzt geht es um eine Eigenschaft, die man dem Code nicht ansieht — nur dem Verhalten.
+### Aufgabe 4 – Die Request-Sammlung vervollständigen
+
+<Task id="ab03-a5">Ergänze `requests.http` um alle fehlenden Aufrufe.</Task>
+
+```http title="requests.http"
+### Alle Personen
+GET http://localhost:8080/api/v1/persons
+
+### Person ändern
+PUT http://localhost:8080/api/v1/persons/1
+Content-Type: application/json
+
+{
+  "firstname": "Anna",
+  "surname": "Schmidt-Meier"
+}
+
+### Person löschen
+DELETE http://localhost:8080/api/v1/persons/2
+
+### Löschen, was es nicht gibt
+DELETE http://localhost:8080/api/v1/persons/999
+```
+
+:::info Warum eine Datei und nicht nur Klicks in einem Werkzeug?
+`requests.http` liegt **im Projekt**. Die Datei wandert mit in die Versionsverwaltung, jeder im Team hat dieselben Aufrufe, und bei einer Änderung der Schnittstelle sieht man im Diff, was sich geändert hat.
+
+Eine Sammlung, die nur lokal in einem Programm liegt, hat niemand außer dir.
+:::
+
+### Aufgabe 5 – Idempotenz beobachten
+
+Jetzt, wo alle vier Aufrufe in deiner Datei stehen, geht es um eine Eigenschaft, die man dem Code nicht ansieht — nur dem Verhalten.
 
 #### Was heißt „idempotent"?
 
@@ -189,36 +224,6 @@ Ein Client schickt eine Bestellung per `POST` und bekommt wegen einer Netzstöru
 Das ist der Grund für den Hinweis „Bitte nicht zweimal klicken" auf Bezahlseiten.
 
 Eine Übersicht über alle HTTP-Methoden — und dazu den verwandten Begriff **sicher** — findest du im Infoblatt [Das REST-Paradigma](/infoblaetter/rest-paradigma#sicher-und-idempotent).
-:::
-
-### Aufgabe 5 – Die Request-Sammlung vervollständigen
-
-<Task id="ab03-a5">Ergänze `requests.http` um alle fehlenden Aufrufe.</Task>
-
-```http title="requests.http"
-### Alle Personen
-GET http://localhost:8080/api/v1/persons
-
-### Person ändern
-PUT http://localhost:8080/api/v1/persons/1
-Content-Type: application/json
-
-{
-  "firstname": "Anna",
-  "surname": "Schmidt-Meier"
-}
-
-### Person löschen
-DELETE http://localhost:8080/api/v1/persons/2
-
-### Löschen, was es nicht gibt
-DELETE http://localhost:8080/api/v1/persons/999
-```
-
-:::info Warum eine Datei und nicht nur Klicks in einem Werkzeug?
-`requests.http` liegt **im Projekt**. Die Datei wandert mit in die Versionsverwaltung, jeder im Team hat dieselben Aufrufe, und bei einer Änderung der Schnittstelle sieht man im Diff, was sich geändert hat.
-
-Eine Sammlung, die nur lokal in einem Programm liegt, hat niemand außer dir.
 :::
 
 ### Aufgabe 6 – URL-Entwurf beurteilen
