@@ -180,7 +180,7 @@ spring-boot-starter-webmvc
 ```
 
 <svg viewBox="0 0 720 230" width="100%" role="img"
-     aria-label="Aus 8 deklarierten Abhängigkeiten werden 124 tatsächlich geladene Dateien"
+     aria-label="Aus 8 deklarierten Abhängigkeiten werden 123 tatsächlich geladene Dateien"
      fontFamily="var(--ifm-font-family-base)">
 
   {/* obere Leiste: was du schreibst */}
