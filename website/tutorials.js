@@ -1,18 +1,32 @@
 // ===========================================================================
-//  HIER SCHALTEST DU DIE TUTORIALS FREI
+//  WELCHE TUTORIALS VERÖFFENTLICHT WERDEN
 // ===========================================================================
 //
-//  veroeffentlicht: false  ->  Das Tutorial wird gar nicht erst gebaut.
-//                             Die Adresse liefert einen 404 - auch für
-//                             jemanden, der sie errät.
+//  In dieser Datei steht NICHT, was freigeschaltet ist — hier stehen nur die
+//  Tutorials, die es überhaupt gibt.
 //
-//  veroeffentlicht: true   ->  Das Tutorial erscheint auf der Startseite
-//                             und in der Navigationsleiste.
+//  Freigeschaltet wird über die Variable TUTORIALS:
 //
-//  Nach einer Änderung: committen und pushen. Die Pipeline stellt die Seite
-//  dann in etwa zwei Minuten neu bereit.
+//    Auf GitHub:  Settings → Secrets and variables → Actions → Variables
+//                 Name: TUTORIALS
+//                 Wert: tutorial-01,tutorial-02
+//                 Danach unter "Actions" den Workflow von Hand starten
+//                 ("Run workflow") — fertig, kein Commit nötig.
 //
-//  Die Infoblätter sind NICHT geschaltet - sie sind Nachschlagematerial und
+//    Lokal:       gar nicht. Beim Entwickeln auf dem eigenen Rechner sind
+//                 IMMER alle Tutorials sichtbar, damit man sehen kann,
+//                 woran man arbeitet.
+//
+//  Warum nicht mehr über ein Feld in dieser Datei?
+//  Weil die Freigabe damit im Quelltext stünde. Zwei Lehrkräfte, die
+//  dasselbe Material zu unterschiedlichen Zeitpunkten freischalten, kämen
+//  sich bei jeder Änderung ins Gehege — und wer zum Ansehen kurz etwas
+//  einschaltet, vergisst leicht, es vor dem Commit zurückzustellen.
+//
+//  Ein nicht freigeschaltetes Tutorial wird gar nicht erst gebaut. Seine
+//  Adresse liefert einen 404 — auch für jemanden, der sie errät.
+//
+//  Die Infoblätter sind nie geschaltet: Sie sind Nachschlagematerial und
 //  immer erreichbar.
 // ===========================================================================
 
@@ -25,7 +39,6 @@ const tutorials = [
     beschreibung:
       'Der Einstieg: ein Spring-Boot-Projekt aufsetzen, Daten in einer ' +
       'Datenbank ablegen und über HTTP bereitstellen.',
-    veroeffentlicht: true,
   },
   {
     id: 'tutorial-02',
@@ -35,10 +48,57 @@ const tutorials = [
     beschreibung:
       'Die Schnittstelle wird gut: vollständige Antworten, dauerhafte ' +
       'Speicherung, Suchen und Blättern, dokumentiert mit OpenAPI.',
-    veroeffentlicht: false,
+  },
+  {
+    id: 'tutorial-03',
+    nummer: '03',
+    titel: 'Das Gästebuch testen',
+    stichworte: 'Service-Schicht · JUnit · Mocks · Slice-Tests · Testpyramide',
+    beschreibung:
+      'Woher weißt du, dass dein Code tut, was du glaubst? Unit-Tests, ' +
+      'Slice-Tests für Web und Datenbank — und ein Entwurfsfehler, den ' +
+      'erst ein Test ans Licht bringt.',
   },
 ];
 
-const freigegeben = tutorials.filter((t) => t.veroeffentlicht);
+// GitHub Actions setzt CI=true. Daran erkennen wir eine Veröffentlichung.
+const veroeffentlichung = process.env.CI === 'true';
+const angefordert = (process.env.TUTORIALS || '').trim();
+
+if (veroeffentlichung && !angefordert) {
+  throw new Error(
+    'Die Variable TUTORIALS ist nicht gesetzt.\n' +
+      'Ohne sie ist nicht entscheidbar, was veröffentlicht werden soll —\n' +
+      'und alles zu veröffentlichen wäre die falsche Vermutung.\n' +
+      'Anlegen unter: Settings → Secrets and variables → Actions → Variables',
+  );
+}
+
+const gewuenscht = angefordert
+  .split(',')
+  .map((eintrag) => eintrag.trim())
+  .filter(Boolean);
+
+// Unbekannte Ids sind fast immer Tippfehler und würden sonst still verpuffen.
+const unbekannt = gewuenscht.filter(
+  (id) => !tutorials.some((t) => t.id === id),
+);
+if (unbekannt.length > 0) {
+  throw new Error(
+    `TUTORIALS nennt unbekannte Ids: ${unbekannt.join(', ')}\n` +
+      `Bekannt sind: ${tutorials.map((t) => t.id).join(', ')}`,
+  );
+}
+
+// Lokal alles, in der Veröffentlichung genau das Angeforderte.
+const freigegeben = angefordert
+  ? tutorials.filter((t) => gewuenscht.includes(t.id))
+  : tutorials;
+
+console.log(
+  veroeffentlichung
+    ? `[tutorials] Veröffentlichung: ${freigegeben.map((t) => t.id).join(', ')}`
+    : `[tutorials] Lokal — alle ${freigegeben.length} Tutorials sichtbar`,
+);
 
 module.exports = { tutorials, freigegeben };

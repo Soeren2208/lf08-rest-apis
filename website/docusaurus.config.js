@@ -5,8 +5,24 @@
 import {themes as prismThemes} from 'prism-react-renderer';
 import {freigegeben} from './tutorials.js';
 
+// ---------------------------------------------------------------------------
+//  Adresse der Seite - NICHT fest eingetragen, sondern abgeleitet.
+//
+//  GitHub Actions setzt GITHUB_REPOSITORY automatisch auf "besitzer/repo".
+//  Daraus entsteht die Pages-Adresse. Der Vorteil: Derselbe Quelltext
+//  veroeffentlicht in jedem Repository unter der richtigen Adresse - auch in
+//  einem Fork. Wer forkt, muss diese Datei also NICHT anfassen und bleibt
+//  damit ohne eigene Commits. Nur so laesst sich der Fork spaeter per
+//  "Sync fork" mit einem Klick aktualisieren.
+//
+//  Lokal ist die Variable nicht gesetzt; dann gilt der Wert dahinter, und die
+//  Vorschau verhaelt sich wie bisher.
+// ---------------------------------------------------------------------------
+const repoSlug = process.env.GITHUB_REPOSITORY || 'Soeren2208/lf08-rest-apis';
+const [repoOwner, repoName] = repoSlug.split('/');
+
 // Einmal hier, damit der Impressum-Verweis im Footer denselben Wert benutzt.
-const baseUrl = '/lf08-rest-apis/';
+const baseUrl = `/${repoName}/`;
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -21,11 +37,11 @@ const config = {
     v4: false,
   },
 
-  url: 'https://soeren2208.github.io',
+  url: `https://${repoOwner.toLowerCase()}.github.io`,
   baseUrl,
 
-  organizationName: 'Soeren2208',
-  projectName: 'lf08-rest-apis',
+  organizationName: repoOwner,
+  projectName: repoName,
 
   onBrokenLinks: 'throw',
   // Bleibt auf 'ignore', und das ist eine bewusste Entscheidung:
@@ -131,7 +147,7 @@ const config = {
             label: 'Infoblätter',
           },
           {
-            href: 'https://github.com/Soeren2208/lf08-rest-apis',
+            href: `https://github.com/${repoSlug}`,
             label: 'GitHub',
             position: 'right',
           },

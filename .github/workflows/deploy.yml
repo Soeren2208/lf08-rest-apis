@@ -36,16 +36,25 @@ jobs:
         working-directory: website
         run: npm ci
 
-      # Welche Tutorials gebaut werden, steuert website/tutorials.js.
-      # Ein Tutorial mit veroeffentlicht:false landet gar nicht erst im
-      # Ergebnis - seine Adresse liefert dann einen 404.
+      # Welche Tutorials gebaut werden, steuert die Repository-Variable
+      # TUTORIALS (Settings -> Secrets and variables -> Actions -> Variables),
+      # z.B. "tutorial-01,tutorial-02". Sie steht bewusst NICHT im Quelltext:
+      # so laesst sich freischalten, ohne etwas zu committen, und zwei
+      # Lehrkraefte mit eigenem Repository kommen sich nicht ins Gehege.
+      #
+      # Ein nicht genanntes Tutorial wird gar nicht erst gebaut - seine
+      # Adresse liefert dann einen 404. Ist die Variable leer, bricht der
+      # Build ab, statt versehentlich alles zu veroeffentlichen.
       - name: Bauen
         working-directory: website
+        env:
+          TUTORIALS: ${{ vars.TUTORIALS }}
         run: npm run build
 
       - name: Freigeschaltete Tutorials anzeigen
         working-directory: website
         run: |
+          echo "Angefordert (Variable TUTORIALS): ${{ vars.TUTORIALS }}"
           echo "Im Ergebnis enthalten:"
           ls -d build/tutorial-* 2>/dev/null | sed 's|build/|  |' || echo "  (keins)"
 

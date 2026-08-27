@@ -20,17 +20,21 @@ am Schulzentrum Utbremen, Bremen.
 | `website/` | Die gesamte Website (Docusaurus) — alle Tutorials und Infoblätter |
 | `01-personenverwaltung/` | Lauffähiges Referenzprojekt zu Tutorial 1 (Spring Boot 4.1, Java 25) |
 | `02-gaestebuch/` | Lauffähiges Referenzprojekt zu Tutorial 2 |
+| `03-gaestebuch-tests/` | Referenzprojekt zu Tutorial 3 — dasselbe Gästebuch, mit Service-Schicht und Tests |
 | `_screenshots/` | Screenshots und die Skripte, mit denen sie erzeugt werden |
 | `.github/workflows/` | Pipeline für die Veröffentlichung |
+| `FREISCHALTEN.md` | **Schritt für Schritt: Tutorials frei- und abschalten** |
+| `FUER-KOLLEGEN.md` | Schritt für Schritt: eigene Ausgabe per Fork einrichten |
 
 Innerhalb von `website/`:
 
 | | |
 |---|---|
-| `tutorials.js` | **Hier wird freigeschaltet** — siehe unten |
+| `tutorials.js` | Verzeichnis der vorhandenen Tutorials. **Nicht** die Freigabe — die steht auf GitHub |
 | `docs-infoblaetter/` | Die Infoblätter, genau einmal. Immer erreichbar. |
 | `docs-tutorial-01/` | Arbeitsblätter von Tutorial 1 |
 | `docs-tutorial-02/` | Arbeitsblätter von Tutorial 2 |
+| `docs-tutorial-03/` | Arbeitsblätter von Tutorial 3 |
 | `src/pages/index.js` | Startseite |
 
 ---
@@ -38,18 +42,31 @@ Innerhalb von `website/`:
 ## Tutorials freischalten
 
 Die Schüler sollen nicht alle Tutorials gleichzeitig bekommen. Gesteuert wird
-das in **`website/tutorials.js`**:
+das über die **GitHub-Repository-Variable `TUTORIALS`** — nicht im Quelltext:
 
-```js
-{ id: 'tutorial-02', titel: 'Gästebuch', veroeffentlicht: false }
+```
+tutorial-01,tutorial-02
 ```
 
-- `false` → Das Tutorial wird **gar nicht gebaut**. Die Adresse liefert einen
-  `404`, auch für jemanden, der sie errät. Weder Inhalt noch Titel stehen
-  irgendwo im Ergebnis.
-- `true` → Es erscheint auf der Startseite und in der Navigationsleiste.
+Was dort nicht steht, wird **gar nicht gebaut**. Die Adresse liefert einen
+`404`, auch für jemanden, der sie errät; weder Inhalt noch Titel stehen
+irgendwo im Ergebnis.
 
-Umschalten, committen, pushen — nach etwa zwei Minuten ist es online.
+**Bedienung:** *Settings → Secrets and variables → Actions → Variables*, dann
+*Actions → Website bauen und veröffentlichen → Run workflow*. Kein Commit, kein
+Clone. Ausführlich in **[`FREISCHALTEN.md`](FREISCHALTEN.md)**.
+
+Warum nicht als Feld im Quelltext? Zwei Gründe:
+
+1. **Zwei Lehrkräfte, zwei Termine.** Steht die Freigabe im Quelltext, kommen
+   sich beide bei jeder Änderung ins Gehege. Als Variable hat jedes Repository
+   seine eigene — siehe [`FUER-KOLLEGEN.md`](FUER-KOLLEGEN.md).
+2. **Kein vergessener Schalter.** Lokal sind beim Entwickeln **immer alle**
+   Tutorials sichtbar. Es gibt nichts, das man zum Ansehen kurz einschaltet und
+   vor dem Commit zurückstellen müsste.
+
+Ist die Variable leer oder nicht gesetzt, **bricht der Build ab** statt
+versehentlich alles zu veröffentlichen. Ein Tippfehler in einer Id ebenfalls.
 
 Die **Infoblätter sind nicht geschaltet**. Sie sind Nachschlagematerial und
 immer erreichbar. Das heißt auch: Wer in Tutorial 1 steckt, sieht im
@@ -108,6 +125,10 @@ git push -u origin meine-aenderung
 
 Danach auf GitHub einen Pull Request stellen. Wer direkt auf `main` arbeitet,
 löst sofort eine Veröffentlichung aus — das ist möglich, aber ungeprüft.
+
+**Eigene Freischaltungstermine** braucht eine eigene Veröffentlichung. Der
+Weg dorthin ist ein Fork; der Inhalt bleibt gemeinsam, nur die Variable
+`TUTORIALS` gehört jedem selbst. Anleitung: [`FUER-KOLLEGEN.md`](FUER-KOLLEGEN.md).
 
 ---
 
