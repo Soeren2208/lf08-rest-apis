@@ -428,13 +428,19 @@ Ab jetzt prüfst du deine Arbeit systematisch. Ein **Testfall** beschreibt, was 
     },
     {
       id: 'TF-05',
-      beschreibung: 'Falsche HTTP-Methode wird abgewiesen',
+      beschreibung: 'Die Antwort ist als JSON gekennzeichnet',
       vorbedingung: 'Anwendung läuft',
-      schritte: ['Einen POST-Request an http://localhost:8080/api/v1/welcome senden'],
-      erwartet: <>Status <code>405</code> (Method Not Allowed). Der Endpunkt existiert, akzeptiert aber nur GET.</>
+      schritte: ['http://localhost:8080/api/v1/welcome aufrufen', 'F12 → Netzwerk → den Eintrag anklicken → Reiter Header'],
+      erwartet: <>Unter den Antwort-Headern steht <code>Content-Type: application/json</code>.</>
     }
   ]}
 />
+
+:::note Ein Fall fehlt hier noch — und das hat einen Grund
+Was passiert bei **richtiger Adresse, aber falscher Methode**? Ein `POST` auf `/api/v1/welcome` wird mit `405 Method Not Allowed` beantwortet — nicht mit `404`, denn die Adresse gibt es ja. Nur die Methode passt nicht zu `@GetMapping`.
+
+Ausprobieren kannst du das jetzt noch nicht: Über die Adresszeile des Browsers geht **ausschließlich GET**. Für alle anderen Methoden brauchst du ein Werkzeug — das bekommst du im nächsten Arbeitsblatt. Der zugehörige Testfall steht dann in Arbeitsblatt 03.
+:::
 
 :::note Warum Testfälle aufschreiben?
 Solange du selbst entwickelst, hast du im Kopf, was funktionieren soll. Sobald jemand anderes prüft — oder du selbst in drei Wochen — ist dieses Wissen weg.
