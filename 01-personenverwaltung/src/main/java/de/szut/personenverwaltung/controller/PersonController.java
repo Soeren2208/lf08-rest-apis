@@ -74,10 +74,10 @@ public class PersonController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePersonById(@PathVariable Long id) {
-        if (!repository.existsById(id)) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND, "Keine Person mit der Id " + id);
-        }
-        repository.deleteById(id);
+        Person person = repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Keine Person mit der Id " + id));
+
+        repository.delete(person);
     }
 }

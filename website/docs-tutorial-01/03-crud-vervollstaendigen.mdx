@@ -107,11 +107,11 @@ Was `PUT` von `PATCH` unterscheidet, steht im Infoblatt [HTTP kompakt](/infoblae
 @DeleteMapping("/{id}")
 @ResponseStatus(HttpStatus.NO_CONTENT)
 public void deletePersonById(@PathVariable Long id) {
-    if (!repository.existsById(id)) {
-        throw new ResponseStatusException(
-                HttpStatus.NOT_FOUND, "Keine Person mit der Id " + id);
-    }
-    repository.deleteById(id);
+    Person person = repository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "Keine Person mit der Id " + id));
+
+    repository.delete(person);
 }
 ```
 
@@ -121,10 +121,12 @@ Zwei Besonderheiten:
 
 **`204 No Content`** statt `200 OK`. Der Code sagt genau das aus: erfolgreich, aber kein Inhalt in der Antwort.
 
-:::note Warum die Prüfung mit `existsById`?
-`deleteById()` wirft bei einer unbekannten Id **keine** Ausnahme, sondern tut schlicht nichts.
+:::note Warum nicht einfach `deleteById(id)`?
+Weil `deleteById()` bei einer unbekannten Id **keine** Ausnahme wirft, sondern schlicht nichts tut.
 
-Ohne die Prüfung würde jeder `DELETE` mit `204` antworten — auch für Datensätze, die es nie gab. Der Client könnte dann nicht unterscheiden, ob er etwas gelöscht hat oder ins Leere griff.
+Jeder `DELETE` würde dann mit `204` antworten — auch für Datensätze, die es nie gab. Der Client könnte nicht unterscheiden, ob er etwas gelöscht hat oder ins Leere griff.
+
+Deshalb wird der Datensatz erst geholt. Das ist **dasselbe Muster wie bei `GET /{id}` und `PUT /{id}`**: holen — oder mit `404` abbrechen. Alle drei Endpunkte, die eine Id entgegennehmen, beginnen jetzt mit denselben zwei Zeilen.
 :::
 
 ### Aufgabe 4 – Idempotenz beobachten

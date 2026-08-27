@@ -66,12 +66,14 @@ public class GuestbookEntryService {
         return repository.save(existing);
     }
 
-    /** Loescht einen Eintrag oder wirft EntryNotFoundException. */
+    /**
+     * Loescht einen Eintrag oder wirft EntryNotFoundException.
+     *
+     * findById wirft bereits, wenn es die Id nicht gibt - deshalb genuegt
+     * hier eine Zeile.
+     */
     public void deleteById(Long id) {
-        if (!repository.existsById(id)) {
-            throw new EntryNotFoundException(id);
-        }
-        repository.deleteById(id);
+        repository.delete(findById(id));
     }
 
     /**

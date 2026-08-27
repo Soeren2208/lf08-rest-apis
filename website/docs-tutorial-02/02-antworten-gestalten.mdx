@@ -181,7 +181,9 @@ Beide Fassungen sind richtig, und die ausgeschriebene ist nicht schlechter. Die 
 <Task id="t2-ab02-a2-delete">Implementiere den Endpunkt zum Löschen. Erfolg: `204`. Unbekannte Id: `404`.</Task>
 
 :::warning Denk an die Prüfung vor dem Löschen
-`deleteById()` wirft bei einer unbekannten Id keine Ausnahme, sondern tut nichts. Ohne vorherige Prüfung mit `existsById()` würde jeder Löschversuch mit `204` antworten — auch für Einträge, die es nie gab.
+`deleteById()` wirft bei einer unbekannten Id keine Ausnahme, sondern tut nichts. Ohne vorheriges Nachsehen würde jeder Löschversuch mit `204` antworten — auch für Einträge, die es nie gab.
+
+Hol den Eintrag deshalb erst mit `findById(...).orElseThrow(...)` — genau wie beim Lesen und beim Ändern.
 :::
 
 <details>
@@ -204,11 +206,11 @@ public ResponseEntity<GuestbookEntry> updateEntry(@PathVariable Long id,
 
 @DeleteMapping("/{id}")
 public ResponseEntity<Void> deleteEntryById(@PathVariable Long id) {
-    if (!repository.existsById(id)) {
-        throw new ResponseStatusException(
-                HttpStatus.NOT_FOUND, "Kein Gästebucheintrag mit der Id " + id);
-    }
-    repository.deleteById(id);
+    GuestbookEntry entry = repository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "Kein Gästebucheintrag mit der Id " + id));
+
+    repository.delete(entry);
     return ResponseEntity.noContent().build();
 }
 ```

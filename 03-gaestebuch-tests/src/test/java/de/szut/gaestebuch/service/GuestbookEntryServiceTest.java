@@ -124,11 +124,11 @@ class GuestbookEntryServiceTest {
     @Test
     @DisplayName("loescht nicht, wenn es die Id nicht gibt")
     void loeschtNichtBeiUnbekannterId() {
-        when(repository.existsById(9999L)).thenReturn(false);
+        when(repository.findById(9999L)).thenReturn(java.util.Optional.empty());
 
         assertThatThrownBy(() -> service.deleteById(9999L))
                 .isInstanceOf(EntryNotFoundException.class);
 
-        verify(repository, never()).deleteById(any());
+        verify(repository, never()).delete(any());
     }
 }

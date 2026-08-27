@@ -110,11 +110,11 @@ public class GuestbookEntryController {
     /** Loescht einen Eintrag. Antwort: 204 No Content oder 404 Not Found. */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEntryById(@PathVariable Long id) {
-        if (!repository.existsById(id)) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND, "Kein Gaestebucheintrag mit der Id " + id);
-        }
-        repository.deleteById(id);
+        GuestbookEntry entry = repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Kein Gaestebucheintrag mit der Id " + id));
+
+        repository.delete(entry);
         return ResponseEntity.noContent().build();
     }
 }
