@@ -1,0 +1,408 @@
+---
+title: "AB 02 – Den Controller allein testen"
+sidebar_label: "02 – Den Controller allein testen"
+slug: 02-controller-testen
+sidebar_position: 2
+---
+
+# AB 02 – Den Controller allein testen
+
+## Die Situation
+
+> Deine Service-Tests sind grün. Trotzdem bleibt eine Lücke, und sie ist nicht klein:
+>
+> Ob aus einer `InvalidEntryException` wirklich eine **400** wird, hat noch nie jemand geprüft. Ob die `Location`-Kopfzeile die richtige Adresse enthält, auch nicht. Ob ein `DELETE` tatsächlich **204** liefert und keinen Rumpf — geprüft hat das bisher nur dein Auge in Postman.
+>
+> Das alles steckt in der Web-Schicht. Und die hat mit Fachlichkeit nichts zu tun.
+
+## Lernziele
+
+Nach Bearbeitung dieses Arbeitsblatts kannst du:
+
+- erklären, was ein **Slice-Test** ist und wodurch er sich von einem Unit-Test unterscheidet
+- mit `@WebMvcTest` nur die Web-Schicht starten
+- mit `MockMvc` Anfragen stellen, ohne dass ein Server läuft
+- mit `@MockitoBean` eine Bean im Spring-Kontext durch ein Doppel ersetzen
+- Statuscodes, Kopfzeilen und JSON-Inhalte prüfen
+- begründen, welche Fehler dieser Test finden kann — und welche nicht
+
+## Was fehlt noch?
+
+Ordne zu, was dein bisheriger Testbestand abdeckt:
+
+| Frage | Bisher geprüft von |
+|---|---|
+| Wird ein Kommentar mit 61 Zeichen gekürzt? | `CommentPreviewTest` |
+| Wird ein leerer Titel abgelehnt? | `GuestbookEntryServiceTest` |
+| Wird daraus eine **400** mit Begründung? | *niemand* |
+| Zeigt `Location` auf den neuen Eintrag? | *niemand* |
+| Liefert `DELETE` **204** ohne Rumpf? | *niemand* |
+
+Die untere Hälfte ist die Übersetzungsarbeit zwischen HTTP und Java. Genau das prüft ein **Slice-Test** der Web-Schicht.
+
+## Drei Größen von Tests
+
+<div style={{overflowX: 'auto'}}>
+
+```text
+   Unit-Test          Slice-Test              Integrationstest
+   ─────────          ──────────              ────────────────
+   eine Klasse        eine Schicht            die ganze Anwendung
+   kein Spring        ein Teil von Spring     ganz Spring + Server + DB
+
+   CommentPreview     @WebMvcTest             @SpringBootTest
+   Service + Mock     @DataJpaTest
+```
+
+</div>
+
+Ein **Slice** ist ein Ausschnitt. `@WebMvcTest` startet von Spring genau den Teil, der mit dem Web zu tun hat:
+
+| Wird geladen | Wird **nicht** geladen |
+|---|---|
+| dein Controller | Repositories |
+| die Umwandlung von und nach JSON | die Datenbank |
+| Statuscode-Behandlung, `@RestControllerAdvice` | dein Service (der wird ersetzt) |
+| die Zuordnung von Adressen zu Methoden | Tomcat |
+
+:::danger Die häufigste Fehlvorstellung
+„`@WebMvcTest` startet meine Anwendung und ruft sie über HTTP auf."
+
+Nein. Es läuft **kein Server**, es ist **kein Port** offen, und du könntest den Test ohne Netzwerkverbindung ausführen. `MockMvc` reicht die Anfrage direkt an die Spring-Web-Schicht weiter — es wird kein einziges Byte über eine Leitung geschickt.
+
+Das ist der Grund, warum diese Tests überhaupt praktikabel sind.
+:::
+
+## Aufgaben
+
+### Aufgabe 1 – Das Gerüst
+
+<Task id="t3-ab02-a1">Lege unter `src/test/java/de/szut/gaestebuch/controller/` die Klasse `GuestbookEntryControllerTest` an:</Task>
+
+```java title="src/test/java/de/szut/gaestebuch/controller/GuestbookEntryControllerTest.java"
+@WebMvcTest(GuestbookEntryController.class)
+@DisplayName("GuestbookEntryController (Web-Schicht)")
+class GuestbookEntryControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    /** Das Doppel für den Service — der echte wird nicht geladen. */
+    @MockitoBean
+    private GuestbookEntryService service;
+
+    private GuestbookEntry beispielEintrag() {
+        GuestbookEntry entry = new GuestbookEntry();
+        entry.setId(1L);
+        entry.setTitle("Toller Kurs");
+        entry.setComment("Hat mir gut gefallen!");
+        entry.setAuthor("Anna");
+        entry.setDate(LocalDateTime.of(2026, 3, 1, 10, 0));
+        return entry;
+    }
+}
+```
+
+:::warning Die Import-Pfade haben sich mit Spring Boot 4 geändert
+Findest du im Netz eine Anleitung, steht dort fast immer `org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest`. Das ist der Pfad aus Spring Boot 3 und **existiert in Boot 4 nicht mehr**.
+
+Richtig sind:
+
+```java
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+```
+
+Ebenfalls verschwunden ist `@MockBean` — es hieß bis Spring Boot 3.4 so und ist durch `@MockitoBean` ersetzt. Lässt IntelliJ dich `@MockBean` importieren, ist es aus einer alten Bibliothek. Nimm `@MockitoBean`.
+:::
+
+| Annotation | Wirkung |
+|---|---|
+| `@WebMvcTest(GuestbookEntryController.class)` | Lädt die Web-Schicht — und von deinen Controllern nur diesen einen |
+| `@Autowired MockMvc` | Das Werkzeug, mit dem der Test Anfragen stellt |
+| `@MockitoBean` | Ersetzt eine Bean im Spring-Kontext durch ein Mockito-Doppel |
+
+:::note `mock(...)` und `@MockitoBean` — der Unterschied
+In Arbeitsblatt 01 hast du das Doppel selbst gebaut: `mock(GuestbookEntryRepository.class)`. Kein Spring beteiligt.
+
+Hier läuft Spring, und Spring will den Controller mit einem Service versorgen. `@MockitoBean` legt das Doppel deshalb **in den Spring-Kontext** — der Controller bekommt es beim Bauen hineingereicht, ohne es zu merken.
+:::
+
+### Aufgabe 2 – Der erste Aufruf
+
+<Task id="t3-ab02-a2">Ergänze den Test für das Anlegen:</Task>
+
+```java
+@Test
+@DisplayName("POST liefert 201 und eine Location-Kopfzeile")
+void postLiefert201MitLocation() throws Exception {
+    // Arrange — was soll der Service tun, wenn er gefragt wird?
+    GuestbookEntry gespeichert = beispielEintrag();
+    when(service.create(any(GuestbookEntry.class))).thenReturn(gespeichert);
+
+    // Act + Assert
+    mockMvc.perform(post("/api/v1/guestbook")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                            {
+                              "title": "Toller Kurs",
+                              "comment": "Hat mir gut gefallen!",
+                              "author": "Anna"
+                            }
+                            """))
+            .andExpect(status().isCreated())
+            .andExpect(header().string("Location",
+                    "http://localhost/api/v1/guestbook/1"))
+            .andExpect(jsonPath("$.title").value("Toller Kurs"))
+            .andExpect(jsonPath("$.author").value("Anna"));
+}
+```
+
+| Baustein | Bedeutung |
+|---|---|
+| `mockMvc.perform(post(...))` | stellt die Anfrage |
+| `.contentType(...)` / `.content(...)` | setzt Kopfzeile und Rumpf |
+| `.andExpect(status().isCreated())` | erwartet **201** |
+| `.andExpect(header().string("Location", ...))` | prüft eine Kopfzeile |
+| `.andExpect(jsonPath("$.title").value(...))` | prüft ein Feld im JSON-Rumpf |
+
+:::info `jsonPath` — mit dem Finger auf eine Stelle im JSON zeigen
+`$` ist das äußerste Objekt. `$.title` ist das Feld `title` darin. In einer Liste zeigt `$.content[0].title` auf den Titel des ersten Eintrags.
+
+So lässt sich eine einzelne Stelle der Antwort prüfen, statt den gesamten JSON-Text zu vergleichen — was bei jedem neuen Feld fehlschlagen würde.
+:::
+
+:::tip Warum `http://localhost` in der erwarteten Adresse?
+Es läuft kein Server, aber `ServletUriComponentsBuilder.fromCurrentRequest()` baut die Adresse trotzdem aus der Anfrage — und `MockMvc` gibt als Servername `localhost` ohne Portangabe an.
+
+Das ist genau der Punkt, den dieser Test absichert: Die Adresse entsteht **aus der Anfrage** und ist nirgends fest eingetragen. Genau das hattest du in Tutorial 2 behauptet; jetzt ist es geprüft.
+:::
+
+<Task id="t3-ab02-a2-run">Führe den Test aus. Er muss grün sein.</Task>
+
+### Aufgabe 3 – Der Fehlerfall
+
+Jetzt die Übersetzung, die bisher niemand geprüft hat: Wird aus der Ausnahme wirklich eine **400**?
+
+<Task id="t3-ab02-a3">Ergänze:</Task>
+
+```java
+@Test
+@DisplayName("POST liefert 400, wenn der Service den Eintrag ablehnt")
+void postLiefert400BeiUngueltigemEintrag() throws Exception {
+    when(service.create(any(GuestbookEntry.class)))
+            .thenThrow(new InvalidEntryException("Der Titel darf nicht leer sein."));
+
+    mockMvc.perform(post("/api/v1/guestbook")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"comment\":\"ohne Titel\",\"author\":\"Anna\"}"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.detail").value("Der Titel darf nicht leer sein."));
+}
+```
+
+:::note Der Service wirft hier nicht wirklich
+`thenThrow(...)` heißt: „Wenn jemand `create` aufruft, wirf diese Ausnahme." Der echte Service läuft nicht, seine Regeln greifen nicht — der Test **stellt die Situation her**, statt sie auszulösen.
+
+Deshalb ist es auch egal, dass der gesendete Rumpf gar keinen Titel hat: Was der Service prüfen *würde*, spielt hier keine Rolle. Das hat `GuestbookEntryServiceTest` erledigt.
+
+Geprüft wird hier nur: Ausnahme rein, **400** samt Begründung raus.
+:::
+
+<Task id="t3-ab02-a3-mehr">Schreibe nach demselben Muster zwei weitere Tests: `GET` auf eine unbekannte Id liefert **404** mit Begründung, und `DELETE` auf eine unbekannte Id liefert **404**.</Task>
+
+<details>
+<summary>Wenn du nicht weiterkommst</summary>
+
+```java
+@Test
+@DisplayName("GET auf eine unbekannte Id liefert 404 mit Begründung")
+void getLiefert404BeiUnbekannterId() throws Exception {
+    when(service.findById(9999L)).thenThrow(new EntryNotFoundException(9999L));
+
+    mockMvc.perform(get("/api/v1/guestbook/9999"))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.detail").value(
+                    "Kein Gästebucheintrag mit der Id 9999"));
+}
+
+@Test
+@DisplayName("DELETE auf eine unbekannte Id liefert 404")
+void deleteLiefert404() throws Exception {
+    doThrow(new EntryNotFoundException(9999L)).when(service).deleteById(9999L);
+
+    mockMvc.perform(delete("/api/v1/guestbook/9999"))
+            .andExpect(status().isNotFound());
+}
+```
+
+**`doThrow(...).when(...)` statt `when(...).thenThrow(...)`:** `deleteById` gibt nichts zurück (`void`). `when(service.deleteById(9999L))` ließe sich gar nicht schreiben, weil da kein Wert steht, den man weiterreichen könnte. Für `void`-Methoden dreht Mockito den Satz deshalb um.
+
+</details>
+
+### Aufgabe 4 – Der Erfolgsfall beim Löschen
+
+<Task id="t3-ab02-a4">Ergänze:</Task>
+
+```java
+@Test
+@DisplayName("DELETE liefert 204 ohne Rumpf")
+void deleteLiefert204() throws Exception {
+    mockMvc.perform(delete("/api/v1/guestbook/1"))
+            .andExpect(status().isNoContent());
+}
+```
+
+<Task id="t3-ab02-a4-frage">Diesem Test fehlt der Arrange-Teil. Warum funktioniert er trotzdem?</Task>
+
+<details>
+<summary>Antwort</summary>
+
+Weil ein Mockito-Doppel von sich aus **nichts tut**. `service.deleteById(1L)` wird aufgerufen, das Doppel tut nichts, wirft nichts, kehrt zurück — und der Controller antwortet mit **204**.
+
+Genau das ist hier der Erfolgsfall: Löschen ohne Ausnahme heißt „hat geklappt".
+
+**Vorsicht:** Bei Methoden mit Rückgabewert ist dieses Schweigen eine häufige Fehlerquelle. Ein nicht eingerichteter Mock liefert `null` — und der Test scheitert an einer `NullPointerException`, obwohl der Code richtig ist. Nicht der Code ist dann schuld, sondern der fehlende `when(...)`.
+
+</details>
+
+### Aufgabe 5 – Eine Seite zurückgeben
+
+<Task id="t3-ab02-a5">Ergänze den Test für die Sammlung:</Task>
+
+```java
+@Test
+@DisplayName("GET auf die Sammlung liefert eine Seite")
+void getLiefertSeite() throws Exception {
+    Page<GuestbookEntry> seite = new PageImpl<>(List.of(beispielEintrag()));
+    when(service.findAll(eq(null), any(Pageable.class))).thenReturn(seite);
+
+    mockMvc.perform(get("/api/v1/guestbook"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content[0].title").value("Toller Kurs"))
+            .andExpect(jsonPath("$.totalElements").value(1));
+}
+```
+
+:::info `eq(null)` statt `null`
+Sobald ein Parameter ein Matcher ist (`any(Pageable.class)`), müssen **alle** Parameter Matcher sein. `eq(null)` heißt „genau dieser Wert" — hier eben `null`, weil kein Jahr gefragt ist.
+
+Steht dort schlicht `null`, bricht Mockito mit `InvalidUseOfMatchersException` ab. Die Meldung ist lang; die Ursache ist immer diese Regel.
+:::
+
+### Aufgabe 6 – Was der Slice von selbst kann
+
+<Task id="t3-ab02-a6">Ergänze zum Schluss:</Task>
+
+```java
+@Test
+@DisplayName("fehlerhaftes JSON liefert 400 — dafür sorgt Spring selbst")
+void kaputtesJsonLiefert400() throws Exception {
+    mockMvc.perform(post("/api/v1/guestbook")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"title\": "))
+            .andExpect(status().isBadRequest());
+}
+```
+
+<Task id="t3-ab02-a6-frage">Der Service wird hier nie aufgerufen. Wo entsteht die 400?</Task>
+
+<details>
+<summary>Antwort</summary>
+
+In der JSON-Umwandlung, also **vor** dem Controller. Das JSON ist abgeschnitten und lässt sich nicht in ein `GuestbookEntry` verwandeln — Spring bricht ab und antwortet mit **400**, ohne deine Methode überhaupt zu betreten.
+
+Das ist einer der Fälle, die ein Slice-Test findet und ein Unit-Test grundsätzlich nicht: Der Fehler passiert in Spring, nicht in deinem Code. In einem Unit-Test gibt es kein Spring.
+
+Denselben Fall hast du in Tutorial 2 in der Statuscode-Tabelle eingetragen. Jetzt ist er abgesichert.
+
+</details>
+
+### Aufgabe 7 – Testfälle
+
+<Task id="t3-ab02-a7">Arbeite die Testfälle ab.</Task>
+
+<TestTable
+  storageKey="t3-ab02-tests"
+  tests={[
+    {
+      id: 'TF-01',
+      beschreibung: 'Alle Web-Tests laufen durch',
+      vorbedingung: 'Aufgaben 1 bis 6 bearbeitet',
+      schritte: ['GuestbookEntryControllerTest ausführen'],
+      erwartet: <>Alle Tests grün, sieben Stück.</>
+    },
+    {
+      id: 'TF-02',
+      beschreibung: 'Der Test braucht keine Datenbank',
+      vorbedingung: 'Alle Tests grün',
+      schritte: ['Ordner data/ umbenennen', 'Test erneut ausführen', 'Ordner zurückbenennen'],
+      erwartet: <>Die Tests bleiben grün. Sie greifen nicht auf die Datenbank zu.</>
+    },
+    {
+      id: 'TF-03',
+      beschreibung: 'Der Test bemerkt einen falschen Statuscode',
+      vorbedingung: 'Alle Tests grün',
+      schritte: ['Im Controller noContent() durch ok() ersetzen', 'Tests ausführen', 'Änderung zurücknehmen'],
+      erwartet: <>Nur <code>deleteLiefert204</code> wird rot: erwartet 204, bekommen 200.</>
+    },
+    {
+      id: 'TF-04',
+      beschreibung: 'Der Test bemerkt eine fehlende Location-Kopfzeile',
+      vorbedingung: 'Alle Tests grün',
+      schritte: ['Im Controller ResponseEntity.created(location).body(saved) durch ResponseEntity.status(201).body(saved) ersetzen', 'Tests ausführen', 'Änderung zurücknehmen'],
+      erwartet: <>Nur <code>postLiefert201MitLocation</code> wird rot — der Statuscode stimmt ja noch.</>
+    },
+    {
+      id: 'TF-05',
+      beschreibung: 'Der Slice-Test bemerkt einen Fachlichkeitsfehler NICHT',
+      vorbedingung: 'Alle Tests grün',
+      schritte: ['Im Service den Aufruf von validate(entry) auskommentieren', 'Nur GuestbookEntryControllerTest ausführen', 'Änderung zurücknehmen'],
+      erwartet: <>Alle sieben Web-Tests bleiben <b>grün</b> — der echte Service läuft hier gar nicht. Rot werden nur drei Tests in <code>GuestbookEntryServiceTest</code>.</>
+    }
+  ]}
+/>
+
+:::danger TF-05 ist der wichtigste Testfall dieses Arbeitsblatts
+Du entfernst eine Prüfung aus der Anwendung — und die Web-Tests bleiben grün. Das ist kein Fehler im Test, sondern seine Bauart: Der echte Service ist durch ein Doppel ersetzt.
+
+Daraus folgt beides:
+
+- **Ein grüner Slice-Test bedeutet nicht, dass die Anwendung funktioniert.** Er bedeutet, dass *diese Schicht* funktioniert.
+- **Deshalb braucht es mehrere Testarten.** Keine deckt allein alles ab.
+
+Welche Art wofür zuständig ist, ordnet Arbeitsblatt 04.
+:::
+
+## Zusammenfassung
+
+:::tip Das hast du gelernt
+- Ein **Slice-Test** startet einen Ausschnitt von Spring — hier mit `@WebMvcTest` die Web-Schicht.
+- Es läuft **kein Server**. `MockMvc` reicht die Anfrage direkt hinein.
+- `@MockitoBean` ersetzt eine Bean im Spring-Kontext durch ein Doppel; `mock(...)` aus Arbeitsblatt 01 kommt ohne Spring aus.
+- Geprüft werden Statuscode, Kopfzeilen und einzelne JSON-Felder (`jsonPath`).
+- Für `void`-Methoden heißt es `doThrow(...).when(...)` statt `when(...).thenThrow(...)`.
+- Sobald ein Parameter ein Matcher ist, müssen alle Parameter Matcher sein — daher `eq(null)`.
+- Mit Spring Boot 4 haben sich die Import-Pfade geändert; `@MockBean` gibt es nicht mehr.
+- Ein grüner Web-Test sagt nichts über die Fachlichkeit und nichts über die Datenbank aus.
+:::
+
+## Selbstkontrolle
+
+1. Was startet `@WebMvcTest` — und was nicht?
+2. Warum braucht dieser Test keinen freien Port?
+3. Worin unterscheiden sich `mock(...)` und `@MockitoBean`?
+4. Warum funktioniert `deleteLiefert204` ohne Arrange-Teil?
+5. Du entfernst die Validierung aus dem Service. Welche Tests werden rot, welche nicht — und warum?
+
+<details>
+<summary>Antworten</summary>
+
+1. Geladen werden Controller, JSON-Umwandlung, Adresszuordnung und die Fehlerbehandlung samt `@RestControllerAdvice`. Nicht geladen werden Repositories, Datenbank und Tomcat; der Service wird durch ein Doppel ersetzt.
+2. Weil kein Server läuft. `MockMvc` übergibt die Anfrage direkt an die Web-Schicht von Spring — es geht nichts über das Netzwerk.
+3. `mock(...)` erzeugt ein Doppel als gewöhnliches Java-Objekt, ganz ohne Spring. `@MockitoBean` legt das Doppel in den Spring-Kontext, sodass Spring es dem Controller beim Bauen hineinreicht.
+4. Weil ein Doppel von sich aus nichts tut. `deleteById` wird aufgerufen, wirft nichts — und für den Controller heißt „keine Ausnahme" eben „erfolgreich gelöscht".
+5. Rot wird `GuestbookEntryServiceTest`, denn dort läuft der echte Service. Grün bleiben alle Web-Tests, weil sie ein Doppel benutzen und den echten Service nie aufrufen. Das zeigt, dass ein Slice nur seine eigene Schicht absichert.
+
+</details>

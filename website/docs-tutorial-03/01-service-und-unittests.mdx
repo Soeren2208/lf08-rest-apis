@@ -1,0 +1,612 @@
+---
+title: "AB 01 – Fachlichkeit und Unit-Tests"
+sidebar_label: "01 – Fachlichkeit und Unit-Tests"
+slug: 01-service-und-unittests
+sidebar_position: 1
+---
+
+# AB 01 – Fachlichkeit bekommt einen Ort, und Tests bekommen ein Ziel
+
+## Die Situation
+
+> Das Frontend-Team meldet zwei Wünsche an:
+>
+> *„In der Übersichtsliste brauchen wir eine kurze Vorschau des Kommentars — eine Zeile, nicht 2000 Zeichen."*
+>
+> *„Und bitte lasst keine leeren Einträge mehr durch. Wir haben gerade drei Stück mit leerem Titel in der Liste."*
+>
+> Beides sind **fachliche Regeln**. Und beide gehören nirgendwohin, wo dein Code sie im Moment aufnehmen könnte.
+
+## Lernziele
+
+Nach Bearbeitung dieses Arbeitsblatts kannst du:
+
+- begründen, warum Fachlichkeit weder in den Controller noch ins Repository gehört
+- eine **Service-Schicht** einziehen und den Controller darauf umstellen
+- Unit-Tests nach **Arrange-Act-Assert** schreiben
+- aus Äquivalenzklassen und Grenzwerten die nötigen Testfälle ableiten
+- mit `@ParameterizedTest` mehrere Fälle in einer Methode prüfen
+- ein **Test-Doppel** einsetzen und sagen, was der Test dadurch nicht mehr prüft
+
+## Wo soll die neue Regel hin?
+
+Sieh dir an, was du hast:
+
+| Schicht | Zuständig für | Kennt |
+|---|---|---|
+| `GuestbookEntryController` | HTTP: Adressen, Statuscodes, Kopfzeilen | Web |
+| `GuestbookEntryRepository` | Speichern und Suchen | Datenbank |
+
+Die Regel *„ein Titel darf nicht leer sein"* ist weder das eine noch das andere. Sie gilt unabhängig davon, ob die Anfrage über HTTP kommt, und unabhängig davon, ob H2 oder PostgreSQL darunter liegt.
+
+<Task id="t3-ab01-a0-denken">Überlege zuerst selbst: Was spricht dagegen, die Prüfung einfach in den Controller zu schreiben? Notiere zwei Gründe, bevor du weiterliest.</Task>
+
+<details>
+<summary>Zwei Gründe</summary>
+
+1. **Sie gilt dann nur für diesen einen Weg.** Kommt später ein Import aus einer CSV-Datei oder ein zweiter Endpunkt dazu, ist die Regel dort nicht wirksam — es sei denn, jemand kopiert sie. Kopierte Regeln laufen auseinander.
+2. **Sie ist dann nur zusammen mit HTTP prüfbar.** Um die Regel „Titel nicht leer" zu testen, müsstest du eine HTTP-Anfrage bauen. Für eine Regel, die mit HTTP nichts zu tun hat.
+
+Der zweite Grund ist der, um den es in diesem Tutorial geht. Merk ihn dir — er kommt in Arbeitsblatt 03 in schärferer Form wieder.
+
+</details>
+
+## Aufgaben
+
+### Aufgabe 1 – Die Service-Schicht einziehen
+
+<Task id="t3-ab01-a1-service">Lege im Package `service` die Klasse `GuestbookEntryService` an. Sie bekommt das Repository über den Konstruktor — genau wie der Controller es bisher bekommen hat.</Task>
+
+```java title="src/main/java/de/szut/gaestebuch/service/GuestbookEntryService.java"
+@Service
+public class GuestbookEntryService {
+
+    private final GuestbookEntryRepository repository;
+
+    public GuestbookEntryService(GuestbookEntryRepository repository) {
+        this.repository = repository;
+    }
+
+    public GuestbookEntry create(GuestbookEntry entry) {
+        return repository.save(entry);
+    }
+
+    public Page<GuestbookEntry> findAll(Integer year, Pageable pageable) {
+        if (year == null) {
+            return repository.findAll(pageable);
+        }
+        LocalDateTime from = LocalDate.of(year, 1, 1).atStartOfDay();
+        LocalDateTime to = from.plusYears(1);
+        return repository.findByDateGreaterThanEqualAndDateLessThan(from, to, pageable);
+    }
+
+    public GuestbookEntry findById(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new EntryNotFoundException(id));
+    }
+}
+```
+
+<Task id="t3-ab01-a1-rest">Verschiebe auch `update` und `deleteById` aus dem Controller in den Service.</Task>
+
+:::info `@Service` — was macht die Annotation?
+Dasselbe wie `@RestController` und `@Repository`: Sie sagt Spring „von dieser Klasse brauche ich ein Exemplar". Spring legt es beim Start an und reicht es überall dort hinein, wo ein `GuestbookEntryService` im Konstruktor steht.
+
+Technisch könnte auch `@Component` dort stehen. `@Service` sagt zusätzlich einem Menschen, der den Code liest, worum es sich handelt.
+:::
+
+### Aufgabe 2 – Eigene Ausnahmen statt Statuscodes
+
+Der Service darf nichts von HTTP wissen — sonst wäre er wieder an das Web gebunden. Statt `ResponseStatusException` wirft er eigene Ausnahmen.
+
+<Task id="t3-ab01-a2-exceptions">Lege im Package `service` zwei Klassen an:</Task>
+
+```java
+public class InvalidEntryException extends RuntimeException {
+    public InvalidEntryException(String message) {
+        super(message);
+    }
+}
+```
+
+```java
+public class EntryNotFoundException extends RuntimeException {
+    public EntryNotFoundException(Long id) {
+        super("Kein Gästebucheintrag mit der Id " + id);
+    }
+}
+```
+
+Aus diesen Ausnahmen müssen wieder Statuscodes werden. Das erledigt **eine** Klasse an **einer** Stelle:
+
+<Task id="t3-ab01-a2-advice">Lege im Package `controller` die Klasse `ApiExceptionHandler` an:</Task>
+
+```java title="src/main/java/de/szut/gaestebuch/controller/ApiExceptionHandler.java"
+@RestControllerAdvice
+public class ApiExceptionHandler {
+
+    @ExceptionHandler(InvalidEntryException.class)
+    public ProblemDetail handleInvalidEntry(InvalidEntryException ex) {
+        ProblemDetail problem =
+                ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problem.setTitle("Ungültiger Eintrag");
+        return problem;
+    }
+
+    @ExceptionHandler(EntryNotFoundException.class)
+    public ProblemDetail handleNotFound(EntryNotFoundException ex) {
+        ProblemDetail problem =
+                ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problem.setTitle("Nicht gefunden");
+        return problem;
+    }
+}
+```
+
+:::info `@RestControllerAdvice` — ein Übersetzer für die ganze Anwendung
+Die Klasse gehört zu keinem einzelnen Controller. Sie gilt für **alle**. Wirft irgendwo eine `EntryNotFoundException`, greift Spring hier zu und macht eine `404`-Antwort daraus.
+
+`ProblemDetail` kennst du aus dem ersten Tutorial: das Standardformat für Fehlerantworten nach RFC 9457. Genau dieses Format hat Spring bisher selbst erzeugt — jetzt füllst du es mit deinem eigenen Text.
+:::
+
+<Task id="t3-ab01-a2-controller">Baue den Controller um: Er ruft nur noch den Service auf. Danach steht in keiner Controller-Methode mehr eine Fallunterscheidung.</Task>
+
+<details>
+<summary>So sieht der Controller danach aus</summary>
+
+```java
+@RestController
+@RequestMapping("/api/v1/guestbook")
+public class GuestbookEntryController {
+
+    private final GuestbookEntryService service;
+
+    public GuestbookEntryController(GuestbookEntryService service) {
+        this.service = service;
+    }
+
+    @PostMapping
+    public ResponseEntity<GuestbookEntry> createEntry(@RequestBody GuestbookEntry entry) {
+        GuestbookEntry saved = service.create(entry);
+
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(saved.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(saved);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<GuestbookEntry> findEntryById(@PathVariable Long id) {
+        return ResponseEntity.ok(service.findById(id));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteEntryById(@PathVariable Long id) {
+        service.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+}
+```
+
+Die `404`-Behandlung ist aus dem Controller verschwunden — nicht weggefallen, sondern an die zwei Stellen gewandert, an die sie gehört: die Regel in den Service, die Übersetzung in den `ApiExceptionHandler`.
+
+</details>
+
+<Task id="t3-ab01-a2-test">Starte die Anwendung und rufe deine `requests.http` durch. Alles muss sich verhalten wie vorher — du hast umgebaut, nicht geändert.</Task>
+
+:::note Das war ein Refactoring
+Ein **Refactoring** ändert den Aufbau des Codes, ohne sein Verhalten zu ändern. Der Beweis dafür ist, dass sich von außen nichts unterscheidet.
+
+Genau hier zeigt sich das Problem, das dieses Tutorial löst: Diesen Beweis hast du eben von Hand geführt, indem du geklickt hast. Beim nächsten Umbau musst du wieder klicken. Und beim übernächsten.
+:::
+
+### Aufgabe 3 – Die erste eigene Logik
+
+Jetzt der erste Wunsch des Frontend-Teams: eine Vorschauzeile.
+
+<Task id="t3-ab01-a3-code">Lege im Package `service` die Klasse `CommentPreview` an — **genau so**, auch wenn dir etwas auffällt:</Task>
+
+```java title="src/main/java/de/szut/gaestebuch/service/CommentPreview.java"
+public final class CommentPreview {
+
+    public static final int MAX_LENGTH = 60;
+
+    private CommentPreview() {
+    }
+
+    public static String shorten(String comment) {
+        if (comment == null) {
+            return "";
+        }
+        if (comment.length() < MAX_LENGTH) {
+            return comment;
+        }
+        return comment.substring(0, MAX_LENGTH - 1) + "…";
+    }
+}
+```
+
+Die Regel dazu lautet:
+
+> Ein Kommentar mit **höchstens 60 Zeichen** wird unverändert angezeigt. Ein längerer wird abgeschnitten und bekommt „…" ans Ende, sodass die Vorschau insgesamt genau 60 Zeichen lang ist. `null` wird zu einem leeren Text.
+
+### Aufgabe 4 – Testfälle ableiten, bevor du testest
+
+Nicht jeden möglichen Wert prüfen — sondern die **richtigen**. Welche das sind, verrät das Infoblatt [Testfälle formulieren](/infoblaetter/testfaelle).
+
+<Task id="t3-ab01-a4-klassen">Fülle die Tabelle aus: Welche Äquivalenzklassen hat `shorten`, und welche Grenzwerte liegen dazwischen? Es genügen die Wörter **unverändert**, **gekürzt** oder **leerer Text**.</Task>
+
+<FillInTable
+  storageKey="t3-ab01-klassen"
+  spalteLinks="Eingabe"
+  spalteRechts="Erwartete Ausgabe"
+  platzhalter="kurz beschreiben"
+  zeilen={[
+    {id: 'null', links: 'null', loesung: 'leerer Text', klartext: 'leerer Text ("")'},
+    {id: 'kurz', links: 'Kommentar mit 20 Zeichen', loesung: 'unverändert', klartext: 'unverändert'},
+    {id: 'g59', links: <>Kommentar mit <b>59</b> Zeichen</>, loesung: 'unverändert', klartext: 'unverändert'},
+    {id: 'g60', links: <>Kommentar mit <b>60</b> Zeichen</>, loesung: 'unverändert', klartext: 'unverändert — 60 ist noch erlaubt'},
+    {id: 'g61', links: <>Kommentar mit <b>61</b> Zeichen</>, loesung: 'gekürzt', klartext: 'gekürzt, endet auf „…", 60 Zeichen lang'},
+    {id: 'lang', links: 'Kommentar mit 500 Zeichen', loesung: 'gekürzt', klartext: 'gekürzt, endet auf „…", 60 Zeichen lang'},
+  ]}
+/>
+
+:::tip Warum ausgerechnet 59, 60 und 61?
+Weil dort die Regel umschlägt. Ein Programmierfehler an einer Grenze — `<` statt `<=` — verändert das Verhalten für **genau einen** Wert. Ein Test mit 20 und 500 Zeichen findet ihn nie.
+
+Das ist die **Grenzwertanalyse**: Prüfe an jeder Grenze den Wert davor, die Grenze selbst und den Wert danach.
+:::
+
+### Aufgabe 5 – Der erste Unit-Test
+
+<Task id="t3-ab01-a5-datei">Lege unter `src/test/java/de/szut/gaestebuch/service/` die Klasse `CommentPreviewTest` an.</Task>
+
+Ein Test besteht aus drei Abschnitten. Diese Gliederung heißt **Arrange-Act-Assert**:
+
+```java title="src/test/java/de/szut/gaestebuch/service/CommentPreviewTest.java"
+class CommentPreviewTest {
+
+    @Test
+    @DisplayName("kurzer Kommentar bleibt unverändert")
+    void kurzerKommentarBleibtUnveraendert() {
+        // Arrange — alles vorbereiten
+        String kommentar = "Hat mir gut gefallen!";
+
+        // Act — die eine Sache tun, um die es geht
+        String ergebnis = CommentPreview.shorten(kommentar);
+
+        // Assert — nachsehen, ob es stimmt
+        assertThat(ergebnis).isEqualTo(kommentar);
+    }
+}
+```
+
+| Teil | Frage | Faustregel |
+|---|---|---|
+| **Arrange** | Was muss vorher da sein? | darf mehrere Zeilen haben |
+| **Act** | Was wird geprüft? | **genau eine** Zeile |
+| **Assert** | Woran erkennst du, dass es stimmt? | prüft **eine** Aussage |
+
+:::info `assertThat` statt `assertEquals`
+Beides funktioniert. `assertThat(...)` kommt von **AssertJ** und liest sich wie ein Satz — `assertThat(ergebnis).isEqualTo(kommentar)`. Vor allem aber sind die Fehlermeldungen aussagekräftiger.
+
+AssertJ ist bereits dabei; es steckt im Test-Starter deines Projekts.
+
+Der Import: `import static org.assertj.core.api.Assertions.assertThat;`
+:::
+
+:::note `@DisplayName` — der Test erklärt sich selbst
+Ohne diese Annotation heißt der fehlgeschlagene Test `kurzerKommentarBleibtUnveraendert`. Mit ihr steht in der Ausgabe *„kurzer Kommentar bleibt unverändert"*.
+
+Der Unterschied zählt in dem Moment, in dem ein Test in einem halben Jahr rot wird und jemand anderes verstehen muss, was eigentlich kaputt ist.
+:::
+
+<Task id="t3-ab01-a5-run">Führe den Test aus (in IntelliJ: grüner Pfeil neben der Methode). Er muss grün sein.</Task>
+
+### Aufgabe 6 – Die Grenze prüfen
+
+Jetzt die drei Fälle aus deiner Tabelle, an denen die Regel umschlägt.
+
+<Task id="t3-ab01-a6-grenzwerte">Schreibe **einen** Test, der alle drei Grenzwerte prüft:</Task>
+
+```java
+/** Erzeugt einen Text aus genau so vielen Zeichen. */
+private String textMitLaenge(int laenge) {
+    return "x".repeat(laenge);
+}
+
+@ParameterizedTest(name = "{0} Zeichen -> unverändert: {1}")
+@DisplayName("An der Grenze von 60 Zeichen")
+@CsvSource({
+        "59, true",
+        "60, true",
+        "61, false"
+})
+void anDerGrenze(int laenge, boolean bleibtUnveraendert) {
+    String kommentar = textMitLaenge(laenge);
+
+    String ergebnis = CommentPreview.shorten(kommentar);
+
+    assertThat(ergebnis.equals(kommentar)).isEqualTo(bleibtUnveraendert);
+}
+```
+
+:::info `@ParameterizedTest` — eine Methode, mehrere Fälle
+Die Methode läuft dreimal, jedes Mal mit einer Zeile aus `@CsvSource`. Die Werte landen in den Parametern.
+
+Der Gewinn: Ein weiterer Fall ist **eine Zeile**, keine weitere Methode. Und im Testbericht erscheinen drei einzelne Ergebnisse — du siehst, *welcher* Wert versagt hat.
+:::
+
+<Task id="t3-ab01-a6-run">Führe den Test aus.</Task>
+
+<Task id="t3-ab01-a6-lesen">Er ist **rot**. Lies die Fehlermeldung, bevor du irgendetwas änderst: Welcher der drei Fälle versagt — und was war erwartet, was kam heraus?</Task>
+
+:::danger Jetzt kommt die wichtigste Frage dieses Arbeitsblatts
+Ein Test ist rot. Zwei Erklärungen sind möglich:
+
+1. **Der Code ist falsch.**
+2. **Der Test ist falsch.**
+
+Die zweite Möglichkeit gerät leicht aus dem Blick — ein roter Test fühlt sich an wie ein Vorwurf an den Code. Beantworte die Frage trotzdem jedes Mal, und zwar an der Regel, nicht am Code:
+
+> *Ein Kommentar mit **höchstens 60 Zeichen** wird unverändert angezeigt.*
+
+Was sagt die Regel für 60 Zeichen? Und was tut dein Code?
+:::
+
+<details>
+<summary>Auflösung</summary>
+
+Der **Code** ist falsch. In `shorten` steht:
+
+```java
+if (comment.length() < MAX_LENGTH) {   // ❌
+```
+
+„höchstens 60" heißt `<= 60`. Mit `<` wird ein Kommentar von exakt 60 Zeichen gekürzt, obwohl er passt. Richtig:
+
+```java
+if (comment.length() <= MAX_LENGTH) {   // ✅
+```
+
+Ein einziges Zeichen im Quelltext. Es betrifft genau einen von Milliarden möglichen Eingabewerten — und genau diesen einen hat dein Test geprüft, weil du ihn aus der Grenzwertanalyse abgeleitet hast und nicht geraten.
+
+**Merke:** Der Test hat den Fehler nicht gefunden, weil er ein Test ist. Er hat ihn gefunden, weil er an der **richtigen Stelle** geprüft hat.
+
+</details>
+
+<Task id="t3-ab01-a6-fix">Korrigiere den Code und lass den Test erneut laufen. Achte darauf, dass die anderen Tests weiterhin grün sind.</Task>
+
+<Task id="t3-ab01-a6-rest">Ergänze zwei weitere Tests: `null` wird zu einem leeren Text, und ein Kommentar mit 200 Zeichen wird auf genau 60 Zeichen gekürzt und endet auf „…".</Task>
+
+### Aufgabe 7 – Die Validierung
+
+Der zweite Wunsch des Frontend-Teams: keine leeren Einträge mehr.
+
+<Task id="t3-ab01-a7-code">Ergänze im `GuestbookEntryService`:</Task>
+
+```java
+public static final int MAX_TITLE_LENGTH = 80;
+public static final int MAX_COMMENT_LENGTH = 2000;
+public static final int MAX_AUTHOR_LENGTH = 50;
+
+public GuestbookEntry create(GuestbookEntry entry) {
+    validate(entry);
+    return repository.save(entry);
+}
+
+/** Paketsichtbar, damit der Test im selben Package sie direkt aufrufen kann. */
+void validate(GuestbookEntry entry) {
+    checkText(entry.getTitle(), "Der Titel", MAX_TITLE_LENGTH);
+    checkText(entry.getComment(), "Der Kommentar", MAX_COMMENT_LENGTH);
+    checkText(entry.getAuthor(), "Der Verfasser", MAX_AUTHOR_LENGTH);
+}
+
+private void checkText(String value, String bezeichnung, int maxLength) {
+    if (value == null || value.isBlank()) {
+        throw new InvalidEntryException(bezeichnung + " darf nicht leer sein.");
+    }
+    if (value.length() > maxLength) {
+        throw new InvalidEntryException(
+                bezeichnung + " darf höchstens " + maxLength + " Zeichen lang sein.");
+    }
+}
+```
+
+### Aufgabe 8 – Testen mit einem Doppel
+
+Der Service lässt sich nicht so testen wie `CommentPreview`: Er braucht ein Repository, und das braucht eine Datenbank.
+
+Muss es nicht. Es genügt **etwas, das aussieht wie ein Repository**.
+
+<Task id="t3-ab01-a8-setup">Lege `GuestbookEntryServiceTest` an — ebenfalls unter `src/test/java/de/szut/gaestebuch/service/`:</Task>
+
+```java title="src/test/java/de/szut/gaestebuch/service/GuestbookEntryServiceTest.java"
+class GuestbookEntryServiceTest {
+
+    private GuestbookEntryRepository repository;
+    private GuestbookEntryService service;
+
+    @BeforeEach
+    void setUp() {
+        repository = mock(GuestbookEntryRepository.class);
+        service = new GuestbookEntryService(repository);
+    }
+
+    /** Baut einen Eintrag, der alle Regeln erfüllt. */
+    private GuestbookEntry gueltigerEintrag() {
+        GuestbookEntry entry = new GuestbookEntry();
+        entry.setTitle("Toller Kurs");
+        entry.setComment("Hat mir gut gefallen!");
+        entry.setAuthor("Anna");
+        return entry;
+    }
+}
+```
+
+:::info `mock(...)` — ein Doppel, kein Ersatz
+`mock(GuestbookEntryRepository.class)` erzeugt ein Objekt, das dieselben Methoden hat wie ein Repository. Es speichert nichts. Jede Methode gibt zunächst nichts zurück (`null`, `false`, leeres `Optional`) — bis der Test etwas anderes anordnet.
+
+Das Werkzeug dahinter heißt **Mockito** und liegt bereits im Test-Starter deines Projekts.
+
+`@BeforeEach` läuft vor **jedem** Test. So bekommt jeder Test ein frisches Doppel und kann nicht durch einen vorherigen Test beeinflusst werden.
+:::
+
+<Task id="t3-ab01-a8-tests">Schreibe zwei Tests:</Task>
+
+```java
+@Test
+@DisplayName("speichert einen gültigen Eintrag")
+void speichertGueltigenEintrag() {
+    // Arrange
+    GuestbookEntry eingabe = gueltigerEintrag();
+    when(repository.save(any(GuestbookEntry.class))).thenReturn(eingabe);
+
+    // Act
+    GuestbookEntry ergebnis = service.create(eingabe);
+
+    // Assert
+    assertThat(ergebnis).isSameAs(eingabe);
+    verify(repository).save(eingabe);
+}
+
+@Test
+@DisplayName("speichert NICHT, wenn der Titel fehlt")
+void speichertNichtOhneTitel() {
+    GuestbookEntry eingabe = gueltigerEintrag();
+    eingabe.setTitle("   ");
+
+    assertThatThrownBy(() -> service.create(eingabe))
+            .isInstanceOf(InvalidEntryException.class)
+            .hasMessageContaining("Titel");
+
+    verify(repository, never()).save(any());
+}
+```
+
+| Baustein | Bedeutung |
+|---|---|
+| `when(...).thenReturn(...)` | „Wenn jemand das aufruft, liefere das." |
+| `verify(repository).save(eingabe)` | „Prüfe, dass `save` mit genau diesem Eintrag aufgerufen wurde." |
+| `verify(repository, never()).save(any())` | „Prüfe, dass `save` **nie** aufgerufen wurde." |
+| `assertThatThrownBy(() -> ...)` | „Führe das aus und prüfe die geworfene Ausnahme." |
+
+:::tip `verify(..., never())` ist der eigentliche Test
+Dass eine Ausnahme fliegt, ist die halbe Aussage. Die andere Hälfte: Es darf **nichts** in der Datenbank landen.
+
+Ein Service, der erst speichert und dann prüft, würde den ersten Teil bestehen und trotzdem Datenmüll hinterlassen. `never()` schließt das aus.
+:::
+
+:::danger Was dieser Test NICHT prüft
+Es gibt keine Datenbank in diesem Test. `repository.save(...)` speichert nichts, es gibt nur zurück, was der Test angeordnet hat.
+
+Dieser Test kann also **niemals** einen Fehler in der Datenbankschicht finden — kein falsches Mapping, keine kaputte Abfrage, keine fehlende Spalte. Er prüft die Regeln des Service. Sonst nichts.
+
+Das ist kein Mangel, sondern der Zweck: Wird dieser Test rot, weißt du sofort, wo der Fehler steckt. Für die Datenbank ist Arbeitsblatt 03 zuständig.
+:::
+
+<Task id="t3-ab01-a8-grenzwerte">Schreibe einen `@ParameterizedTest` für die Längengrenze des Titels — 79, 80 und 81 Zeichen. Leite die Fälle wieder aus der Regel ab, nicht aus dem Code.</Task>
+
+<Task id="t3-ab01-a8-alle">Führe alle Tests aus: In IntelliJ Rechtsklick auf den Ordner `src/test/java` → *Run All Tests*. Oder auf der Konsole:</Task>
+
+```bash
+mvnw test
+```
+
+### Aufgabe 9 – Testfälle
+
+<Task id="t3-ab01-a9">Arbeite die Testfälle ab.</Task>
+
+<TestTable
+  storageKey="t3-ab01-tests"
+  tests={[
+    {
+      id: 'TF-01',
+      beschreibung: 'Das Verhalten nach außen ist unverändert',
+      vorbedingung: 'Service-Umbau abgeschlossen, Anwendung läuft',
+      schritte: ['requests.http vollständig durchlaufen'],
+      erwartet: <>Alle Aufrufe verhalten sich wie vor dem Umbau — dieselben Statuscodes, dieselben Antworten.</>
+    },
+    {
+      id: 'TF-02',
+      beschreibung: 'Leerer Titel wird abgelehnt',
+      vorbedingung: 'Anwendung läuft',
+      schritte: ['POST mit "title": "" senden'],
+      erwartet: <>Status <code>400</code>, im Rumpf ein Feld <code>detail</code> mit dem Wort <code>Titel</code>.</>
+    },
+    {
+      id: 'TF-03',
+      beschreibung: 'Der abgelehnte Eintrag wurde nicht gespeichert',
+      vorbedingung: 'TF-02 wurde ausgeführt',
+      schritte: ['GET auf /api/v1/guestbook'],
+      erwartet: <>Der abgelehnte Eintrag taucht <b>nicht</b> in der Liste auf.</>
+    },
+    {
+      id: 'TF-04',
+      beschreibung: 'Grenzwert Titel: 80 Zeichen sind erlaubt',
+      vorbedingung: 'Anwendung läuft',
+      schritte: ['POST mit einem Titel aus genau 80 Zeichen'],
+      erwartet: <>Status <code>201</code> — nicht 400.</>
+    },
+    {
+      id: 'TF-05',
+      beschreibung: 'Grenzwert Titel: 81 Zeichen sind zu viel',
+      vorbedingung: 'Anwendung läuft',
+      schritte: ['POST mit einem Titel aus genau 81 Zeichen'],
+      erwartet: <>Status <code>400</code>.</>
+    },
+    {
+      id: 'TF-06',
+      beschreibung: 'Der Grenzwerttest findet den Fehler',
+      vorbedingung: 'CommentPreview ist korrigiert, alle Tests sind grün',
+      schritte: ['In shorten das <= wieder zu < ändern', 'Tests ausführen', 'Änderung zurücknehmen'],
+      erwartet: <>Genau der Fall <code>60</code> wird rot, die Fälle 59 und 61 bleiben grün.</>
+    },
+    {
+      id: 'TF-07',
+      beschreibung: 'Alle Tests laufen zusammen durch',
+      vorbedingung: 'Alle Aufgaben bearbeitet',
+      schritte: ['mvnw test'],
+      erwartet: <><code>BUILD SUCCESS</code>, keine Fehler, keine übersprungenen Tests.</>
+    }
+  ]}
+/>
+
+:::note TF-06 ist ein Test für deinen Test
+Einen Fehler absichtlich wieder einzubauen, um zu sehen, ob der Test ihn bemerkt, klingt umständlich. Es ist aber die einzige Möglichkeit zu prüfen, ob ein grüner Test überhaupt etwas leistet.
+
+Ein Test, der auch bei kaputtem Code grün bleibt, ist schlimmer als kein Test: Er erzeugt Vertrauen, das nicht gedeckt ist.
+:::
+
+## Zusammenfassung
+
+:::tip Das hast du gelernt
+- Fachliche Regeln gehören in eine eigene **Service-Schicht** — nicht in den Controller, nicht ins Repository.
+- Der Service kennt kein HTTP. Er wirft eigene Ausnahmen; der `@RestControllerAdvice` übersetzt sie in Statuscodes.
+- **Arrange-Act-Assert** gliedert jeden Test: vorbereiten, eine Sache tun, eine Aussage prüfen.
+- Testfälle werden aus **Äquivalenzklassen und Grenzwerten** abgeleitet, nicht geraten. Fehler sitzen an den Grenzen.
+- `@ParameterizedTest` mit `@CsvSource` prüft mehrere Fälle in einer Methode und meldet jeden einzeln.
+- Ein **Mock** ersetzt eine Abhängigkeit. Er macht den Test schnell und eindeutig — und schließt aus, dass dieser Test etwas über die Datenbank aussagt.
+- Bei einem roten Test ist die erste Frage nicht „was ist am Code kaputt", sondern **„wer hat recht — Test oder Code?"**
+:::
+
+## Selbstkontrolle
+
+1. Nenne zwei Gründe, warum die Prüfung „Titel nicht leer" nicht in den Controller gehört.
+2. Warum wirft der Service `InvalidEntryException` statt `ResponseStatusException`?
+3. Welche drei Werte prüfst du bei einer Grenze — und warum genau diese?
+4. Was bedeutet `verify(repository, never()).save(any())`, und warum genügt die Prüfung der Ausnahme allein nicht?
+5. Ein Test ist rot. Woran entscheidest du, ob der Test oder der Code falsch ist?
+
+<details>
+<summary>Antworten</summary>
+
+1. Erstens gälte sie nur für diesen einen Weg — ein zweiter Endpunkt oder ein CSV-Import umginge sie. Zweitens ließe sie sich nur zusammen mit HTTP prüfen, obwohl sie mit HTTP nichts zu tun hat.
+2. Weil `ResponseStatusException` ein Statuscode ist, also HTTP. Der Service soll unabhängig davon sein, über welchen Weg er aufgerufen wird. Die Übersetzung in einen Statuscode passiert an genau einer Stelle: im `ApiExceptionHandler`.
+3. Den Wert unter der Grenze, die Grenze selbst und den Wert darüber — bei „höchstens 60" also 59, 60 und 61. Ein Verwechslungsfehler wie `<` statt `<=` verändert das Verhalten für genau einen Wert; alle anderen Testwerte übersehen ihn.
+4. „`save` wurde kein einziges Mal aufgerufen." Die Ausnahme allein beweist nur, dass etwas abgebrochen wurde — nicht, wann. Ein Service, der erst speichert und dann prüft, würde die Ausnahme ebenfalls werfen und trotzdem einen ungültigen Eintrag hinterlassen.
+5. An der **Regel**, nicht am Code. Die Regel ist die Vorgabe; Test und Code sind zwei Versuche, sie umzusetzen. Man liest die Regel und fragt, welcher der beiden von ihr abweicht.
+
+</details>

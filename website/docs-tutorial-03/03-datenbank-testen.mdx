@@ -1,0 +1,408 @@
+---
+title: "AB 03 – Die Datenbank allein testen"
+sidebar_label: "03 – Die Datenbank allein testen"
+slug: 03-datenbank-testen
+sidebar_position: 3
+---
+
+# AB 03 – Die Datenbank allein testen
+
+## Die Situation
+
+> Zurück zum Anfang dieses Tutorials — zu dem Fehler, der drei Wochen unentdeckt blieb:
+>
+> *„Plötzlich tauchten Einträge in zwei Jahren gleichzeitig auf."*
+>
+> In Tutorial 2 stand dazu eine Behauptung. `findByDateBetween` wäre falsch, hieß es, weil `Between` beide Grenzen einschließt — ein Eintrag exakt am 1. Januar um 00:00 Uhr gehörte dann zu zwei Jahren.
+>
+> Geprüft hat das nie jemand. Es klang einleuchtend, also stand es so da.
+>
+> Heute machst du aus der Behauptung einen Beweis.
+
+## Lernziele
+
+Nach Bearbeitung dieses Arbeitsblatts kannst du:
+
+- mit `@DataJpaTest` nur die Datenzugriffsschicht starten
+- mit dem `TestEntityManager` Daten für einen Test vorbereiten
+- erklären, warum diese Tests deine echten Daten nicht anfassen
+- eine abgeleitete Abfrage an ihrem Grenzwert prüfen
+- an einem Test, der sich **nicht schreiben lässt**, einen Entwurfsfehler erkennen
+- begründen, warum schlechte Testbarkeit meist ein Hinweis auf schlechten Entwurf ist
+
+## Der dritte Slice
+
+Zwei Schichten sind abgesichert, eine fehlt:
+
+| Schicht | Geprüft von | Womit ersetzt |
+|---|---|---|
+| Web | `@WebMvcTest` | Service → Doppel |
+| Fachlichkeit | gewöhnlicher Unit-Test | Repository → Doppel |
+| **Daten** | **fehlt** | — |
+
+In beiden bisherigen Tests war die Datenbank durch ein Doppel ersetzt. Das war Absicht — aber es heißt eben auch: **Ob deine Abfragen richtig sind, hat noch nie jemand nachgesehen.** Ein Doppel liefert zurück, was der Test ihm sagt. Es kann kein falsches SQL erzeugen.
+
+`@DataJpaTest` startet den Gegenpart: Entitäten, Repositories, eine echte Datenbank — aber nichts vom Web.
+
+:::info Zwei Dinge nimmt dir `@DataJpaTest` ab
+**1. Eine eigene Datenbank.** Es schaltet auf eine Datenbank im Hauptspeicher um. Deine Datei unter `data/` wird nicht angefasst — deine echten Einträge sind sicher, und jeder Test startet mit einer leeren Tabelle.
+
+**2. Aufräumen.** Jeder Test läuft in einer Transaktion, die danach **zurückgerollt** wird. Was ein Test anlegt, ist nach ihm wieder weg. Deshalb können Tests einander nicht beeinflussen, und ihre Reihenfolge spielt keine Rolle.
+:::
+
+## Aufgaben
+
+### Aufgabe 1 – Das Gerüst
+
+<Task id="t3-ab03-a1">Lege unter `src/test/java/de/szut/gaestebuch/repository/` die Klasse `GuestbookEntryRepositoryTest` an:</Task>
+
+```java title="src/test/java/de/szut/gaestebuch/repository/GuestbookEntryRepositoryTest.java"
+@DataJpaTest
+@DisplayName("GuestbookEntryRepository (Datenbank-Schicht)")
+class GuestbookEntryRepositoryTest {
+
+    @Autowired
+    private TestEntityManager entityManager;
+
+    @Autowired
+    private GuestbookEntryRepository repository;
+
+    @Test
+    @DisplayName("fängt mit einer leeren Datenbank an")
+    void faengtLeerAn() {
+        assertThat(repository.count()).isZero();
+    }
+}
+```
+
+:::warning Auch hier die neuen Import-Pfade
+```java
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
+```
+
+In jeder älteren Anleitung steht `org.springframework.boot.test.autoconfigure.orm.jpa.…`. Dieses Paket gibt es in Spring Boot 4 nicht mehr.
+:::
+
+<Task id="t3-ab03-a1-run">Führe den Test aus. Er ist grün — obwohl in deiner echten Datenbank Einträge stehen.</Task>
+
+<Task id="t3-ab03-a1-frage">Warum ist er grün? Formuliere die Antwort in einem Satz, bevor du weiterliest.</Task>
+
+<details>
+<summary>Antwort</summary>
+
+Weil es **nicht deine Datenbank** ist. `@DataJpaTest` hat die Verbindung aus `application.properties` durch eine leere Datenbank im Hauptspeicher ersetzt.
+
+Das ist mehr als Bequemlichkeit: Ein Test, der auf echten Daten arbeitet, hängt davon ab, was zufällig darin steht. Er wird grün oder rot, je nachdem, wer zuletzt etwas angelegt hat. Solche Tests wirft man irgendwann weg, weil ihnen niemand mehr glaubt.
+
+</details>
+
+### Aufgabe 2 – Daten für einen Test vorbereiten
+
+Um den Jahresfilter zu prüfen, brauchst du Einträge aus verschiedenen Jahren.
+
+<Task id="t3-ab03-a2">Ergänze eine Hilfsmethode:</Task>
+
+```java
+/** Legt einen Eintrag mit einem ausdrücklichen Datum an. */
+private GuestbookEntry eintragVom(LocalDateTime zeitpunkt, String titel) {
+    GuestbookEntry entry = new GuestbookEntry();
+    entry.setTitle(titel);
+    entry.setComment("Kommentar zu " + titel);
+    entry.setAuthor("Anna");
+    entry.setDate(zeitpunkt);
+    return entityManager.persistAndFlush(entry);
+}
+```
+
+:::info `TestEntityManager` — warum nicht `repository.save(...)`?
+Beides speichert. Der Unterschied liegt in der Absicht.
+
+`persistAndFlush` schreibt **sofort** in die Datenbank, statt auf das Ende der Transaktion zu warten. Das ist wichtig, weil sonst die anschließende Abfrage noch gar nichts finden könnte.
+
+Faustregel: **Vorbereiten mit dem `TestEntityManager`, prüfen mit dem Repository.** Dann prüft der Test das Repository — und nicht sich selbst.
+:::
+
+### Aufgabe 3 – Der Test, der sich nicht schreiben lässt
+
+<Task id="t3-ab03-a3">Schreibe den Test für den Jahresfilter:</Task>
+
+```java
+@Test
+@DisplayName("der Jahresfilter liefert nur Einträge des gesuchten Jahres")
+void jahresfilterLiefertNurDiesesJahr() {
+    eintragVom(LocalDateTime.of(2025, 6, 1, 12, 0), "aus 2025");
+    eintragVom(LocalDateTime.of(2026, 6, 1, 12, 0), "aus 2026");
+    eintragVom(LocalDateTime.of(2027, 6, 1, 12, 0), "aus 2027");
+
+    Page<GuestbookEntry> treffer = repository.findByDateGreaterThanEqualAndDateLessThan(
+            LocalDateTime.of(2026, 1, 1, 0, 0),
+            LocalDateTime.of(2027, 1, 1, 0, 0),
+            PageRequest.of(0, 10));
+
+    assertThat(treffer.getTotalElements()).isEqualTo(1);
+    assertThat(treffer.getContent().get(0).getTitle()).isEqualTo("aus 2026");
+}
+```
+
+<Task id="t3-ab03-a3-run">Führe ihn aus.</Task>
+
+Er ist rot. Und diesmal ist die Ursache eine andere als in Arbeitsblatt 01.
+
+<Task id="t3-ab03-a3-diagnose">Finde heraus, woran es liegt. Schreibe dazu einen Test, der **nur eine Frage** stellt: Bleibt ein gesetztes Datum überhaupt erhalten?</Task>
+
+```java
+@Test
+@DisplayName("das gesetzte Datum bleibt erhalten")
+void gesetztesDatumBleibtErhalten() {
+    LocalDateTime zeitpunkt = LocalDateTime.of(2020, 5, 17, 12, 0);
+
+    GuestbookEntry gespeichert = eintragVom(zeitpunkt, "Alt");
+    entityManager.clear();
+
+    GuestbookEntry geladen = repository.findById(gespeichert.getId()).orElseThrow();
+    assertThat(geladen.getDate()).isEqualTo(zeitpunkt);
+}
+```
+
+<Task id="t3-ab03-a3-lesen">Führe auch diesen Test aus und lies die Fehlermeldung genau. Welches Datum steht wirklich in der Datenbank?</Task>
+
+<details>
+<summary>Was die Fehlermeldung zeigt</summary>
+
+```text
+expected: 2020-05-17T12:00
+ but was: 2026-08-26T18:10:29.805345
+```
+
+Statt des 17. Mai 2020 steht der **heutige Zeitpunkt** dort. Dein Datum wurde beim Speichern überschrieben.
+
+Der Grund steht in der Entität — eine Zeile, die aus Tutorial 2 stammt:
+
+```java
+@CreationTimestamp
+@Column(name = "date_of_entry", nullable = false, updatable = false)
+private LocalDateTime date;
+```
+
+`@CreationTimestamp` setzt beim ersten Speichern den aktuellen Zeitpunkt. **Immer.** Ohne nachzusehen, ob schon ein Wert da ist.
+
+Damit lässt sich kein Eintrag mit einem Datum aus der Vergangenheit anlegen — nicht im Test und auch sonst nicht.
+
+</details>
+
+:::danger Hier steht eine Entscheidung an
+Der Test lässt sich nicht schreiben. Zwei Auswege bieten sich an:
+
+1. **Um das Hindernis herumbauen.** Man könnte das Datum nach dem Speichern per SQL geradebiegen. Der Test würde grün.
+2. **Fragen, warum es das Hindernis gibt.**
+
+Nimm den zweiten Weg. Denn dieselbe Einschränkung, die den Test blockiert, blockiert auch etwas Fachliches:
+
+> Die Marketingabteilung möchte die 200 Einträge aus dem alten Gästebuch übernehmen — **mit ihren ursprünglichen Datumsangaben**.
+
+Mit `@CreationTimestamp` ist das unmöglich. Alle 200 Einträge bekämen das Importdatum.
+
+**Der Test hat keinen Testfehler gefunden, sondern einen Entwurfsfehler.** Das ist kein Zufall: Was sich schlecht testen lässt, ist meist schlecht entworfen. Der Test ist bloß der erste Aufrufer, der die Einschränkung bemerkt — vor der Marketingabteilung.
+:::
+
+### Aufgabe 4 – Den Entwurf korrigieren
+
+Die Regel soll sein: **Wenn kein Datum gesetzt ist, nimm den aktuellen Zeitpunkt.** Wenn eines gesetzt ist, lass es stehen.
+
+<Task id="t3-ab03-a4">Ersetze in `GuestbookEntry` die Annotation `@CreationTimestamp` durch eine eigene Methode:</Task>
+
+```java title="src/main/java/de/szut/gaestebuch/model/GuestbookEntry.java"
+@Column(name = "date_of_entry", nullable = false, updatable = false)
+private LocalDateTime date;
+
+/**
+ * Setzt das Datum beim ersten Speichern - aber nur, wenn keines gesetzt ist.
+ */
+@PrePersist
+void setDateIfMissing() {
+    if (date == null) {
+        date = LocalDateTime.now();
+    }
+}
+```
+
+<Task id="t3-ab03-a4-import">Entferne den Import von `org.hibernate.annotations.CreationTimestamp` und ergänze `jakarta.persistence.PrePersist`.</Task>
+
+| | vorher: `@CreationTimestamp` | jetzt: `@PrePersist` |
+|---|---|---|
+| Wann | beim ersten Speichern | beim ersten Speichern |
+| Was | setzt **immer** den aktuellen Zeitpunkt | setzt ihn nur, **wenn keiner da ist** |
+| Neuer Eintrag über die API | bekommt den aktuellen Zeitpunkt | bekommt den aktuellen Zeitpunkt |
+| Eintrag mit eigenem Datum | wird überschrieben | bleibt erhalten |
+
+:::note Im Betrieb ändert sich nichts
+Ein Eintrag, der über `POST /api/v1/guestbook` hereinkommt, hat kein `date` im Rumpf — das Feld ist `null`, und `@PrePersist` setzt den aktuellen Zeitpunkt. Genau wie vorher.
+
+`updatable = false` gilt unverändert weiter: Das Datum lässt sich nachträglich nicht ändern. Nur **beim Anlegen** darf es jetzt vorgegeben werden.
+:::
+
+<Task id="t3-ab03-a4-run">Führe beide Tests erneut aus. Jetzt sind sie grün.</Task>
+
+<Task id="t3-ab03-a4-regel">Sichere die neue Regel mit einem eigenen Test ab — ein Eintrag **ohne** Datum muss weiterhin den aktuellen Zeitpunkt bekommen:</Task>
+
+```java
+@Test
+@DisplayName("ohne Datum wird der aktuelle Zeitpunkt gesetzt")
+void ohneDatumWirdJetztGesetzt() {
+    GuestbookEntry entry = new GuestbookEntry();
+    entry.setTitle("Neu");
+    entry.setComment("Neu");
+    entry.setAuthor("Anna");
+
+    GuestbookEntry gespeichert = entityManager.persistAndFlush(entry);
+
+    assertThat(gespeichert.getDate()).isNotNull();
+    assertThat(gespeichert.getDate()).isAfter(LocalDateTime.now().minusMinutes(1));
+}
+```
+
+:::tip Warum `isAfter(now().minusMinutes(1))` und nicht `isEqualTo(now())`?
+Weil zwischen dem Speichern und dem Prüfen Zeit vergeht — Millionstel Sekunden, aber genug. `isEqualTo` wäre so gut wie immer rot.
+
+Solche Tests prüfen deshalb ein **Zeitfenster**, keinen Zeitpunkt. Die Aussage lautet: „vor weniger als einer Minute gesetzt". Das reicht, um „gesetzt" von „nicht gesetzt" und von „irgendein alter Wert" zu unterscheiden.
+:::
+
+### Aufgabe 5 – Der eigentliche Beweis
+
+Jetzt lässt sich prüfen, was in Tutorial 2 nur behauptet wurde.
+
+<Task id="t3-ab03-a5">Schreibe den Grenzwerttest für den Jahreswechsel:</Task>
+
+```java
+@Test
+@DisplayName("ein Eintrag exakt um Mitternacht am 1. Januar gehört genau EINEM Jahr")
+void mitternachtAmJahreswechselGehoertGenauEinemJahr() {
+    LocalDateTime jahreswechsel = LocalDateTime.of(2027, 1, 1, 0, 0, 0);
+    eintragVom(jahreswechsel, "Punkt Mitternacht");
+
+    Page<GuestbookEntry> in2026 = repository.findByDateGreaterThanEqualAndDateLessThan(
+            LocalDateTime.of(2026, 1, 1, 0, 0),
+            LocalDateTime.of(2027, 1, 1, 0, 0),
+            PageRequest.of(0, 10));
+
+    Page<GuestbookEntry> in2027 = repository.findByDateGreaterThanEqualAndDateLessThan(
+            LocalDateTime.of(2027, 1, 1, 0, 0),
+            LocalDateTime.of(2028, 1, 1, 0, 0),
+            PageRequest.of(0, 10));
+
+    assertThat(in2026.getTotalElements()).isZero();
+    assertThat(in2027.getTotalElements()).isEqualTo(1);
+}
+```
+
+<Task id="t3-ab03-a5-silvester">Ergänze das Gegenstück: Ein Eintrag vom 31.12.2026 um 23:59:59 gehört noch zu 2026.</Task>
+
+<Task id="t3-ab03-a5-beweis">Führe jetzt den Beweis: Ändere die Methode im Repository von `findByDateGreaterThanEqualAndDateLessThan` in `findByDateBetween` (Signatur und alle Aufrufer anpassen) und lass die Tests laufen.</Task>
+
+<details>
+<summary>Was passiert — und warum das der Punkt ist</summary>
+
+`mitternachtAmJahreswechselGehoertGenauEinemJahr` wird **rot**: Der Eintrag erscheint in beiden Jahren, weil `Between` beide Grenzen einschließt.
+
+Die anderen Tests bleiben grün. Der Eintrag vom 1. Juni liegt tief im Jahr; ihn stört es nicht, ob die Grenze mitgezählt wird.
+
+Genau so verhält sich der Fehler auch im Betrieb: Er zeigt sich nicht. Nicht bei der Abnahme, nicht in der Testphase, nicht im ersten halben Jahr. Erst wenn irgendwann ein Eintrag auf die Sekunde genau am Jahreswechsel entsteht.
+
+Aus der Behauptung in Tutorial 2 ist damit ein **überprüfbarer Sachverhalt** geworden — einer, der jedes Mal neu geprüft wird, wenn jemand `mvnw test` aufruft.
+
+**Nimm die Änderung anschließend zurück.**
+
+</details>
+
+### Aufgabe 6 – Testfälle
+
+<Task id="t3-ab03-a6">Arbeite die Testfälle ab.</Task>
+
+<TestTable
+  storageKey="t3-ab03-tests"
+  tests={[
+    {
+      id: 'TF-01',
+      beschreibung: 'Alle Datenbank-Tests laufen durch',
+      vorbedingung: 'Aufgaben 1 bis 5 bearbeitet',
+      schritte: ['GuestbookEntryRepositoryTest ausführen'],
+      erwartet: <>Alle Tests grün, sechs Stück.</>
+    },
+    {
+      id: 'TF-02',
+      beschreibung: 'Die echten Daten bleiben unberührt',
+      vorbedingung: 'In der Datei-Datenbank stehen Einträge',
+      schritte: ['Anzahl der Einträge über GET /api/v1/guestbook notieren', 'Alle Tests ausführen', 'Erneut abrufen'],
+      erwartet: <>Dieselbe Anzahl wie vorher. Die Tests haben nichts angelegt und nichts gelöscht.</>
+    },
+    {
+      id: 'TF-03',
+      beschreibung: 'Die Reihenfolge der Tests ist egal',
+      vorbedingung: 'Alle Tests grün',
+      schritte: ['Die Testmethoden in der Datei umsortieren', 'Erneut ausführen'],
+      erwartet: <>Weiterhin alle grün — jeder Test wird nach seinem Lauf zurückgerollt.</>
+    },
+    {
+      id: 'TF-04',
+      beschreibung: 'Grenzwert: Mitternacht gehört zum neuen Jahr',
+      vorbedingung: 'Aufgabe 5 bearbeitet',
+      schritte: ['mitternachtAmJahreswechselGehoertGenauEinemJahr ausführen'],
+      erwartet: <>Grün: 0 Treffer für 2026, genau 1 Treffer für 2027.</>
+    },
+    {
+      id: 'TF-05',
+      beschreibung: 'Between ist nachweislich falsch',
+      vorbedingung: 'Alle Tests grün',
+      schritte: ['Auf findByDateBetween umstellen', 'Tests ausführen', 'Änderung zurücknehmen'],
+      erwartet: <>Genau der Mitternachts-Test wird rot. Die Tests mit Datumsangaben mitten im Jahr bleiben grün.</>
+    },
+    {
+      id: 'TF-06',
+      beschreibung: 'Import mit eigenem Datum ist jetzt möglich',
+      vorbedingung: 'Aufgabe 4 bearbeitet, Anwendung läuft',
+      schritte: ['POST mit einem "date"-Feld im Rumpf, z. B. "2019-03-01T10:00:00"'],
+      erwartet: <>Status <code>201</code>, und die Antwort enthält <b>genau dieses</b> Datum — nicht das heutige.</>
+    }
+  ]}
+/>
+
+:::note TF-06 ist ein Nebeneffekt, über den man nachdenken sollte
+Der Umbau hat eine Tür geöffnet: Jeder Aufrufer kann jetzt ein beliebiges Datum mitschicken, auch eines in der Zukunft.
+
+Für einen Import ist das gewollt. Für ein öffentliches Gästebuch ist es das vermutlich nicht — dort möchte man den Import erlauben und den anonymen Besuchern verbieten.
+
+Das ist eine **fachliche** Entscheidung und gehört damit an die Stelle, die du in Arbeitsblatt 01 geschaffen hast: in den Service. Ein Prüfschritt „das Datum darf nicht in der Zukunft liegen" wäre eine Zeile — mit einem Unit-Test, der drei Werte prüft: gestern, jetzt, morgen.
+:::
+
+## Zusammenfassung
+
+:::tip Das hast du gelernt
+- `@DataJpaTest` startet nur die Datenzugriffsschicht — Entitäten, Repositories, Datenbank.
+- Es schaltet auf eine **eigene Datenbank im Hauptspeicher** um und rollt jeden Test danach **zurück**. Deine echten Daten bleiben unberührt, und die Reihenfolge der Tests spielt keine Rolle.
+- Vorbereitet wird mit dem `TestEntityManager`, geprüft mit dem Repository.
+- Erst dieser Slice prüft, ob die **abgeleiteten Abfragen** wirklich das richtige SQL erzeugen — mit Doppeln geht das nicht.
+- Ein Test, der sich **nicht schreiben lässt**, ist ein Befund. `@CreationTimestamp` verhinderte nicht nur den Test, sondern auch den Import von Altdaten.
+- `@PrePersist` mit einer Prüfung auf `null` setzt den Zeitpunkt nur, wenn keiner vorgegeben ist.
+- Bei Zeitstempeln prüft man ein **Zeitfenster**, keinen Zeitpunkt.
+- Grenzwerte sind auch hier die Fundstelle: `Between` und `GreaterThanEqual … LessThan` unterscheiden sich in genau einem Wert.
+:::
+
+## Selbstkontrolle
+
+1. Warum ist `repository.count()` zu Beginn eines `@DataJpaTest` null, obwohl deine Datenbank Einträge enthält?
+2. Warum können zwei Tests einander nicht beeinflussen?
+3. Wozu dient der `TestEntityManager`, wenn das Repository doch auch speichern kann?
+4. Welchen Fehler hat der nicht schreibbare Test aufgedeckt — und wen hätte er sonst getroffen?
+5. Warum bleiben beim Wechsel auf `Between` fast alle Tests grün?
+
+<details>
+<summary>Antworten</summary>
+
+1. Weil `@DataJpaTest` die Verbindung austauscht: Statt der Datei unter `data/` wird eine leere Datenbank im Hauptspeicher benutzt.
+2. Weil jeder Test in einer eigenen Transaktion läuft, die danach zurückgerollt wird. Was ein Test anlegt, existiert nur während seiner Laufzeit.
+3. Um Daten **vorzubereiten**. `persistAndFlush` schreibt sofort, damit die anschließende Abfrage etwas findet. Und es trennt Vorbereitung von Prüfung: Der Test prüft das Repository, statt sich auf dessen eigenes Speichern zu verlassen.
+4. `@CreationTimestamp` überschreibt jedes gesetzte Datum. Getroffen hätte es den Import der 200 Altdaten aus dem früheren Gästebuch — alle hätten das Importdatum bekommen, und aufgefallen wäre es erst danach.
+5. Weil sich `Between` und `GreaterThanEqual … LessThan` nur an der oberen Grenze unterscheiden. Alle Testdaten mitten im Jahr verhalten sich identisch. Nur der Eintrag exakt um Mitternacht liegt auf der Grenze — und nur sein Test wird rot.
+
+</details>

@@ -1,0 +1,317 @@
+---
+title: "AB 04 – Die Testpyramide"
+sidebar_label: "04 – Die Testpyramide"
+slug: 04-testpyramide
+sidebar_position: 4
+---
+
+# AB 04 – Die Testpyramide
+
+## Die Situation
+
+> In der Nachbesprechung fragt die Teamleiterin:
+>
+> *„Ihr habt jetzt 29 Tests. Wie viele braucht ihr eigentlich? Und woran merken wir, dass es genug ist?"*
+>
+> Auf die zweite Frage gibt es keine Zahl als Antwort — aber es gibt eine gute Antwort.
+
+## Lernziele
+
+Nach Bearbeitung dieses Arbeitsblatts kannst du:
+
+- die drei Testarten einordnen und begründen, welche wofür zuständig ist
+- erklären, warum es von den schnellen Tests viele und von den langsamen wenige gibt
+- benennen, was ein Integrationstest zusätzlich absichert
+- eine **Testabdeckung** messen und richtig deuten
+- begründen, was man **nicht** testet
+
+## Was du gebaut hast
+
+<Task id="t3-ab04-a0">Führe alle Tests aus und sieh dir die Zeiten in der Ausgabe an.</Task>
+
+```bash
+mvnw test
+```
+
+Gemessen am Referenzprojekt, jede Klasse einzeln gestartet:
+
+| Testart | Was läuft | Tests | Zeit |
+|---|---|---|---|
+| Unit — `CommentPreviewTest` | nur eine Klasse | 7 | **0,5 s** |
+| Unit mit Doppel — `GuestbookEntryServiceTest` | eine Klasse + Mockito | 8 | **2,0 s** |
+| Slice — `GuestbookEntryControllerTest` | Web-Teil von Spring | 7 | **7,4 s** |
+| Slice — `GuestbookEntryRepositoryTest` | JPA-Teil + Datenbank | 6 | **9,4 s** |
+| Integration — `GaestebuchApplicationTests` | die ganze Anwendung | 1 | **12,3 s** |
+
+:::note Ehrlich gesagt: die Unterschiede sind hier kleiner, als oft behauptet wird
+In Lehrbüchern steht, Slice-Tests seien „um ein Vielfaches schneller" als vollständige Tests. Bei diesem Gästebuch stimmt das nur zum Teil — die Anwendung ist zu klein, als dass es sich lohnen würde.
+
+Deutlich ist der Abstand nur ganz unten: **0,5 Sekunden gegen 12,3.** Das ist der Faktor 25.
+
+Der Abstand wächst mit der Anwendung. Ein Betriebssystem für ein mittleres Unternehmen startet nicht in 12 Sekunden, sondern in ein bis zwei Minuten — und die Unit-Tests laufen weiterhin in Sekundenbruchteilen.
+
+**Der wichtigere Grund für Slice-Tests ist ohnehin ein anderer**, und den hast du in Arbeitsblatt 02 selbst erlebt.
+:::
+
+<Task id="t3-ab04-a0-frage">Welcher Grund ist gemeint? Denk an TF-05 aus Arbeitsblatt 02 und an TF-06 aus Arbeitsblatt 01.</Task>
+
+<details>
+<summary>Antwort</summary>
+
+**Die Aussagekraft eines roten Tests.**
+
+Wird `GuestbookEntryControllerTest` rot, liegt es an der Web-Schicht. Wird `GuestbookEntryRepositoryTest` rot, an der Datenbank. Wird `CommentPreviewTest` rot, an einer Methode, die du in zehn Sekunden gelesen hast.
+
+Wird dagegen ein Test rot, der alles auf einmal startet, weißt du nur: irgendwo im ganzen Ding.
+
+Ein Test ist nicht dafür da zu melden, **dass** etwas kaputt ist. Er ist dafür da zu zeigen, **was**.
+
+</details>
+
+## Die Testpyramide
+
+<div style={{overflowX: 'auto'}}>
+
+```text
+                    ╱╲              wenige
+                   ╱  ╲             Integrationstests        langsam
+                  ╱    ╲            @SpringBootTest          teuer im Betrieb
+                 ╱──────╲                                    aber: prüft das Zusammenspiel
+                ╱        ╲          einige
+               ╱          ╲         Slice-Tests              mittel
+              ╱            ╲        @WebMvcTest              je eine Schicht
+             ╱──────────────╲       @DataJpaTest
+            ╱                ╲
+           ╱                  ╲     viele
+          ╱                    ╲    Unit-Tests               schnell
+         ╱                      ╲   ohne Spring              billig
+        ╱________________________╲  eine Klasse              sehr genaue Aussage
+```
+
+</div>
+
+Die Form hat einen Grund. Von unten nach oben wird jede Stufe **langsamer**, **teurer im Unterhalt** und **ungenauer in ihrer Aussage** — dafür prüft sie mehr Zusammenspiel.
+
+<Task id="t3-ab04-a1">Ordne deine eigenen Tests zu.</Task>
+
+<FillInTable
+  storageKey="t3-ab04-pyramide"
+  spalteLinks="Frage"
+  spalteRechts="Welcher Test?"
+  platzhalter="Unit / Slice / Integration"
+  zeilen={[
+    {id: 'grenze', links: 'Wird ein Kommentar mit 61 Zeichen gekürzt?', loesung: 'unit', klartext: 'Unit (CommentPreviewTest)'},
+    {id: 'leer', links: 'Wird ein leerer Titel abgelehnt?', loesung: 'unit', klartext: 'Unit (GuestbookEntryServiceTest)'},
+    {id: 'code400', links: 'Wird aus der Ausnahme eine 400?', loesung: 'slice', klartext: 'Slice (@WebMvcTest)'},
+    {id: 'location', links: 'Zeigt Location auf den neuen Eintrag?', loesung: 'slice', klartext: 'Slice (@WebMvcTest)'},
+    {id: 'sql', links: 'Erzeugt die abgeleitete Abfrage das richtige SQL?', loesung: 'slice', klartext: 'Slice (@DataJpaTest)'},
+    {id: 'mitternacht', links: 'Gehört Mitternacht am 1. Januar zu genau einem Jahr?', loesung: 'slice', klartext: 'Slice (@DataJpaTest)'},
+    {id: 'start', links: 'Startet die Anwendung überhaupt?', loesung: 'integration', klartext: 'Integration (@SpringBootTest)'},
+  ]}
+/>
+
+:::tip Die Faustregel
+**So weit unten wie möglich, so weit oben wie nötig.**
+
+Lässt sich eine Frage mit einem Unit-Test beantworten, gehört sie dorthin. Erst wenn die Frage das Zusammenspiel mehrerer Teile betrifft, steigt man eine Stufe höher.
+:::
+
+## Was der Integrationstest absichert
+
+In deinem Projekt liegt seit Tutorial 2 eine Testklasse, die du nie beachtet hast:
+
+```java title="src/test/java/de/szut/gaestebuch/GaestebuchApplicationTests.java"
+@SpringBootTest
+class GaestebuchApplicationTests {
+
+    @Test
+    void contextLoads() {
+    }
+}
+```
+
+Der Test hat keinen Rumpf. Trotzdem ist er nicht sinnlos.
+
+<Task id="t3-ab04-a2">Finde heraus, was er prüft: Kommentiere im `GuestbookEntryService` die Annotation `@Service` aus und führe **alle** Tests aus.</Task>
+
+<details>
+<summary>Was passiert</summary>
+
+**Genau ein** Test wird rot: `GaestebuchApplicationTests` — der ohne Rumpf. Alle anderen 28 bleiben grün, auch die beiden Slice-Tests.
+
+Denn `@SpringBootTest` startet die vollständige Anwendung: Alle Beans werden gebaut und miteinander verbunden. Ohne `@Service` kennt Spring den `GuestbookEntryService` nicht, kann den Controller nicht versorgen — und der Start scheitert. `contextLoads` wird rot, ohne je ausgeführt worden zu sein.
+
+Warum bemerken die anderen es nicht?
+
+- Die **Unit-Tests** bauen den Service selbst mit `new`. Spring ist gar nicht beteiligt, `@Service` ist ihnen egal.
+- Der **`@WebMvcTest`** ersetzt den Service ohnehin durch `@MockitoBean`. Ob der echte je gefunden würde, spielt keine Rolle.
+- Der **`@DataJpaTest`** lädt den Service nicht — er ist keine Datenbankschicht.
+
+Das ist genau die Klasse von Fehlern, die alle anderen Stufen durchlassen: **Es passt einzeln, aber nicht zusammen.** Eine vergessene Annotation, zwei Beans desselben Typs, eine fehlerhafte `application.properties`, eine Kreisabhängigkeit.
+
+Deshalb steht ganz oben in der Pyramide etwas — nur eben wenig.
+
+**Nimm die Änderung zurück.**
+
+</details>
+
+:::info Was ein echter Integrationstest zusätzlich tut
+`contextLoads` prüft nur den Start. Ein vollwertiger Integrationstest schickt echte Anfragen durch die **komplette** Anwendung: Web-Schicht, Service, Repository, Datenbank — ohne ein einziges Doppel.
+
+Er ist der Einzige, der Fehler *zwischen* den Schichten findet: Der Controller reicht den Parameter in der falschen Reihenfolge weiter. Der Service ruft die richtige Methode mit dem falschen Datum auf. Jede Schicht für sich ist getestet und korrekt — die Übergabe ist es nicht.
+
+Solche Tests baust du im nächsten Tutorial.
+:::
+
+## Testabdeckung
+
+Die Abdeckung (englisch *coverage*) misst, welcher Anteil deiner Zeilen beim Testlauf ausgeführt wurde.
+
+<Task id="t3-ab04-a3">Miss die Abdeckung: In IntelliJ Rechtsklick auf `src/test/java` → *Run 'All Tests' with Coverage*. Sieh dir an, welche Klassen gut und welche schlecht abgedeckt sind.</Task>
+
+<Task id="t3-ab04-a3-deuten">Suche eine Klasse mit hoher Abdeckung, für die du **kein einziges** Assert geschrieben hast.</Task>
+
+:::danger Die gefährlichste Zahl im Testwesen
+Abdeckung misst, welche Zeilen **ausgeführt** wurden. Nicht, welche **geprüft** wurden.
+
+Dieser Test erreicht 100 % Abdeckung für `shorten`:
+
+```java
+@Test
+void test() {
+    CommentPreview.shorten("irgendwas");   // ❌ prüft nichts
+}
+```
+
+Jede Zeile lief. Kein einziges Assert. Der Test bleibt grün, egal was die Methode zurückgibt — er wäre selbst dann grün, wenn `shorten` immer `null` lieferte.
+
+Umgekehrt gilt: Auch `getTitle()` und `setTitle()` erscheinen in der Statistik als abgedeckt, sobald irgendein Test irgendwo einen Titel setzt.
+
+**Abdeckung ist ein Warnsignal, keine Note.** Sie beantwortet zuverlässig eine einzige Frage: *Welche Stellen hat noch nie ein Test berührt?* Was dort steht, ist ungeprüft — und das ist eine nützliche Information. Der Umkehrschluss gilt nicht.
+:::
+
+<Task id="t3-ab04-a3-frage">Formuliere in einem Satz, warum eine Vorgabe wie „mindestens 80 % Abdeckung" ein Team zu schlechteren Tests verleiten kann.</Task>
+
+<details>
+<summary>Ein möglicher Satz</summary>
+
+Weil sich die Zahl leichter durch Tests ohne Assert erhöhen lässt als durch Tests, die tatsächlich etwas prüfen — und wer unter Zeitdruck eine Zahl erreichen muss, wählt den leichteren Weg.
+
+</details>
+
+## Was man nicht testet
+
+<Task id="t3-ab04-a4">Entscheide, was einen eigenen Test verdient.</Task>
+
+<FillInTable
+  storageKey="t3-ab04-wasnicht"
+  spalteLinks="Soll das getestet werden?"
+  spalteRechts="ja / nein"
+  platzhalter="ja oder nein"
+  zeilen={[
+    {id: 'getter', links: <>Die von Lombok erzeugten <code>getTitle()</code> und <code>setTitle()</code></>, loesung: 'nein', klartext: 'nein — fremder, erzeugter Code'},
+    {id: 'jpa', links: <>Dass <code>repository.save()</code> wirklich in die Datenbank schreibt</>, loesung: 'nein', klartext: 'nein — das ist Spring Data, nicht dein Code'},
+    {id: 'grenze', links: 'Die Längengrenze des Titels bei 80 Zeichen', loesung: 'ja', klartext: 'ja — deine Regel, mit einer Grenze'},
+    {id: 'query', links: 'Die abgeleitete Abfrage für den Jahresfilter', loesung: 'ja', klartext: 'ja — der Methodenname ist dein Code'},
+    {id: 'jackson', links: <>Dass Jackson aus einem <code>String</code> JSON macht</>, loesung: 'nein', klartext: 'nein — fremde Bibliothek'},
+    {id: 'mapping', links: 'Dass der Controller den 201-Statuscode liefert', loesung: 'ja', klartext: 'ja — deine Entscheidung, in deinem Code'},
+  ]}
+/>
+
+:::tip Die Trennlinie
+**Teste deine eigenen Entscheidungen. Nicht die Werkzeuge, die du benutzt.**
+
+Dass Hibernate speichern kann, haben andere geprüft — tausendfach. Dass *dein* Methodenname die *richtige* Abfrage erzeugt, hat noch niemand geprüft. Genau dort liegt dein Test.
+
+Bei abgeleiteten Abfragen ist das besonders leicht zu verwechseln. Der Test prüft nicht Spring Data, sondern **deinen Namen**: ob `GreaterThanEqual` und `LessThan` das ausdrücken, was du fachlich meintest.
+:::
+
+## Aufgabe 5 – Testfälle
+
+<Task id="t3-ab04-a5">Arbeite die Testfälle ab.</Task>
+
+<TestTable
+  storageKey="t3-ab04-tests"
+  tests={[
+    {
+      id: 'TF-01',
+      beschreibung: 'Der gesamte Testbestand läuft durch',
+      vorbedingung: 'Alle Arbeitsblätter bearbeitet',
+      schritte: ['mvnw test'],
+      erwartet: <><code>BUILD SUCCESS</code>, rund 29 Tests, keine Fehler.</>
+    },
+    {
+      id: 'TF-02',
+      beschreibung: 'Ein Fehler in der Fachlichkeit trifft genau einen Test',
+      vorbedingung: 'Alle Tests grün',
+      schritte: ['In CommentPreview <= wieder zu < ändern', 'Alle Tests ausführen', 'Zurücknehmen'],
+      erwartet: <>Rot wird nur der Grenzfall <code>60</code> in <code>CommentPreviewTest</code>. Alle anderen Klassen bleiben grün.</>
+    },
+    {
+      id: 'TF-03',
+      beschreibung: 'Ein Verdrahtungsfehler trifft den Integrationstest',
+      vorbedingung: 'Alle Tests grün',
+      schritte: ['Im Service @Service entfernen', 'Alle Tests ausführen', 'Zurücknehmen'],
+      erwartet: <>Rot wird <b>nur</b> <code>GaestebuchApplicationTests</code> — die Anwendung startet nicht mehr. Alle 28 übrigen bleiben grün, auch die beiden Slice-Tests.</>
+    },
+    {
+      id: 'TF-04',
+      beschreibung: 'Abdeckung ohne Assert',
+      vorbedingung: 'Coverage-Lauf möglich',
+      schritte: ['Einen Test schreiben, der shorten("x") aufruft und nichts prüft', 'Mit Coverage laufen lassen', 'Test wieder löschen'],
+      erwartet: <>Die Abdeckung für die Klasse steigt, obwohl der Test nichts absichert.</>
+    },
+    {
+      id: 'TF-05',
+      beschreibung: 'Die Tests sind wiederholbar',
+      vorbedingung: 'Alle Tests grün',
+      schritte: ['mvnw test dreimal hintereinander ausführen'],
+      erwartet: <>Dreimal dasselbe Ergebnis. Kein Test wird mal grün, mal rot.</>
+    }
+  ]}
+/>
+
+:::note TF-05 prüft die wichtigste Eigenschaft überhaupt
+Ein Test, der manchmal grün und manchmal rot ist, heißt **flaky**. Er ist schlimmer als kein Test: Nach dem dritten Fehlalarm schaut niemand mehr hin — und beim vierten Mal war es echt.
+
+Typische Ursachen: Abhängigkeit von der Uhrzeit, von der Reihenfolge, von übrig gebliebenen Daten. Gegen alle drei hast du in diesem Tutorial etwas getan: das Zeitfenster statt des Zeitpunkts, das Zurückrollen nach jedem Test, die eigene Datenbank im Hauptspeicher.
+:::
+
+## Ausblick
+
+Was noch fehlt, ist die Spitze der Pyramide: ein Test, der eine echte Anfrage durch **alle** Schichten schickt — ohne ein einziges Doppel, mit einer echten Datenbank dahinter.
+
+Das ist das Thema des nächsten Tutorials, und es bekommt einen eigenen Anwendungsfall: einen **Webshop** mit Bestellungen, bei denen mehrere Tabellen zusammenspielen. Dort lohnt sich der Aufwand, weil es dann etwas zwischen den Schichten gibt, das schiefgehen kann.
+
+## Zusammenfassung
+
+:::tip Das hast du gelernt
+- Die **Testpyramide**: viele schnelle Unit-Tests, einige Slice-Tests, wenige Integrationstests.
+- Faustregel: **so weit unten wie möglich, so weit oben wie nötig.**
+- Der Hauptgewinn eines Slice-Tests ist nicht die Geschwindigkeit, sondern dass ein roter Test dir sagt, **welche Schicht** betroffen ist.
+- `@SpringBootTest` findet Fehler, die keine andere Stufe findet: Es passt einzeln, aber nicht zusammen.
+- **Abdeckung** misst ausgeführte Zeilen, nicht geprüfte. Sie zeigt zuverlässig nur, was noch nie berührt wurde.
+- Getestet werden die **eigenen Entscheidungen** — nicht die Werkzeuge, die man benutzt.
+- Ein **flaky** Test ist schädlicher als kein Test.
+:::
+
+## Selbstkontrolle
+
+1. Warum gibt es von den Unit-Tests viele und von den Integrationstests wenige?
+2. Nenne den Hauptgrund für Slice-Tests, der nichts mit Geschwindigkeit zu tun hat.
+3. Welche Art von Fehler findet nur `@SpringBootTest`?
+4. Warum ist eine Abdeckung von 100 % kein Beleg für Fehlerfreiheit?
+5. Warum testet man die von Lombok erzeugten Getter nicht?
+6. Was ist ein flaky Test, und warum ist er schlimmer als gar kein Test?
+
+<details>
+<summary>Antworten</summary>
+
+1. Weil Unit-Tests schnell, billig im Unterhalt und genau in ihrer Aussage sind — von ihnen kann man viele haben und sie ständig laufen lassen. Integrationstests sind langsam und melden nur, dass irgendwo etwas klemmt; von ihnen nimmt man so wenige wie möglich.
+2. Die Aussagekraft: Ein roter Slice-Test benennt die betroffene Schicht. Bei einem Test, der alles zugleich startet, weiß man nur, dass irgendetwas nicht stimmt.
+3. Fehler im Zusammenspiel — eine fehlende Bean, eine doppelte Bean, eine Kreisabhängigkeit, eine fehlerhafte Konfiguration. Jede Schicht für sich ist in Ordnung, die Anwendung startet trotzdem nicht.
+4. Weil Abdeckung nur zählt, welche Zeilen ausgeführt wurden. Ein Test ohne Assert führt Zeilen aus und prüft nichts — die Zahl steigt, die Sicherheit nicht.
+5. Weil sie nicht dein Code sind. Lombok erzeugt sie nach einem festen Muster, das tausendfach geprüft ist. Ein Test dafür sichert nichts ab und muss trotzdem gepflegt werden.
+6. Ein Test, der bei unverändertem Code mal grün und mal rot ist. Er ist schädlich, weil er das Vertrauen in den gesamten Testbestand zerstört: Nach ein paar Fehlalarmen ignoriert man rote Tests — auch die echten.
+
+</details>
