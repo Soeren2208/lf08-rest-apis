@@ -27,11 +27,6 @@ public class Person {
     public Person() {
     }
 
-    public Person(String firstname, String surname) {
-        this.firstname = firstname;
-        this.surname = surname;
-    }
-
     public Long getId() {
         return id;
     }

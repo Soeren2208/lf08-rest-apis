@@ -93,7 +93,7 @@ HTTP/1.1 201 Created                  ← Statuszeile: Code und Kurztext
 Content-Type: application/json        ┐ Header
 Location: /api/v1/persons/1           ┘
                                       ← Leerzeile
-{"id":1,"firstname":"Anna","surname":"Schmidt"}   ← Body
+{"firstname":"Anna","id":1,"surname":"Schmidt"}   ← Body
 ```
 
 ## Die HTTP-Methoden

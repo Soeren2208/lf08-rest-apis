@@ -510,7 +510,7 @@ Zwischen der Außenwelt und deiner Anwendung verläuft eine Grenze. **Draußen g
     <text x="14" y="28" fontSize="15" fontWeight="700" fontFamily="var(--ifm-font-family-monospace)"
           fill="var(--ifm-color-info-dark)">&#123; &#125;</text>
     <text x="42" y="28" fontSize="12" fontFamily="var(--ifm-font-family-monospace)"
-          fill="var(--ifm-font-color-base)">{'{"id":1,"firstname":"Anna", ...}'}</text>
+          fill="var(--ifm-font-color-base)">{'{"firstname":"Anna","id":1, ...}'}</text>
   </g>
 
   <text x="16" y="222" fontSize="12.5" fontWeight="700" fill="var(--ifm-color-emphasis-800)">zwei Überquerungen der Grenze — hinein und hinaus</text>
@@ -572,11 +572,27 @@ Zwischen der Außenwelt und deiner Anwendung verläuft eine Grenze. **Draußen g
     <text x="14" y="28" fontSize="15" fontWeight="700" fontFamily="var(--ifm-font-family-monospace)"
           fill="var(--ifm-color-info-dark)">&#123; &#125;</text>
     <text x="42" y="28" fontSize="12" fontFamily="var(--ifm-font-family-monospace)"
-          fill="var(--ifm-font-color-base)">{'{"id":1,"firstname":"Anna", ...}'}</text>
+          fill="var(--ifm-font-color-base)">{'{"firstname":"Anna","id":1, ...}'}</text>
   </g>
 
   <text x="16" y="430" fontSize="12.5" fontWeight="700" fill="var(--ifm-color-emphasis-800)">nur eine Überquerung — ausschließlich hinaus</text>
 </svg>
+
+:::note Die Reihenfolge im JSON ist nicht deine Reihenfolge
+In deiner Klasse steht `id` zuerst. In der Antwort erscheint es zwischen `firstname` und `surname`:
+
+```json
+{
+  "firstname": "Anna",
+  "id": 1,
+  "surname": "Schmidt"
+}
+```
+
+Das ist kein Fehler. **Ein JSON-Objekt ist laut Standard eine ungeordnete Menge von Paaren** — welches Feld zuerst steht, hat keine Bedeutung. Die Bibliothek, die Spring zum Umwandeln benutzt, sortiert die Felder deshalb alphabetisch.
+
+Merke dir daraus vor allem eines: **Verlass dich in einem Client niemals auf die Reihenfolge der Felder.** Gesucht wird über den Namen, nie über die Position.
+:::
 
 :::tip Woran du das im Code wiedererkennst
 Die Zahl der Überquerungen steht in der **Methodensignatur**:
@@ -606,7 +622,13 @@ Man könnte mit `isPresent()` prüfen und mit `get()` herausholen. Kürzer und s
 
 Zum Testen brauchst du ein Werkzeug, das `POST`-Anfragen schicken kann — über die Adresszeile des Browsers geht nur `GET`.
 
-<Task id="ab02-a5-file">Lege im Projekthauptverzeichnis die Datei `requests.http` an:</Task>
+<Task id="ab02-a5-file">Markiere im Projektbaum das **Projekthauptverzeichnis** und lege dann über *File → New → HTTP Request* die Datei `requests.http` an:</Task>
+
+:::tip Erst markieren, dann anlegen
+IntelliJ legt die neue Datei dort an, wo im Projektbaum gerade etwas ausgewählt ist. Steht die Auswahl noch auf einer Klasse im Package `controller`, landet die Datei dort — und nicht neben der `pom.xml`.
+
+Sollte dein Menü den Eintrag *HTTP Request* nicht anbieten, tut es auch eine gewöhnliche neue Datei mit dem Namen `requests.http`. Entscheidend ist die Endung; an ihr erkennt die Entwicklungsumgebung, was sie vor sich hat.
+:::
 
 ```http title="requests.http"
 ### Person anlegen

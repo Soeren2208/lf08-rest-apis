@@ -48,7 +48,7 @@ Vier davon kennst du. Lombok ist neu.
 
 ### Aufgabe 2 – Lombok verstehen
 
-Sieh dir an, wie viel Platz die Klasse `Person` aus dem ersten Tutorial gebraucht hat: drei Attribute, dazu zwei Konstruktoren und sechs Zugriffsmethoden. Rund 40 Zeilen, von denen keine einzige etwas Fachliches aussagt.
+Sieh dir an, wie viel Platz die Klasse `Person` aus dem ersten Tutorial gebraucht hat: drei Attribute, dazu ein Konstruktor und sechs Zugriffsmethoden. Rund 40 Zeilen, von denen keine einzige etwas Fachliches aussagt.
 
 <details>
 <summary>Die Klasse <code>Person</code> aus Tutorial 1 – ohne Lombok</summary>
@@ -67,11 +67,6 @@ public class Person {
 
     /** JPA benötigt einen parameterlosen Konstruktor. */
     public Person() {
-    }
-
-    public Person(String firstname, String surname) {
-        this.firstname = firstname;
-        this.surname = surname;
     }
 
     public Long getId() {
@@ -124,8 +119,6 @@ public class Person {
 Aus rund 40 Zeilen werden zwölf — und übrig bleibt genau das, was die Klasse fachlich ausmacht.
 
 Daraus macht der Compiler: Getter und Setter für alle drei Attribute, `toString()`, `equals()` und `hashCode()` — und einen Konstruktor mit allen `final`-Feldern (hier gibt es keine, also einen parameterlosen).
-
-Nicht dabei ist der zweite Konstruktor `Person(firstname, surname)`. Den erzeugt `@Data` nicht; dafür gäbe es `@AllArgsConstructor`. Gebraucht wird er hier nicht.
 
 :::warning Zwei Dinge musst du wissen
 1. **Der erzeugte Code steht nirgends in deinen Dateien.** Er entsteht erst beim Kompilieren. Suche nicht danach.
