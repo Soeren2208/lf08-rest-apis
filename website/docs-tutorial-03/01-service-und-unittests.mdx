@@ -55,6 +55,26 @@ Der zweite Grund ist der, um den es in diesem Tutorial geht. Merk ihn dir — er
 
 ### Aufgabe 1 – Die Service-Schicht einziehen
 
+Zwei kleine Klassen zuerst — der Service braucht sie gleich. **Warum** er eigene Ausnahmen wirft statt Statuscodes, klärt Aufgabe 2; hier genügt, dass es sie gibt.
+
+<Task id="t3-ab01-a1-exceptions">Lege im Package `service` diese beiden Klassen an:</Task>
+
+```java
+public class InvalidEntryException extends RuntimeException {
+    public InvalidEntryException(String message) {
+        super(message);
+    }
+}
+```
+
+```java
+public class EntryNotFoundException extends RuntimeException {
+    public EntryNotFoundException(Long id) {
+        super("Kein Gästebucheintrag mit der Id " + id);
+    }
+}
+```
+
 <Task id="t3-ab01-a1-service">Lege im Package `service` die Klasse `GuestbookEntryService` an. Sie bekommt das Repository über den Konstruktor — genau wie der Controller es bisher bekommen hat.</Task>
 
 ```java title="src/main/java/de/szut/gaestebuch/service/GuestbookEntryService.java"
@@ -99,25 +119,9 @@ Technisch könnte auch `@Component` dort stehen. `@Service` sagt zusätzlich ein
 
 Der Service darf nichts von HTTP wissen — sonst wäre er wieder an das Web gebunden. Statt `ResponseStatusException` wirft er eigene Ausnahmen.
 
-<Task id="t3-ab01-a2-exceptions">Lege im Package `service` zwei Klassen an:</Task>
+Genau dafür sind die beiden Klassen aus Aufgabe 1 da: `InvalidEntryException` und `EntryNotFoundException` sagen, **was** nicht stimmt — nicht, welchen Statuscode das ergibt.
 
-```java
-public class InvalidEntryException extends RuntimeException {
-    public InvalidEntryException(String message) {
-        super(message);
-    }
-}
-```
-
-```java
-public class EntryNotFoundException extends RuntimeException {
-    public EntryNotFoundException(Long id) {
-        super("Kein Gästebucheintrag mit der Id " + id);
-    }
-}
-```
-
-Aus diesen Ausnahmen müssen wieder Statuscodes werden. Das erledigt **eine** Klasse an **einer** Stelle:
+Aus diesen Ausnahmen müssen aber wieder Statuscodes werden. Das erledigt **eine** Klasse an **einer** Stelle:
 
 <Task id="t3-ab01-a2-advice">Lege im Package `controller` die Klasse `ApiExceptionHandler` an:</Task>
 
@@ -252,6 +256,14 @@ Nicht jeden möglichen Wert prüfen — sondern die **richtigen**. Welche das si
     {id: 'lang', links: 'Kommentar mit 500 Zeichen', loesung: 'gekürzt', klartext: 'gekürzt, endet auf „…", 60 Zeichen lang'},
   ]}
 />
+
+:::note „Und wo wird das benutzt?"
+Bisher nirgends — die Klasse wird von keinem Endpunkt aufgerufen. Das ist Absicht und kein Versehen.
+
+Für den Weg zur Vorschauzeile fehlt noch ein Stück, das erst im nächsten Tutorial drankommt: eine eigene Klasse für das, was nach außen geht, statt die Entität direkt auszuliefern. Bis dahin bleibt `CommentPreview` eine Regel, die für sich steht.
+
+Fürs Testen ändert das nichts — und das ist die Beobachtung, um die es hier geht: **Ob eine Funktion prüfbar ist, hängt nicht daran, wer sie aufruft**, sondern nur daran, ob sie bei gleicher Eingabe dasselbe liefert.
+:::
 
 :::tip Warum ausgerechnet 59, 60 und 61?
 Weil dort die Regel umschlägt. Ein Programmierfehler an einer Grenze — `<` statt `<=` — verändert das Verhalten für **genau einen** Wert. Ein Test mit 20 und 500 Zeichen findet ihn nie.
@@ -414,6 +426,14 @@ private void checkText(String value, String bezeichnung, int maxLength) {
     }
 }
 ```
+
+<Task id="t3-ab01-a7-update">Setze `validate(entry);` auch als erste Zeile in `update`. Beim Ändern gelten dieselben Regeln wie beim Anlegen.</Task>
+
+:::warning Sonst gibt es ein Loch
+Prüfst du nur beim Anlegen, kommt ein leerer Titel eben per `PUT` herein. Eine Regel, die nur einen von zwei Wegen absichert, ist keine Regel.
+
+Genau deshalb steht sie im Service und nicht im Controller: Es gibt **eine** Stelle, an der sie steht, und beide Wege gehen dort vorbei.
+:::
 
 ### Aufgabe 8 – Testen mit einem Doppel
 

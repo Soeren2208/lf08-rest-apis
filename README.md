@@ -77,8 +77,9 @@ Nachschlagen ist etwas anderes, als die Arbeitsblätter vorab zu bekommen.
 
 ## Musterlösungen
 
-Am Ende von Tutorial 1, Arbeitsblatt 03 steht die vollständige Lösung. Sie ist
-mit dem Passwort **`solution`** freizuschalten.
+Jedes Tutorial endet auf seinem letzten Arbeitsblatt mit der vollständigen
+Lösung. Sie ist mit dem Passwort **`solution`** freizuschalten; bei Tutorial 3
+gehören die vier Testklassen dazu.
 
 Die Lösung liegt **verschlüsselt** in der Seite (AES-GCM, Schlüssel per PBKDF2
 aus dem Passwort). Eine bloß ausgeblendete Lösung wäre keine: Sie stünde im

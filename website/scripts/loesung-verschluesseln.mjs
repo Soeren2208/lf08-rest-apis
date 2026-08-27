@@ -44,6 +44,40 @@ const aufgaben = [
       'requests.http',
     ],
   },
+  {
+    ziel: 'src/data/loesung-tutorial-02.json',
+    passwort: 'solution',
+    projekt: '02-gaestebuch',
+    dateien: [
+      'src/main/java/de/szut/gaestebuch/model/GuestbookEntry.java',
+      'src/main/java/de/szut/gaestebuch/repository/GuestbookEntryRepository.java',
+      'src/main/java/de/szut/gaestebuch/controller/GuestbookEntryController.java',
+      'src/main/java/de/szut/gaestebuch/config/OpenApiConfig.java',
+      'src/main/resources/application.properties',
+      'requests.http',
+    ],
+  },
+  {
+    ziel: 'src/data/loesung-tutorial-03.json',
+    passwort: 'solution',
+    projekt: '03-gaestebuch-tests',
+    dateien: [
+      // Anwendung
+      'src/main/java/de/szut/gaestebuch/model/GuestbookEntry.java',
+      'src/main/java/de/szut/gaestebuch/repository/GuestbookEntryRepository.java',
+      'src/main/java/de/szut/gaestebuch/service/CommentPreview.java',
+      'src/main/java/de/szut/gaestebuch/service/InvalidEntryException.java',
+      'src/main/java/de/szut/gaestebuch/service/EntryNotFoundException.java',
+      'src/main/java/de/szut/gaestebuch/service/GuestbookEntryService.java',
+      'src/main/java/de/szut/gaestebuch/controller/ApiExceptionHandler.java',
+      'src/main/java/de/szut/gaestebuch/controller/GuestbookEntryController.java',
+      // Tests
+      'src/test/java/de/szut/gaestebuch/service/CommentPreviewTest.java',
+      'src/test/java/de/szut/gaestebuch/service/GuestbookEntryServiceTest.java',
+      'src/test/java/de/szut/gaestebuch/controller/GuestbookEntryControllerTest.java',
+      'src/test/java/de/szut/gaestebuch/repository/GuestbookEntryRepositoryTest.java',
+    ],
+  },
 ];
 
 const sprachen = {

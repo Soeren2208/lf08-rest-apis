@@ -247,11 +247,30 @@ Deine API antwortet je nach Situation mit einem anderen Statuscode. Ordne zu:
 
 <Task id="t2-ab02-a3-pruefen">Prüfe anschließend jede Zeile durch Ausprobieren. Erst dann weißt du, ob dein Dienst wirklich das tut, was du eingetragen hast.</Task>
 
+Für die letzten beiden Zeilen brauchst du zwei Aufrufe, die noch nicht in deiner `requests.http` stehen. Ergänze sie:
+
+```http title="requests.http"
+### Fehlerhaftes JSON
+POST http://localhost:8080/api/v1/guestbook
+Content-Type: application/json
+
+{"title":
+
+### DELETE auf die Sammlung statt auf einen Eintrag
+DELETE http://localhost:8080/api/v1/guestbook
+```
+
 Nachschlagen: [HTTP kompakt](/infoblaetter/http-kompakt).
 
 ### Aufgabe 4 – Postman
 
 Bisher hast du `.http`-Dateien benutzt. In Betrieben ist **Postman** weit verbreitet — vor allem, weil man Anfragen darin sammeln, gemeinsam nutzen und dokumentieren kann.
+
+:::note Falls Postman nicht installiert ist
+Im Klassenraum ist es meist schon da. Sonst gibt es das Programm kostenlos unter [postman.com/downloads](https://www.postman.com/downloads/); ein Konto brauchst du dafür nicht.
+
+Geht die Installation nicht, ist das kein Beinbruch: Alles, was hier geübt wird, kannst du auch mit deiner `.http`-Datei. Lies die Aufgabe dann und arbeite weiter.
+:::
 
 <Task id="t2-ab02-a4-collection">Öffne Postman und lege eine neue Collection mit dem Namen **Gästebuch** an.</Task>
 
