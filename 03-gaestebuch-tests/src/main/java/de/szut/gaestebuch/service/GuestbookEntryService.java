@@ -88,13 +88,13 @@ public class GuestbookEntryService {
         checkText(entry.getAuthor(), "Der Verfasser", MAX_AUTHOR_LENGTH);
     }
 
-    private void checkText(String value, String bezeichnung, int maxLength) {
+    private void checkText(String value, String label, int maxLength) {
         if (value == null || value.isBlank()) {
-            throw new InvalidEntryException(bezeichnung + " darf nicht leer sein.");
+            throw new InvalidEntryException(label + " darf nicht leer sein.");
         }
         if (value.length() > maxLength) {
             throw new InvalidEntryException(
-                    bezeichnung + " darf hoechstens " + maxLength + " Zeichen lang sein.");
+                    label + " darf hoechstens " + maxLength + " Zeichen lang sein.");
         }
     }
 }

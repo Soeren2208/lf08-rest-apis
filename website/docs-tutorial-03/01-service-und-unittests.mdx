@@ -282,15 +282,15 @@ class CommentPreviewTest {
 
     @Test
     @DisplayName("kurzer Kommentar bleibt unverändert")
-    void kurzerKommentarBleibtUnveraendert() {
+    void shortCommentStaysUnchanged() {
         // Arrange — alles vorbereiten
-        String kommentar = "Hat mir gut gefallen!";
+        String comment = "Hat mir gut gefallen!";
 
         // Act — die eine Sache tun, um die es geht
-        String ergebnis = CommentPreview.shorten(kommentar);
+        String result = CommentPreview.shorten(comment);
 
         // Assert — nachsehen, ob es stimmt
-        assertThat(ergebnis).isEqualTo(kommentar);
+        assertThat(result).isEqualTo(comment);
     }
 }
 ```
@@ -302,7 +302,7 @@ class CommentPreviewTest {
 | **Assert** | Woran erkennst du, dass es stimmt? | prüft **eine** Aussage |
 
 :::info `assertThat` statt `assertEquals`
-Beides funktioniert. `assertThat(...)` kommt von **AssertJ** und liest sich wie ein Satz — `assertThat(ergebnis).isEqualTo(kommentar)`. Vor allem aber sind die Fehlermeldungen aussagekräftiger.
+Beides funktioniert. `assertThat(...)` kommt von **AssertJ** und liest sich wie ein Satz — `assertThat(result).isEqualTo(comment)`. Vor allem aber sind die Fehlermeldungen aussagekräftiger.
 
 AssertJ ist bereits dabei; es steckt im Test-Starter deines Projekts.
 
@@ -325,8 +325,8 @@ Jetzt die drei Fälle aus deiner Tabelle, an denen die Regel umschlägt.
 
 ```java
 /** Erzeugt einen Text aus genau so vielen Zeichen. */
-private String textMitLaenge(int laenge) {
-    return "x".repeat(laenge);
+private String textOfLength(int length) {
+    return "x".repeat(length);
 }
 
 @ParameterizedTest(name = "{0} Zeichen -> unverändert: {1}")
@@ -336,12 +336,12 @@ private String textMitLaenge(int laenge) {
         "60, true",
         "61, false"
 })
-void anDerGrenze(int laenge, boolean bleibtUnveraendert) {
-    String kommentar = textMitLaenge(laenge);
+void atTheBoundary(int length, boolean staysUnchanged) {
+    String comment = textOfLength(length);
 
-    String ergebnis = CommentPreview.shorten(kommentar);
+    String result = CommentPreview.shorten(comment);
 
-    assertThat(ergebnis.equals(kommentar)).isEqualTo(bleibtUnveraendert);
+    assertThat(result.equals(comment)).isEqualTo(staysUnchanged);
 }
 ```
 
@@ -416,13 +416,13 @@ void validate(GuestbookEntry entry) {
     checkText(entry.getAuthor(), "Der Verfasser", MAX_AUTHOR_LENGTH);
 }
 
-private void checkText(String value, String bezeichnung, int maxLength) {
+private void checkText(String value, String label, int maxLength) {
     if (value == null || value.isBlank()) {
-        throw new InvalidEntryException(bezeichnung + " darf nicht leer sein.");
+        throw new InvalidEntryException(label + " darf nicht leer sein.");
     }
     if (value.length() > maxLength) {
         throw new InvalidEntryException(
-                bezeichnung + " darf höchstens " + maxLength + " Zeichen lang sein.");
+                label + " darf höchstens " + maxLength + " Zeichen lang sein.");
     }
 }
 ```
@@ -456,7 +456,7 @@ class GuestbookEntryServiceTest {
     }
 
     /** Baut einen Eintrag, der alle Regeln erfüllt. */
-    private GuestbookEntry gueltigerEintrag() {
+    private GuestbookEntry validEntry() {
         GuestbookEntry entry = new GuestbookEntry();
         entry.setTitle("Toller Kurs");
         entry.setComment("Hat mir gut gefallen!");
@@ -479,26 +479,26 @@ Das Werkzeug dahinter heißt **Mockito** und liegt bereits im Test-Starter deine
 ```java
 @Test
 @DisplayName("speichert einen gültigen Eintrag")
-void speichertGueltigenEintrag() {
+void savesValidEntry() {
     // Arrange
-    GuestbookEntry eingabe = gueltigerEintrag();
-    when(repository.save(any(GuestbookEntry.class))).thenReturn(eingabe);
+    GuestbookEntry input = validEntry();
+    when(repository.save(any(GuestbookEntry.class))).thenReturn(input);
 
     // Act
-    GuestbookEntry ergebnis = service.create(eingabe);
+    GuestbookEntry result = service.create(input);
 
     // Assert
-    assertThat(ergebnis).isSameAs(eingabe);
-    verify(repository).save(eingabe);
+    assertThat(result).isSameAs(input);
+    verify(repository).save(input);
 }
 
 @Test
 @DisplayName("speichert NICHT, wenn der Titel fehlt")
-void speichertNichtOhneTitel() {
-    GuestbookEntry eingabe = gueltigerEintrag();
-    eingabe.setTitle("   ");
+void doesNotSaveWithoutTitle() {
+    GuestbookEntry input = validEntry();
+    input.setTitle("   ");
 
-    assertThatThrownBy(() -> service.create(eingabe))
+    assertThatThrownBy(() -> service.create(input))
             .isInstanceOf(InvalidEntryException.class)
             .hasMessageContaining("Titel");
 
@@ -509,7 +509,7 @@ void speichertNichtOhneTitel() {
 | Baustein | Bedeutung |
 |---|---|
 | `when(...).thenReturn(...)` | „Wenn jemand das aufruft, liefere das." |
-| `verify(repository).save(eingabe)` | „Prüfe, dass `save` mit genau diesem Eintrag aufgerufen wurde." |
+| `verify(repository).save(input)` | „Prüfe, dass `save` mit genau diesem Eintrag aufgerufen wurde." |
 | `verify(repository, never()).save(any())` | „Prüfe, dass `save` **nie** aufgerufen wurde." |
 | `assertThatThrownBy(() -> ...)` | „Führe das aus und prüfe die geworfene Ausnahme." |
 

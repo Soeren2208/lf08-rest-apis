@@ -156,7 +156,7 @@ Abgeleitete Abfragen haben eine Grenze. Diese Methode ist theoretisch möglich:
 
 ```java
 List<GuestbookEntry> findByAuthorAndTitleContainingAndDateBetweenOrderByDateDesc(
-        String author, String titel, LocalDateTime from, LocalDateTime to);
+        String author, String title, LocalDateTime from, LocalDateTime to);
 ```
 
 Lesbar ist sie nicht mehr. Ab etwa **drei Bedingungen** greift man besser zu `@Query`:
@@ -165,10 +165,10 @@ Lesbar ist sie nicht mehr. Ab etwa **drei Bedingungen** greift man besser zu `@Q
 @Query("""
         select e from GuestbookEntry e
         where e.author = :author
-          and lower(e.title) like lower(concat('%', :titel, '%'))
+          and lower(e.title) like lower(concat('%', :title, '%'))
         order by e.date desc
         """)
-List<GuestbookEntry> sucheEintraege(String author, String titel);
+List<GuestbookEntry> searchEntries(String author, String title);
 ```
 
 Das ist **JPQL** — eine Abfragesprache, die wie SQL aussieht, aber über **Klassen und Attribute** formuliert wird, nicht über Tabellen und Spalten. Beachte `GuestbookEntry` und `e.author` statt `guestbook_entry` und `author`.

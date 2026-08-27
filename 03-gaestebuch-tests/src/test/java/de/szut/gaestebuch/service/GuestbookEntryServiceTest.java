@@ -39,7 +39,7 @@ class GuestbookEntryServiceTest {
     }
 
     /** Baut einen Eintrag, der alle Regeln erfuellt. */
-    private GuestbookEntry gueltigerEintrag() {
+    private GuestbookEntry validEntry() {
         GuestbookEntry entry = new GuestbookEntry();
         entry.setTitle("Toller Kurs");
         entry.setComment("Hat mir gut gefallen!");
@@ -49,26 +49,26 @@ class GuestbookEntryServiceTest {
 
     @Test
     @DisplayName("speichert einen gueltigen Eintrag")
-    void speichertGueltigenEintrag() {
+    void savesValidEntry() {
         // Arrange
-        GuestbookEntry eingabe = gueltigerEintrag();
-        when(repository.save(any(GuestbookEntry.class))).thenReturn(eingabe);
+        GuestbookEntry input = validEntry();
+        when(repository.save(any(GuestbookEntry.class))).thenReturn(input);
 
         // Act
-        GuestbookEntry ergebnis = service.create(eingabe);
+        GuestbookEntry result = service.create(input);
 
         // Assert
-        assertThat(ergebnis).isSameAs(eingabe);
-        verify(repository).save(eingabe);
+        assertThat(result).isSameAs(input);
+        verify(repository).save(input);
     }
 
     @Test
     @DisplayName("speichert NICHT, wenn der Titel fehlt")
-    void speichertNichtOhneTitel() {
-        GuestbookEntry eingabe = gueltigerEintrag();
-        eingabe.setTitle("   ");
+    void doesNotSaveWithoutTitle() {
+        GuestbookEntry input = validEntry();
+        input.setTitle("   ");
 
-        assertThatThrownBy(() -> service.create(eingabe))
+        assertThatThrownBy(() -> service.create(input))
                 .isInstanceOf(InvalidEntryException.class)
                 .hasMessageContaining("Titel");
 
@@ -78,11 +78,11 @@ class GuestbookEntryServiceTest {
 
     @Test
     @DisplayName("nennt im Fehlertext, welches Feld gemeint ist")
-    void nenntDasBetroffeneFeld() {
-        GuestbookEntry eingabe = gueltigerEintrag();
-        eingabe.setAuthor(null);
+    void namesTheAffectedField() {
+        GuestbookEntry input = validEntry();
+        input.setAuthor(null);
 
-        assertThatThrownBy(() -> service.create(eingabe))
+        assertThatThrownBy(() -> service.create(input))
                 .hasMessageContaining("Verfasser");
     }
 
@@ -98,22 +98,22 @@ class GuestbookEntryServiceTest {
             "80, true",
             "81, false"
     })
-    void anDerLaengengrenzeDesTitels(int laenge, boolean erlaubt) {
-        GuestbookEntry eingabe = gueltigerEintrag();
-        eingabe.setTitle("x".repeat(laenge));
-        when(repository.save(any(GuestbookEntry.class))).thenReturn(eingabe);
+    void atTheTitleLengthBoundary(int length, boolean allowed) {
+        GuestbookEntry input = validEntry();
+        input.setTitle("x".repeat(length));
+        when(repository.save(any(GuestbookEntry.class))).thenReturn(input);
 
-        if (erlaubt) {
-            assertThat(service.create(eingabe)).isNotNull();
+        if (allowed) {
+            assertThat(service.create(input)).isNotNull();
         } else {
-            assertThatThrownBy(() -> service.create(eingabe))
+            assertThatThrownBy(() -> service.create(input))
                     .isInstanceOf(InvalidEntryException.class);
         }
     }
 
     @Test
     @DisplayName("wirft EntryNotFoundException bei unbekannter Id")
-    void wirftBeiUnbekannterId() {
+    void throwsForUnknownId() {
         when(repository.findById(9999L)).thenReturn(java.util.Optional.empty());
 
         assertThatThrownBy(() -> service.findById(9999L))
@@ -123,7 +123,7 @@ class GuestbookEntryServiceTest {
 
     @Test
     @DisplayName("loescht nicht, wenn es die Id nicht gibt")
-    void loeschtNichtBeiUnbekannterId() {
+    void doesNotDeleteUnknownId() {
         when(repository.findById(9999L)).thenReturn(java.util.Optional.empty());
 
         assertThatThrownBy(() -> service.deleteById(9999L))

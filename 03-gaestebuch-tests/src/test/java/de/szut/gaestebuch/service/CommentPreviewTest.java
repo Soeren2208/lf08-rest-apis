@@ -17,30 +17,30 @@ import static org.assertj.core.api.Assertions.assertThat;
 class CommentPreviewTest {
 
     /** Erzeugt einen Text aus genau so vielen Zeichen. */
-    private String textMitLaenge(int laenge) {
-        return "x".repeat(laenge);
+    private String textOfLength(int length) {
+        return "x".repeat(length);
     }
 
     @Test
     @DisplayName("null wird zu leerem Text")
-    void nullWirdZuLeeremText() {
+    void nullBecomesEmptyText() {
         // Arrange - hier nichts vorzubereiten
 
         // Act
-        String ergebnis = CommentPreview.shorten(null);
+        String result = CommentPreview.shorten(null);
 
         // Assert
-        assertThat(ergebnis).isEmpty();
+        assertThat(result).isEmpty();
     }
 
     @Test
     @DisplayName("kurzer Kommentar bleibt unveraendert")
-    void kurzerKommentarBleibtUnveraendert() {
-        String kommentar = "Hat mir gut gefallen!";
+    void shortCommentStaysUnchanged() {
+        String comment = "Hat mir gut gefallen!";
 
-        String ergebnis = CommentPreview.shorten(kommentar);
+        String result = CommentPreview.shorten(comment);
 
-        assertThat(ergebnis).isEqualTo(kommentar);
+        assertThat(result).isEqualTo(comment);
     }
 
     /**
@@ -54,33 +54,33 @@ class CommentPreviewTest {
             "60, true",
             "61, false"
     })
-    void anDerGrenze(int laenge, boolean bleibtUnveraendert) {
-        String kommentar = textMitLaenge(laenge);
+    void atTheBoundary(int length, boolean staysUnchanged) {
+        String comment = textOfLength(length);
 
-        String ergebnis = CommentPreview.shorten(kommentar);
+        String result = CommentPreview.shorten(comment);
 
-        assertThat(ergebnis.equals(kommentar)).isEqualTo(bleibtUnveraendert);
+        assertThat(result.equals(comment)).isEqualTo(staysUnchanged);
     }
 
     @Test
     @DisplayName("langer Kommentar wird auf genau 60 Zeichen gekuerzt")
-    void langerKommentarWirdGekuerzt() {
-        String kommentar = textMitLaenge(200);
+    void longCommentIsShortened() {
+        String comment = textOfLength(200);
 
-        String ergebnis = CommentPreview.shorten(kommentar);
+        String result = CommentPreview.shorten(comment);
 
-        assertThat(ergebnis).hasSize(CommentPreview.MAX_LENGTH);
-        assertThat(ergebnis).endsWith("…");
+        assertThat(result).hasSize(CommentPreview.MAX_LENGTH);
+        assertThat(result).endsWith("…");
     }
 
     @Test
     @DisplayName("der Anfang des Kommentars bleibt lesbar")
-    void derAnfangBleibtLesbar() {
-        String kommentar = "Sehr schoene Ausstellung, wir kommen im naechsten Jahr wieder "
+    void beginningStaysReadable() {
+        String comment = "Sehr schoene Ausstellung, wir kommen im naechsten Jahr wieder "
                 + "und bringen die ganze Familie mit.";
 
-        String ergebnis = CommentPreview.shorten(kommentar);
+        String result = CommentPreview.shorten(comment);
 
-        assertThat(ergebnis).startsWith("Sehr schoene Ausstellung");
+        assertThat(result).startsWith("Sehr schoene Ausstellung");
     }
 }

@@ -35,61 +35,61 @@ class GuestbookEntryRepositoryTest {
     private GuestbookEntryRepository repository;
 
     /** Legt einen Eintrag mit einem AUSDRUECKLICHEN Datum an. */
-    private GuestbookEntry eintragVom(LocalDateTime zeitpunkt, String titel) {
+    private GuestbookEntry entryDated(LocalDateTime moment, String title) {
         GuestbookEntry entry = new GuestbookEntry();
-        entry.setTitle(titel);
-        entry.setComment("Kommentar zu " + titel);
+        entry.setTitle(title);
+        entry.setComment("Kommentar zu " + title);
         entry.setAuthor("Anna");
-        entry.setDate(zeitpunkt);
+        entry.setDate(moment);
         return entityManager.persistAndFlush(entry);
     }
 
     @Test
     @DisplayName("faengt mit einer leeren Datenbank an")
-    void faengtLeerAn() {
+    void startsEmpty() {
         assertThat(repository.count()).isZero();
     }
 
     @Test
     @DisplayName("das gesetzte Datum bleibt erhalten")
-    void gesetztesDatumBleibtErhalten() {
-        LocalDateTime zeitpunkt = LocalDateTime.of(2020, 5, 17, 12, 0);
+    void givenDateIsKept() {
+        LocalDateTime moment = LocalDateTime.of(2020, 5, 17, 12, 0);
 
-        GuestbookEntry gespeichert = eintragVom(zeitpunkt, "Alt");
+        GuestbookEntry saved = entryDated(moment, "Alt");
         entityManager.clear();
 
-        GuestbookEntry geladen = repository.findById(gespeichert.getId()).orElseThrow();
-        assertThat(geladen.getDate()).isEqualTo(zeitpunkt);
+        GuestbookEntry loaded = repository.findById(saved.getId()).orElseThrow();
+        assertThat(loaded.getDate()).isEqualTo(moment);
     }
 
     @Test
     @DisplayName("ohne Datum wird der aktuelle Zeitpunkt gesetzt")
-    void ohneDatumWirdJetztGesetzt() {
+    void withoutDateTheCurrentMomentIsSet() {
         GuestbookEntry entry = new GuestbookEntry();
         entry.setTitle("Neu");
         entry.setComment("Neu");
         entry.setAuthor("Anna");
 
-        GuestbookEntry gespeichert = entityManager.persistAndFlush(entry);
+        GuestbookEntry saved = entityManager.persistAndFlush(entry);
 
-        assertThat(gespeichert.getDate()).isNotNull();
-        assertThat(gespeichert.getDate()).isAfter(LocalDateTime.now().minusMinutes(1));
+        assertThat(saved.getDate()).isNotNull();
+        assertThat(saved.getDate()).isAfter(LocalDateTime.now().minusMinutes(1));
     }
 
     @Test
     @DisplayName("der Jahresfilter liefert nur Eintraege des gesuchten Jahres")
-    void jahresfilterLiefertNurDiesesJahr() {
-        eintragVom(LocalDateTime.of(2025, 6, 1, 12, 0), "aus 2025");
-        eintragVom(LocalDateTime.of(2026, 6, 1, 12, 0), "aus 2026");
-        eintragVom(LocalDateTime.of(2027, 6, 1, 12, 0), "aus 2027");
+    void yearFilterReturnsOnlyThatYear() {
+        entryDated(LocalDateTime.of(2025, 6, 1, 12, 0), "aus 2025");
+        entryDated(LocalDateTime.of(2026, 6, 1, 12, 0), "aus 2026");
+        entryDated(LocalDateTime.of(2027, 6, 1, 12, 0), "aus 2027");
 
-        Page<GuestbookEntry> treffer = repository.findByDateGreaterThanEqualAndDateLessThan(
+        Page<GuestbookEntry> hits = repository.findByDateGreaterThanEqualAndDateLessThan(
                 LocalDateTime.of(2026, 1, 1, 0, 0),
                 LocalDateTime.of(2027, 1, 1, 0, 0),
                 PageRequest.of(0, 10));
 
-        assertThat(treffer.getTotalElements()).isEqualTo(1);
-        assertThat(treffer.getContent().get(0).getTitle()).isEqualTo("aus 2026");
+        assertThat(hits.getTotalElements()).isEqualTo(1);
+        assertThat(hits.getContent().get(0).getTitle()).isEqualTo("aus 2026");
     }
 
     /**
@@ -101,9 +101,9 @@ class GuestbookEntryRepositoryTest {
      */
     @Test
     @DisplayName("ein Eintrag exakt um Mitternacht am 1. Januar gehoert genau EINEM Jahr")
-    void mitternachtAmJahreswechselGehoertGenauEinemJahr() {
-        LocalDateTime jahreswechsel = LocalDateTime.of(2027, 1, 1, 0, 0, 0);
-        eintragVom(jahreswechsel, "Punkt Mitternacht");
+    void midnightBelongsToExactlyOneYear() {
+        LocalDateTime turnOfYear = LocalDateTime.of(2027, 1, 1, 0, 0, 0);
+        entryDated(turnOfYear, "Punkt Mitternacht");
 
         Page<GuestbookEntry> in2026 = repository.findByDateGreaterThanEqualAndDateLessThan(
                 LocalDateTime.of(2026, 1, 1, 0, 0),
@@ -121,8 +121,8 @@ class GuestbookEntryRepositoryTest {
 
     @Test
     @DisplayName("die letzte Sekunde des Jahres gehoert noch zum alten Jahr")
-    void letzteSekundeGehoertZumAltenJahr() {
-        eintragVom(LocalDateTime.of(2026, 12, 31, 23, 59, 59), "Silvester");
+    void lastSecondBelongsToOldYear() {
+        entryDated(LocalDateTime.of(2026, 12, 31, 23, 59, 59), "Silvester");
 
         Page<GuestbookEntry> in2026 = repository.findByDateGreaterThanEqualAndDateLessThan(
                 LocalDateTime.of(2026, 1, 1, 0, 0),

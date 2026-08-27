@@ -50,7 +50,7 @@ class GuestbookEntryControllerTest {
     @MockitoBean
     private GuestbookEntryService service;
 
-    private GuestbookEntry beispielEintrag() {
+    private GuestbookEntry sampleEntry() {
         GuestbookEntry entry = new GuestbookEntry();
         entry.setId(1L);
         entry.setTitle("Toller Kurs");
@@ -62,9 +62,9 @@ class GuestbookEntryControllerTest {
 
     @Test
     @DisplayName("POST liefert 201 und eine Location-Kopfzeile")
-    void postLiefert201MitLocation() throws Exception {
-        GuestbookEntry gespeichert = beispielEintrag();
-        when(service.create(any(GuestbookEntry.class))).thenReturn(gespeichert);
+    void postReturns201WithLocation() throws Exception {
+        GuestbookEntry saved = sampleEntry();
+        when(service.create(any(GuestbookEntry.class))).thenReturn(saved);
 
         mockMvc.perform(post("/api/v1/guestbook")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -84,7 +84,7 @@ class GuestbookEntryControllerTest {
 
     @Test
     @DisplayName("POST liefert 400, wenn der Service den Eintrag ablehnt")
-    void postLiefert400BeiUngueltigemEintrag() throws Exception {
+    void postReturns400ForInvalidEntry() throws Exception {
         when(service.create(any(GuestbookEntry.class)))
                 .thenThrow(new InvalidEntryException("Der Titel darf nicht leer sein."));
 
@@ -97,7 +97,7 @@ class GuestbookEntryControllerTest {
 
     @Test
     @DisplayName("GET auf eine unbekannte Id liefert 404 mit Begruendung")
-    void getLiefert404BeiUnbekannterId() throws Exception {
+    void getReturns404ForUnknownId() throws Exception {
         when(service.findById(9999L)).thenThrow(new EntryNotFoundException(9999L));
 
         mockMvc.perform(get("/api/v1/guestbook/9999"))
@@ -108,10 +108,10 @@ class GuestbookEntryControllerTest {
 
     @Test
     @DisplayName("GET auf die Sammlung liefert eine Seite")
-    void getLiefertSeite() throws Exception {
-        Page<GuestbookEntry> seite =
-                new PageImpl<>(java.util.List.of(beispielEintrag()));
-        when(service.findAll(eq(null), any(Pageable.class))).thenReturn(seite);
+    void getReturnsPage() throws Exception {
+        Page<GuestbookEntry> page =
+                new PageImpl<>(java.util.List.of(sampleEntry()));
+        when(service.findAll(eq(null), any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/guestbook"))
                 .andExpect(status().isOk())
@@ -121,14 +121,14 @@ class GuestbookEntryControllerTest {
 
     @Test
     @DisplayName("DELETE liefert 204 ohne Rumpf")
-    void deleteLiefert204() throws Exception {
+    void deleteReturns204() throws Exception {
         mockMvc.perform(delete("/api/v1/guestbook/1"))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     @DisplayName("DELETE auf eine unbekannte Id liefert 404")
-    void deleteLiefert404() throws Exception {
+    void deleteReturns404() throws Exception {
         doThrow(new EntryNotFoundException(9999L)).when(service).deleteById(9999L);
 
         mockMvc.perform(delete("/api/v1/guestbook/9999"))
@@ -137,7 +137,7 @@ class GuestbookEntryControllerTest {
 
     @Test
     @DisplayName("fehlerhaftes JSON liefert 400 - dafuer sorgt Spring selbst")
-    void kaputtesJsonLiefert400() throws Exception {
+    void brokenJsonReturns400() throws Exception {
         mockMvc.perform(post("/api/v1/guestbook")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\": "))
