@@ -4,6 +4,7 @@ import MDXComponents from '@theme-original/MDXComponents';
 import TestTable from '@site/src/components/TestTable';
 import Task from '@site/src/components/Task';
 import FillInTable from '@site/src/components/FillInTable';
+import Solution from '@site/src/components/Solution';
 
 export default {
   // Bestehende Docusaurus-MDX-Komponenten übernehmen ...
@@ -13,4 +14,5 @@ export default {
   TestTable,
   Task,
   FillInTable,
+  Solution,
 };

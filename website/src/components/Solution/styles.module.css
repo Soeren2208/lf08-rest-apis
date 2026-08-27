@@ -1,0 +1,116 @@
+.wrapper {
+  margin: 1.5rem 0;
+}
+
+.gesperrt {
+  padding: 1.1rem 1.25rem 0.6rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-global-radius);
+  background: var(--ifm-color-emphasis-100);
+}
+
+.kopf,
+.kopfOffen {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.05rem;
+}
+
+.kopfOffen {
+  margin-bottom: 0.9rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-300);
+}
+
+.schloss {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.hinweis {
+  margin: 0.6rem 0 0.9rem;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.zeile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.label {
+  font-weight: 600;
+}
+
+.eingabe {
+  flex: 1 1 12rem;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0.4rem 0.7rem;
+  font-size: 1rem;
+  color: var(--ifm-font-color-base);
+  background: var(--ifm-background-surface-color);
+  border: 2px solid var(--ifm-color-emphasis-400);
+  border-radius: var(--ifm-global-radius);
+}
+
+.eingabe:focus-visible {
+  outline: 3px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+}
+
+.knopf {
+  min-height: 44px;
+  padding: 0 1.1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ifm-button-color, #fff);
+  background: var(--ifm-color-primary);
+  border: 2px solid var(--ifm-color-primary);
+  border-radius: var(--ifm-global-radius);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.knopf:hover:not(:disabled) {
+  background: var(--ifm-color-primary-dark);
+  border-color: var(--ifm-color-primary-dark);
+}
+
+.knopf:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.knopf:focus-visible,
+.knopfLeise:focus-visible {
+  outline: 3px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+}
+
+.knopfLeise {
+  margin-left: auto;
+  min-height: 36px;
+  padding: 0 0.8rem;
+  font-size: 0.85rem;
+  color: var(--ifm-font-color-base);
+  background: transparent;
+  border: 1px solid var(--ifm-color-emphasis-400);
+  border-radius: var(--ifm-global-radius);
+  cursor: pointer;
+}
+
+.knopfLeise:hover {
+  background: var(--ifm-color-emphasis-200);
+}
+
+/* Bleibt als Platzhalter stehen, damit die Kiste beim Fehler nicht springt. */
+.fehler {
+  min-height: 1.5rem;
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ifm-color-danger);
+}

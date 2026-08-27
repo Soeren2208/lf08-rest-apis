@@ -10,8 +10,10 @@ build/
 target/
 !.mvn/wrapper/maven-wrapper.jar
 
-# Lokale H2-Datenbanken der Referenzprojekte
-data/
+# Lokale H2-Datenbanken der Referenzprojekte.
+# Bewusst mit fuehrendem Pfad: Ein blosses "data/" wuerde JEDEN so
+# benannten Ordner erfassen, auch website/src/data/.
+0*/data/
 *.mv.db
 *.trace.db
 
