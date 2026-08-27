@@ -17,7 +17,7 @@ public interface GuestbookEntryRepository extends JpaRepository<GuestbookEntry, 
      * das passende SQL. "findBy" + "Date" + "GreaterThanEqual" + "And" +
      * "Date" + "LessThan" wird zu
      *
-     *   ... where date >= ? and date < ?
+     *   ... where date_of_entry >= ? and date_of_entry < ?
      *
      * Es gibt keine Implementierung - der Name IST die Abfrage.
      *

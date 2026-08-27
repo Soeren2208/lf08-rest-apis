@@ -46,9 +46,9 @@ Eine naheliegende Lösung wäre, im Controller zu sortieren:
 ```java
 @GetMapping
 public ResponseEntity<List<GuestbookEntry>> findAllEntries() {
-    List<GuestbookEntry> alle = repository.findAll();
-    alle.sort(Comparator.comparing(GuestbookEntry::getDate).reversed());   // ❌
-    return ResponseEntity.ok(alle);
+    List<GuestbookEntry> all = repository.findAll();
+    all.sort(Comparator.comparing(GuestbookEntry::getDate).reversed());   // ❌
+    return ResponseEntity.ok(all);
 }
 ```
 
@@ -64,20 +64,47 @@ Bei zwanzig Einträgen fällt das nicht auf. Bei zwanzigtausend schon.
 
 ### Aufgabe 2 – Sortieren lassen
 
-Spring Data nimmt Sortierwünsche direkt entgegen. Dafür gibt es das Interface `Sort`:
+Der Auftrag „sortiere nach Datum, absteigend" muss zur Datenbank. Und dorthin kommt er auf eine Weise, die auf den ersten Blick nach einem Trick aussieht: **Du schreibst ihn in den Methodennamen.**
+
+<Task id="t2-ab03-a2-repo">Ergänze im `GuestbookEntryRepository` diese eine Zeile:</Task>
 
 ```java
-repository.findAll(Sort.by(Sort.Direction.DESC, "date"));
+List<GuestbookEntry> findAllByOrderByDateDesc();
 ```
 
-Daraus erzeugt Hibernate ein `ORDER BY date DESC` — die Datenbank sortiert, nicht dein Programm.
+Das ist alles. Kein Rumpf, keine Implementierung, kein SQL. Spring Data liest den Namen beim Start, zerlegt ihn in seine Wortbestandteile und baut daraus die Abfrage:
 
-<Task id="t2-ab03-a2">Ändere den Endpunkt so, dass die Sortierung vom Repository kommt. Prüfe im Log, dass im erzeugten SQL ein <code>order by</code> auftaucht.</Task>
+```text
+findAll      By          OrderBy           Date       Desc
+───────      ──          ───────           ────       ────
+"gib alle"   keine       "sortiere nach"   Attribut   absteigend
+             Bedingung                     date
+```
+
+Daraus wird `... order by date_of_entry desc` — ein `where` kommt nicht vor, es sollen ja alle Einträge geliefert werden.
+
+:::note Warum steht da `By`, wenn nichts folgt?
+`By` leitet in Spring Data immer den Bedingungsteil ein. Hier gibt es keine Bedingung, deshalb folgt sofort `OrderBy`. Die Stelle sieht leer aus — und ist es auch.
+
+In Aufgabe 4 füllst du sie: Dort steht hinter `findBy` eine Bedingung — und dann ergibt das `By` auch sichtbar Sinn.
+:::
+
+<Task id="t2-ab03-a2-controller">Rufe die neue Methode im Endpunkt auf, statt selbst zu sortieren. Prüfe im Log, dass im erzeugten SQL ein <code>order by</code> auftaucht.</Task>
 
 :::tip Nach `date` sortieren, nicht nach `id`
 Beides liefert hier zufällig dasselbe Ergebnis, weil neuere Einträge auch höhere Ids haben.
 
 Fachlich richtig ist `date`: Gefragt war „die neuesten zuerst" — und das ist eine Aussage über das **Datum**. Würden Einträge später einmal nachträglich importiert, liefe die Sortierung nach `id` ins Leere.
+:::
+
+:::info Wenn der Client selbst sortieren dürfen soll
+Ein Methodenname legt die Sortierung **fest**. Soll der Aufrufer sie bestimmen, bräuchtest du für jede Spalte und jede Richtung eine eigene Methode — `findAllByOrderByAuthorAsc`, `findAllByOrderByTitleDesc` und so fort. Dafür gibt es einen zweiten Weg, das Interface `Sort`:
+
+```java
+repository.findAll(Sort.by(Sort.Direction.DESC, "date"));
+```
+
+Hier steht die Sortierung fest, deshalb ist der Methodenname der direktere Weg. In Aufgabe 6 begegnet dir `Sort` trotzdem wieder — dann als Teil des `Pageable`.
 :::
 
 ### Aufgabe 3 – Einträge eines Jahres
@@ -104,10 +131,10 @@ Als Zwischenschritt bekommt der Filter gleich noch eine eigene Adresse — `/gue
 ```java
 @GetMapping("/jahr")
 public ResponseEntity<List<GuestbookEntry>> findByYear(@RequestParam Integer year) {
-    List<GuestbookEntry> gefiltert = repository.findAll().stream()
+    List<GuestbookEntry> filtered = repository.findAll().stream()
             .filter(entry -> entry.getDate().getYear() == year)
             .toList();
-    return ResponseEntity.ok(gefiltert);
+    return ResponseEntity.ok(filtered);
 }
 ```
 
@@ -123,7 +150,7 @@ Sieh dir das erzeugte SQL im Log an: Dort steht ein schlichtes `select ... from 
 
 ### Aufgabe 4 – Die Abfrage ins Repository verlagern
 
-Spring Data kann die Abfrage aus dem **Methodennamen** ableiten. Du schreibst nur die Signatur — die Implementierung entsteht beim Start.
+Dasselbe Verfahren wie in Aufgabe 2 — nur ist die leere Stelle hinter `By` diesmal gefüllt, und die Methode nimmt Werte entgegen.
 
 <Task id="t2-ab03-a4-repo">Ergänze im `GuestbookEntryRepository`:</Task>
 
@@ -143,7 +170,13 @@ findBy   Date       GreaterThanEqual   And   Date       LessThan
          date       >= ?                     date       < ?
 ```
 
-Daraus wird `... where date >= ? and date < ?`.
+Daraus wird `... where date_of_entry >= ? and date_of_entry < ?`.
+
+:::note Attribut hier, Spalte dort
+Im Methodennamen steht `Date` — so heißt das **Attribut** in der Java-Klasse. Im SQL steht `date_of_entry` — so heißt die **Spalte**, festgelegt in Arbeitsblatt 01 mit `@Column(name = "date_of_entry")`.
+
+Du schreibst den Namen, den du in Java kennst; Hibernate setzt den Namen ein, den die Datenbank kennt. Genau dafür ist ein objektrelationaler Mapper da.
+:::
 
 :::danger Warum nicht `findByDateBetween`?
 Der Name wäre kürzer, und die Vorschlagsliste bietet ihn zuerst an. Er ist hier aber **falsch**.
@@ -182,7 +215,7 @@ public ResponseEntity<List<GuestbookEntry>> findAllEntries(
         @RequestParam(required = false) Integer year) {
 
     if (year == null) {
-        return ResponseEntity.ok(repository.findAll(Sort.by(Sort.Direction.DESC, "date")));
+        return ResponseEntity.ok(repository.findAllByOrderByDateDesc());
     }
 
     LocalDateTime from = LocalDate.of(year, 1, 1).atStartOfDay();
@@ -240,7 +273,11 @@ public ResponseEntity<Page<GuestbookEntry>> findAllEntries(
 }
 ```
 
-Das `Pageable` trägt drei Angaben: welche Seite, wie groß, wie sortiert. `@PageableDefault` legt die Werte fest, falls der Client nichts angibt — dadurch ist auch die Sortierung aus Aufgabe 2 mit erledigt.
+Das `Pageable` trägt drei Angaben: welche Seite, wie groß, wie sortiert. `@PageableDefault` legt die Werte fest, falls der Client nichts angibt.
+
+Damit erledigt sich die Sortierung aus Aufgabe 2 gleich mit: Du rufst wieder das schlichte `findAll(pageable)` auf, und die Reihenfolge steckt im `Pageable`. Deine Methode `findAllByOrderByDateDesc()` wird nicht mehr gebraucht und kann aus dem Repository verschwinden — genau wie der Endpunkt `/jahr` aus Aufgabe 3.
+
+Das ist kein vergebliches Arbeiten: Jeder dieser Schritte hat etwas gezeigt, was der nächste voraussetzt. So entsteht Software auch im Betrieb.
 
 Der Client steuert es über Parameter:
 
@@ -328,7 +365,7 @@ Notiere dir vor der Abnahme einmal, wie viele Einträge es gerade gibt (`totalEl
       beschreibung: 'Filter greift in der Datenbank',
       vorbedingung: 'Einträge aus dem laufenden Jahr existieren',
       schritte: ['GET auf /api/v1/guestbook?year=2026', 'Log ansehen'],
-      erwartet: <>Das SQL enthält <code>where date&gt;=? and date&lt;?</code> — <b>nicht</b> ein einfaches select über die ganze Tabelle, und <b>nicht</b> <code>between</code>.</>
+      erwartet: <>Das SQL enthält <code>where ge1_0.date_of_entry&gt;=? and ge1_0.date_of_entry&lt;?</code> — <b>nicht</b> ein einfaches select über die ganze Tabelle, und <b>nicht</b> <code>between</code>.</>
     },
     {
       id: 'TF-04',
@@ -372,7 +409,7 @@ Notiere dir vor der Abnahme einmal, wie viele Einträge es gerade gibt (`totalEl
 
 :::tip Das hast du gelernt
 - Sortieren und Filtern gehören in die **Datenbank**, nicht in den Controller.
-- **Abgeleitete Abfragen** entstehen aus dem Methodennamen: `findByDateGreaterThanEqualAndDateLessThan` wird zu `where date >= ? and date < ?`.
+- **Abgeleitete Abfragen** entstehen aus dem Methodennamen — ganz ohne Implementierung. `findAllByOrderByDateDesc` wird zu `order by date_of_entry desc`, `findByDateGreaterThanEqualAndDateLessThan` zu `where date_of_entry >= ? and date_of_entry < ?`. Der Methodenname nennt das **Attribut**, das SQL die **Spalte**.
 - `Between` schließt **beide** Grenzen ein und ist für einen Zeitraum, der vor der oberen Grenze endet, das falsche Werkzeug.
 - `@RequestParam` nimmt Werte aus der URL entgegen; `required = false` macht sie optional.
 - Ein **Filter** rechtfertigt keinen eigenen Endpunkt — er schränkt eine vorhandene Ressource ein.
@@ -389,15 +426,17 @@ Notiere dir vor der Abnahme einmal, wie viele Einträge es gerade gibt (`totalEl
 4. Warum bekommt der Jahresfilter keinen eigenen Endpunkt?
 5. Welchen Wert hat `number` auf der ersten Seite?
 6. Woran erkennst du im Log, dass die Datenbank filtert und nicht dein Programm?
+7. In `findAllByOrderByDateDesc()` steckt ein `By`, auf das nichts folgt. Warum steht es trotzdem da?
 
 <details>
 <summary>Antworten</summary>
 
 1. Weil die Anwendung dafür alle Datensätze aus der Datenbank holen und in den Hauptspeicher übertragen muss. Die Datenbank kann das schneller und mit weniger Datenverkehr.
-2. Spring Data zerlegt den Namen beim Start: `findBy` leitet die Abfrage ein, `Date` benennt jeweils das Attribut, `GreaterThanEqual` und `LessThan` die Vergleiche. Daraus entsteht `where date >= ? and date < ?`. `Between` wäre falsch, weil es beide Grenzen einschließt — ein Eintrag exakt am 1. Januar des Folgejahres um 00:00 Uhr fiele dann in zwei Jahre.
+2. Spring Data zerlegt den Namen beim Start: `findBy` leitet die Abfrage ein, `Date` benennt jeweils das Attribut, `GreaterThanEqual` und `LessThan` die Vergleiche. Daraus entsteht `where date_of_entry >= ? and date_of_entry < ?` — der Methodenname nennt das Attribut `date`, Hibernate setzt den Spaltennamen ein. `Between` wäre falsch, weil es beide Grenzen einschließt — ein Eintrag exakt am 1. Januar des Folgejahres um 00:00 Uhr fiele dann in zwei Jahre.
 3. Eine Pfadvariable bezeichnet **welche** Ressource gemeint ist (`/guestbook/7`). Ein Request-Parameter schränkt eine Sammlung ein (`?year=2026`).
 4. Weil er keinen neuen Anwendungsfall darstellt. Gefragt sind weiterhin Gästebucheinträge — nur eine Teilmenge davon. Deshalb dieselbe Adresse mit optionalem Parameter.
 5. `0`. Die Zählung beginnt bei null.
 6. Das erzeugte SQL enthält eine `where`-Bedingung. Fehlt sie und es steht nur `select ... from guestbook_entry`, wurde die ganze Tabelle geholt und erst danach gefiltert.
+7. Weil `By` in Spring Data immer den Bedingungsteil einleitet. Hier gibt es keine Bedingung — es sollen ja alle Einträge kommen —, deshalb bleibt die Stelle leer und es folgt sofort `OrderBy`. In `findByDateGreaterThanEqualAndDateLessThan` ist dieselbe Stelle gefüllt.
 
 </details>

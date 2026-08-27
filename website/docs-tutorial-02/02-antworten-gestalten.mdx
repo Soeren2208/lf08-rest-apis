@@ -147,12 +147,33 @@ public ResponseEntity<GuestbookEntry> findEntryById(@PathVariable Long id) {
 }
 ```
 
-:::info Neu: `.map(ResponseEntity::ok)`
-`findById` liefert ein `Optional`. Mit `map` wird der Inhalt umgewandelt, **falls** einer da ist: Aus `Optional<GuestbookEntry>` wird `Optional<ResponseEntity<GuestbookEntry>>`.
+:::info Diese drei Zeilen genauer angesehen
+`findById()` kennst du aus dem ersten Tutorial: Es liefert kein Objekt, sondern ein **`Optional`** — einen Behälter, in dem ein Eintrag liegen kann oder eben nicht.
 
-Ist nichts da, greift `orElseThrow` — und Spring macht daraus die Antwort `404`.
+Ausgeschrieben täte der Endpunkt genau dasselbe:
 
-Die Schreibweise `ResponseEntity::ok` ist eine **Methodenreferenz**. Sie ist die Kurzform von `entry -> ResponseEntity.ok(entry)`.
+```java
+Optional<GuestbookEntry> found = repository.findById(id);
+
+if (found.isPresent()) {
+    return ResponseEntity.ok(found.get());
+}
+throw new ResponseStatusException(
+        HttpStatus.NOT_FOUND, "Kein Gästebucheintrag mit der Id " + id);
+```
+
+Die kurze Fassung sagt dasselbe — mit drei Schreibweisen, die du so noch nicht benutzt hast.
+
+**`.map(...)` — mach etwas mit dem Inhalt, falls einer da ist.**
+Liegt ein Eintrag im Behälter, wird er umgewandelt und wieder eingepackt. Ist der Behälter leer, bleibt er leer — dann wird gar nichts ausgeführt. Aus dem Eintrag wird so eine fertige `200`-Antwort, die weiterhin im Behälter steckt. `orElseThrow` packt sie am Ende aus.
+
+**Der Pfeil `->` — eine Funktion ohne Namen.**
+`() -> new ResponseStatusException(...)` heißt: „nimm nichts entgegen und liefere eine neue Ausnahme". Du übergibst hier keinen fertigen *Wert*, sondern eine *Vorschrift*, die nur dann ausgeführt wird, wenn sie gebraucht wird — bei einer unbekannten Id. Diese Schreibweise heißt **Lambda-Ausdruck**; im ersten Tutorial stand sie schon einmal da, ohne dass sie einen Namen bekommen hätte.
+
+**Der Doppel-Doppelpunkt `::` — dasselbe noch kürzer.**
+`ResponseEntity::ok` ist die Kurzform von `entry -> ResponseEntity.ok(entry)` und heißt: „ruf damit `ResponseEntity.ok` auf". Das nennt man eine **Methodenreferenz**.
+
+Beide Fassungen sind richtig, und die ausgeschriebene ist nicht schlechter. Die kurze steht hier, weil sie dir in Spring-Projekten überall begegnen wird.
 :::
 
 <Task id="t2-ab02-a2-put">Implementiere den Endpunkt zum Ändern eines Eintrags. Titel, Kommentar und Verfasser dürfen sich ändern — das Datum nicht.</Task>
@@ -163,38 +184,68 @@ Die Schreibweise `ResponseEntity::ok` ist eine **Methodenreferenz**. Sie ist die
 `deleteById()` wirft bei einer unbekannten Id keine Ausnahme, sondern tut nichts. Ohne vorherige Prüfung mit `existsById()` würde jeder Löschversuch mit `204` antworten — auch für Einträge, die es nie gab.
 :::
 
-### Aufgabe 3 – Statuscodes systematisch
-
-Deine API antwortet jetzt in fünf verschiedenen Situationen. Ordne zu:
-
-<Task id="t2-ab02-a3">Trage in die Tabelle ein, welchen Statuscode dein Dienst liefert — und prüfe es anschließend durch Ausprobieren.</Task>
-
-| Situation | Dein Statuscode |
-|---|---|
-| Eintrag erfolgreich angelegt | |
-| Alle Einträge abgerufen | |
-| Eintrag mit unbekannter Id abgerufen | |
-| Eintrag erfolgreich gelöscht | |
-| Eintrag mit unbekannter Id gelöscht | |
-| JSON im Rumpf war fehlerhaft | |
-| `DELETE` auf die Sammlung statt auf einen Eintrag | |
-
 <details>
-<summary>Auflösung</summary>
+<summary>Wenn du nicht weiterkommst – so sehen die beiden Endpunkte aus</summary>
 
-| Situation | Statuscode |
-|---|---|
-| Eintrag erfolgreich angelegt | `201 Created` |
-| Alle Einträge abgerufen | `200 OK` |
-| Eintrag mit unbekannter Id abgerufen | `404 Not Found` |
-| Eintrag erfolgreich gelöscht | `204 No Content` |
-| Eintrag mit unbekannter Id gelöscht | `404 Not Found` |
-| JSON im Rumpf war fehlerhaft | `400 Bad Request` |
-| `DELETE` auf die Sammlung | `405 Method Not Allowed` |
+```java
+@PutMapping("/{id}")
+public ResponseEntity<GuestbookEntry> updateEntry(@PathVariable Long id,
+                                                  @RequestBody GuestbookEntry entry) {
+    GuestbookEntry existing = repository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "Kein Gästebucheintrag mit der Id " + id));
 
-Nachschlagen: [HTTP kompakt](/infoblaetter/http-kompakt).
+    existing.setTitle(entry.getTitle());
+    existing.setComment(entry.getComment());
+    existing.setAuthor(entry.getAuthor());
+
+    return ResponseEntity.ok(repository.save(existing));
+}
+
+@DeleteMapping("/{id}")
+public ResponseEntity<Void> deleteEntryById(@PathVariable Long id) {
+    if (!repository.existsById(id)) {
+        throw new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "Kein Gästebucheintrag mit der Id " + id);
+    }
+    repository.deleteById(id);
+    return ResponseEntity.noContent().build();
+}
+```
+
+Zwei Stellen lohnen einen zweiten Blick:
+
+**Beim Ändern wird der vorhandene Eintrag geladen** und es werden nur drei Felder übernommen. Würdest du stattdessen das hereingereichte `entry` direkt speichern, käme dessen `date` aus dem Rumpf der Anfrage — also `null`. Das Datum bleibt nur erhalten, wenn du das gespeicherte Objekt änderst statt es zu ersetzen.
+
+**`ResponseEntity<Void>`** beim Löschen: In den spitzen Klammern steht, was im Rumpf liegt. Bei `204` liegt dort nichts — dafür steht `Void`.
 
 </details>
+
+### Aufgabe 3 – Statuscodes systematisch
+
+Deine API antwortet je nach Situation mit einem anderen Statuscode. Ordne zu:
+
+<Task id="t2-ab02-a3">Trage in die Tabelle ein, welchen Statuscode dein Dienst liefert. Fülle sie erst aus dem Kopf aus und decke die Auflösung danach auf.</Task>
+
+<FillInTable
+  storageKey="t2-ab02-statuscodes"
+  spalteLinks="Situation"
+  spalteRechts="Dein Statuscode"
+  platzhalter="z. B. 200"
+  zeilen={[
+    {id: 'post-ok', links: 'Eintrag erfolgreich angelegt', loesung: '201', klartext: '201 Created'},
+    {id: 'get-all', links: 'Alle Einträge abgerufen', loesung: '200', klartext: '200 OK'},
+    {id: 'get-404', links: 'Eintrag mit unbekannter Id abgerufen', loesung: '404', klartext: '404 Not Found'},
+    {id: 'del-ok', links: 'Eintrag erfolgreich gelöscht', loesung: '204', klartext: '204 No Content'},
+    {id: 'del-404', links: 'Eintrag mit unbekannter Id gelöscht', loesung: '404', klartext: '404 Not Found'},
+    {id: 'json-kaputt', links: 'JSON im Rumpf war fehlerhaft', loesung: '400', klartext: '400 Bad Request'},
+    {id: 'del-sammlung', links: <>DELETE auf die <b>Sammlung</b> statt auf einen Eintrag</>, loesung: '405', klartext: '405 Method Not Allowed'},
+  ]}
+/>
+
+<Task id="t2-ab02-a3-pruefen">Prüfe anschließend jede Zeile durch Ausprobieren. Erst dann weißt du, ob dein Dienst wirklich das tut, was du eingetragen hast.</Task>
+
+Nachschlagen: [HTTP kompakt](/infoblaetter/http-kompakt).
 
 ### Aufgabe 4 – Postman
 

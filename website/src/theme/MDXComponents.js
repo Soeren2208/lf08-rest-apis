@@ -3,6 +3,7 @@ import React from 'react';
 import MDXComponents from '@theme-original/MDXComponents';
 import TestTable from '@site/src/components/TestTable';
 import Task from '@site/src/components/Task';
+import FillInTable from '@site/src/components/FillInTable';
 
 export default {
   // Bestehende Docusaurus-MDX-Komponenten übernehmen ...
@@ -11,4 +12,5 @@ export default {
   // jeder .md/.mdx-Datei ohne expliziten Import genutzt werden können.
   TestTable,
   Task,
+  FillInTable,
 };

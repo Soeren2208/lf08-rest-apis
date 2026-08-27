@@ -31,7 +31,7 @@ Dieses Tutorial setzt die Personenverwaltung voraus. Du solltest einen REST-Cont
 
 ### Aufgabe 1 – Projekt erzeugen
 
-<Task id="t2-ab01-a1-init">Erzeuge auf [start.spring.io](https://start.spring.io) ein neues Projekt:</Task>
+<Task id="t2-ab01-a1-init">Erzeuge über IntelliJ oder auf [start.spring.io](https://start.spring.io) ein neues Projekt:</Task>
 
 | Feld | Wert |
 |---|---|
@@ -48,27 +48,95 @@ Vier davon kennst du. Lombok ist neu.
 
 ### Aufgabe 2 – Lombok verstehen
 
-Sieh dir an, wie viel Platz die Klasse `Person` aus dem ersten Tutorial gebraucht hat: drei Attribute, dazu ein Konstruktor und sechs Zugriffsmethoden. Rund 40 Zeilen, von denen keine einzige etwas Fachliches aussagt.
+Sieh dir an, wie viel Platz die Klasse `Person` aus dem ersten Tutorial gebraucht hat: drei Attribute, dazu zwei Konstruktoren und sechs Zugriffsmethoden. Rund 40 Zeilen, von denen keine einzige etwas Fachliches aussagt.
 
-**Lombok** erzeugt diesen Code beim Kompilieren automatisch. Im Quelltext steht nur noch die Annotation.
+<details>
+<summary>Die Klasse <code>Person</code> aus Tutorial 1 – ohne Lombok</summary>
 
-```java
-@Data
-public class GuestbookEntry {
+```java title="Tutorial 1: src/main/java/de/szut/personenverwaltung/model/Person.java"
+@Entity
+public class Person {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    private String title;
-    private String comment;
+
+    private String firstname;
+
+    private String surname;
+
+    /** JPA benötigt einen parameterlosen Konstruktor. */
+    public Person() {
+    }
+
+    public Person(String firstname, String surname) {
+        this.firstname = firstname;
+        this.surname = surname;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getFirstname() {
+        return firstname;
+    }
+
+    public void setFirstname(String firstname) {
+        this.firstname = firstname;
+    }
+
+    public String getSurname() {
+        return surname;
+    }
+
+    public void setSurname(String surname) {
+        this.surname = surname;
+    }
 }
 ```
 
+Nur der obere Teil bis `private String surname;` sagt etwas über die Fachlichkeit aus: Eine Person hat eine Id, einen Vor- und einen Nachnamen. Der ganze Rest ist immer gleich — und wäre bei einem Gästebucheintrag mit vier Attributen noch länger.
+
+</details>
+
+**Lombok** erzeugt diesen Code beim Kompilieren. Im Quelltext steht nur noch eine Annotation. Dieselbe Klasse `Person` sieht damit so aus:
+
+```java title="Person – mit Lombok"
+@Data
+@Entity
+public class Person {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+
+    private String firstname;
+
+    private String surname;
+}
+```
+
+Aus rund 40 Zeilen werden zwölf — und übrig bleibt genau das, was die Klasse fachlich ausmacht.
+
 Daraus macht der Compiler: Getter und Setter für alle drei Attribute, `toString()`, `equals()` und `hashCode()` — und einen Konstruktor mit allen `final`-Feldern (hier gibt es keine, also einen parameterlosen).
+
+Nicht dabei ist der zweite Konstruktor `Person(firstname, surname)`. Den erzeugt `@Data` nicht; dafür gäbe es `@AllArgsConstructor`. Gebraucht wird er hier nicht.
 
 :::warning Zwei Dinge musst du wissen
 1. **Der erzeugte Code steht nirgends in deinen Dateien.** Er entsteht erst beim Kompilieren. Suche nicht danach.
-2. **Deine Entwicklungsumgebung braucht das Lombok-Plugin**, sonst unterringelt sie `entry.getTitle()` als unbekannt — obwohl das Projekt einwandfrei baut. IntelliJ bringt es seit einigen Versionen mit; falls nicht, über *File → Settings → Plugins* nachinstallieren.
+2. **Deine Entwicklungsumgebung braucht das Lombok-Plugin**, sonst unterringelt sie `person.getFirstname()` als unbekannt — obwohl das Projekt einwandfrei baut. IntelliJ bringt es seit einigen Versionen mit; falls nicht, über *File → Settings → Plugins* nachinstallieren.
 :::
 
 Ausführlich steht das im Infoblatt [Lombok](/infoblaetter/lombok).
+
+:::note Hier ist noch nichts einzugeben
+Die Klasse `Person` dient nur zum Vergleich — du kennst sie schon, deshalb siehst du an ihr am schnellsten, was Lombok abnimmt. Die Entität für das Gästebuch baust du in Aufgabe 4.
+:::
 
 ### Aufgabe 3 – Die Datenbank soll überleben
 
@@ -106,13 +174,26 @@ Zwei Zeilen haben sich gegenüber dem ersten Tutorial geändert:
 
 :::info Der Pfad `./data/guestbookdb`
 Der Punkt am Anfang bedeutet „relativ zum Projektverzeichnis". Beim ersten Start legt H2 dort den Ordner `data` mit der Datei `guestbookdb.mv.db` an.
-
-Diese Datei gehört **nicht** in die Versionsverwaltung — sie enthält Daten, keinen Quelltext. Trage `data/` in die `.gitignore` ein.
 :::
 
 :::warning Beide Zeilen gehören zusammen
 Nur `file:` einzustellen und `create-drop` stehen zu lassen, hilft nichts: Hibernate würde die Tabelle beim Start weiterhin löschen und neu anlegen — nur eben in einer Datei.
 :::
+
+#### Die Datenbankdatei von der Versionsverwaltung ausnehmen
+
+Eine Versionsverwaltung hast du für dieses Projekt nicht eingerichtet — die Datei `.gitignore` liegt trotzdem schon bereit. Spring Initializr legt sie in jedem erzeugten Projekt mit an, direkt neben der `pom.xml`. Darin steht, was Git später einmal ignorieren soll: der Ordner `target` mit den Kompilaten, die Einstellungsdateien der Entwicklungsumgebung — alles, was sich jederzeit wiederherstellen lässt oder bei jedem im Team anders aussieht.
+
+Die Datenbankdatei gehört in dieselbe Kategorie: Sie enthält Daten, keinen Quelltext, und ändert sich bei jedem Start.
+
+<Task id="t2-ab01-a3-gitignore">Öffne die Datei `.gitignore` im Projektverzeichnis und hänge unten diese zwei Zeilen an:</Task>
+
+```text title=".gitignore"
+### Lokale H2-Datenbank ###
+data/
+```
+
+Der Schrägstrich am Ende sagt: Gemeint ist ein **Ordner**, nicht eine Datei dieses Namens. Speichern — mehr ist nicht zu tun. Wirksam wird der Eintrag in dem Moment, in dem das Projekt in eine Versionsverwaltung wandert.
 
 ### Aufgabe 4 – Die Entität
 
@@ -146,20 +227,49 @@ public class GuestbookEntry {
     private String author;
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Column(name = "date_of_entry", nullable = false, updatable = false)
     private LocalDateTime date;
 }
 ```
 
-Vier Annotationen sind neu:
+Diese Annotationen sind neu:
 
 | Annotation | Wirkung |
 |---|---|
-| `@Table(name = "guestbook_entry")` | Legt den Tabellennamen ausdrücklich fest, statt ihn aus dem Klassennamen abzuleiten |
+| `@Table(name = "guestbook_entry")` | Legt den **Tabellennamen** ausdrücklich fest, statt ihn Hibernate zu überlassen |
+| `@Column(name = "date_of_entry")` | Legt den **Spaltennamen** fest — für ein Attribut dasselbe, was `@Table` für die Klasse tut |
 | `@Column(length = 2000)` | Erweitert die Spalte; ohne Angabe wären es nur 255 Zeichen |
-| `@Column(nullable = false, updatable = false)` | Das Datum muss gesetzt sein und darf nie geändert werden |
+| `@Column(nullable = false)` | Die Spalte darf nicht leer bleiben |
+| `@Column(updatable = false)` | Der Wert darf nachträglich nicht geändert werden |
 | `@CreationTimestamp` | Hibernate setzt den Zeitpunkt automatisch beim ersten Speichern |
 | `@NoArgsConstructor` | Der parameterlose Konstruktor, den Hibernate braucht. `@Data` liefert ihn hier zufällig mit — aber nur, solange die Klasse kein `final`-Feld hat. Warum man sich darauf nicht verlässt, steht im Infoblatt [Lombok](/infoblaetter/lombok) |
+
+:::info Woher käme der Tabellenname ohne `@Table`?
+Hibernate leitet ihn aus dem Klassennamen ab und schreibt ihn in der Schreibweise der Datenbankwelt: Jeder Großbuchstabe im Wortinneren wird zu einem Unterstrich, alles wird klein.
+
+| Klasse | abgeleiteter Tabellenname |
+|---|---|
+| `Person` | `person` |
+| `GuestbookEntry` | `guestbook_entry` |
+| `PersonAddress` | `person_address` |
+
+In Tutorial 1 stand deshalb kein `@Table` an der Klasse `Person` — der abgeleitete Name `person` war schon der richtige.
+
+Hier ist es genauso: `GuestbookEntry` ergäbe auch ohne die Annotation `guestbook_entry`. Warum sie trotzdem dasteht? Weil sie den Namen **festhält**. Wird die Klasse eines Tages umbenannt, wandert der Tabellenname sonst stillschweigend mit — und die vorhandenen Daten stehen weiterhin in der alten Tabelle, die niemand mehr abfragt.
+:::
+
+:::info Warum heißt die Spalte anders als das Attribut?
+`@Column` ist **eine** Annotation mit mehreren Einstellungen — in der Tabelle stehen sie nur einzeln, damit jede für sich erkennbar ist. Im Quelltext sind alle drei zu einer Angabe zusammengefasst:
+
+```java
+@Column(name = "date_of_entry", nullable = false, updatable = false)
+private LocalDateTime date;
+```
+
+Ohne `name` hieße die Spalte wie das Attribut, also `date`. Das ist in der SQL-Norm ein **reserviertes Wort**. Wie streng eine Datenbank das nimmt, ist von Hersteller zu Hersteller verschieden: H2 und MySQL akzeptieren es, Oracle nicht. Wechselt das Projekt später die Datenbank, kann genau diese Spalte zum Problem werden — und der Fehler zeigt sich erst dann.
+
+In Java heißt das Attribut weiterhin `date` — dort ist der Name unproblematisch und beschreibt die Sache am besten. Dass Attribut und Spalte verschieden heißen dürfen, ist keine Notlösung, sondern der Kern des objektrelationalen Mappings: Beide Seiten benennen ihre Dinge nach ihren eigenen Regeln, die Zuordnung steht in der Annotation.
+:::
 
 :::tip Warum `updatable = false` beim Datum?
 Weil ein Eintrag zu einem bestimmten Zeitpunkt verfasst wurde — und dieser Zeitpunkt sich nachträglich nicht ändert. Hibernate lässt die Spalte deshalb in jeder `UPDATE`-Anweisung aus, die es erzeugt. Selbst wenn dein Code später `setDate(...)` aufruft, kommt die Änderung nicht in der Datenbank an.
@@ -167,13 +277,13 @@ Weil ein Eintrag zu einem bestimmten Zeitpunkt verfasst wurde — und dieser Zei
 **Wie weit reicht dieser Schutz?** Genau so weit wie Hibernate. Sieh dir die `CREATE TABLE`-Anweisung im Log an:
 
 ```sql
-date timestamp(6) not null
+date_of_entry timestamp(6) not null
 ```
 
 Dort steht `not null` — das kommt von `nullable = false` und ist eine echte Regel der Datenbank. Von `updatable` steht dort **nichts**. Wer die H2-Console öffnet und
 
 ```sql
-UPDATE guestbook_entry SET date = '2020-01-01 00:00:00' WHERE id = 1;
+UPDATE guestbook_entry SET date_of_entry = '2020-01-01 00:00:00' WHERE id = 1;
 ```
 
 ausführt, ändert das Datum ohne Weiteres.
@@ -196,7 +306,14 @@ Für ein Gästebuch, dessen Einträge dauerhaft gespeichert werden, sind fortlau
 
 <Task id="t2-ab01-a5-repo">Lege im Package `repository` das Interface `GuestbookEntryRepository` an, das `JpaRepository<GuestbookEntry, Long>` erweitert.</Task>
 
-<Task id="t2-ab01-a5-controller">Erstelle im Package `controller` die Klasse `GuestbookEntryController` mit zwei Endpunkten:</Task>
+<Task id="t2-ab01-a5-controller">Erstelle im Package `controller` die Klasse `GuestbookEntryController` mit zwei Endpunkten unter `/api/v1/guestbook`: einem **POST**-Endpunkt, über den ein Gästebucheintrag angelegt wird, und einem **GET**-Endpunkt, der alle Einträge zurückgibt.</Task>
+
+Das Muster kennst du aus dem ersten Tutorial — es ist dasselbe wie beim `PersonController`: das Repository über den Konstruktor hineingeben, `@PostMapping` mit `@RequestBody` und Status `201`, `@GetMapping` ohne Parameter. Schreibe die Klasse zuerst selbst.
+
+Ein `date` schickst du **nicht** mit — das setzt Hibernate.
+
+<details>
+<summary>Wenn du nicht weiterkommst – so sieht die Klasse aus</summary>
 
 ```java title="src/main/java/de/szut/gaestebuch/controller/GuestbookEntryController.java"
 @RestController
@@ -222,11 +339,11 @@ public class GuestbookEntryController {
 }
 ```
 
-Das kennst du aus dem ersten Tutorial. Beachte nur: Ein `date` schickst du **nicht** mit — das setzt Hibernate.
+</details>
 
 ### Aufgabe 6 – Ausprobieren
 
-<Task id="t2-ab01-a6-file">Lege eine Datei `requests.http` an:</Task>
+<Task id="t2-ab01-a6-file">Lege im Projekthauptverzeichnis — neben der `pom.xml` — die Datei `requests.http` an. Das Gästebuch ist ein eigenes Projekt, es gibt sie hier also noch nicht; die aus dem ersten Tutorial bleibt, wo sie ist.</Task>
 
 ```http title="requests.http"
 ### Eintrag anlegen
@@ -264,10 +381,10 @@ Lege noch einen dritten Eintrag an und achte auf die Id: Sie zählt dort weiter,
   tests={[
     {
       id: 'TF-01',
-      beschreibung: 'Tabelle wird mit dem festgelegten Namen angelegt',
+      beschreibung: 'Tabelle und Spalten tragen die festgelegten Namen',
       vorbedingung: 'Projekt frisch erstellt, Ordner data existiert noch nicht',
       schritte: ['Anwendung starten', 'Konsolenausgabe durchsehen'],
-      erwartet: <>Im Log steht <code>create table guestbook_entry</code> — nicht <code>guestbook_entry_entity</code> oder Ähnliches.</>
+      erwartet: <>Im Log steht <code>create table guestbook_entry</code>, und darin die Spalte <code>date_of_entry</code> — nicht <code>date</code>.</>
     },
     {
       id: 'TF-02',
@@ -332,6 +449,7 @@ Lege noch einen dritten Eintrag an und achte auf die Id: Sie zählt dort weiter,
 3. Warum ist `updatable = false` beim Datum sinnvoll?
 4. Welchen Vorteil hat `IDENTITY` gegenüber `AUTO` für ein Gästebuch?
 5. Warum gehört der Ordner `data` nicht in die Versionsverwaltung?
+6. Das Attribut heißt `date`, die Spalte `date_of_entry`. Wer sorgt dafür, dass beides zusammenfindet?
 
 <details>
 <summary>Antworten</summary>
@@ -341,5 +459,6 @@ Lege noch einen dritten Eintrag an und achte auf die Id: Sie zählt dort weiter,
 3. Weil der Zeitpunkt, zu dem ein Eintrag verfasst wurde, sich nicht nachträglich ändert. `updatable = false` hält die Spalte aus allen `UPDATE`-Anweisungen heraus, die Hibernate erzeugt — eine Regel der Datenbank ist es nicht, ein direktes SQL-`UPDATE` käme weiterhin durch.
 4. `IDENTITY` vergibt die Nummern einzeln und damit dicht aufeinanderfolgend. `AUTO` holt sich 50 Werte auf Vorrat, wodurch nach einem Neustart größere Lücken entstehen. Garantiert lückenlos ist keine der beiden Strategien — nach einem Löschen oder einem Rollback fehlt die Nummer.
 5. Weil er Daten enthält, keinen Quelltext. Jeder Entwickler hat andere Testdaten, und die Datei ändert sich bei jedem Start.
+6. Hibernate. Die Zuordnung steht in `@Column(name = "date_of_entry")`. Im Java-Code sprichst du weiterhin vom Attribut `date`, im erzeugten SQL steht `date_of_entry` — das Übersetzen ist die Aufgabe des objektrelationalen Mappers.
 
 </details>

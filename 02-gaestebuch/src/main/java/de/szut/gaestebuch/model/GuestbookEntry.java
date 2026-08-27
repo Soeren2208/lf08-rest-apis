@@ -49,8 +49,12 @@ public class GuestbookEntry {
      * Das Anlegedatum setzt Hibernate automatisch beim ersten Speichern.
      * updatable = false verhindert, dass es spaeter veraendert wird -
      * ein Eintrag wurde nun einmal zu einem bestimmten Zeitpunkt verfasst.
+     *
+     * name = "date_of_entry" benennt die Spalte um. Ohne die Angabe hiesse
+     * sie wie das Attribut, also "date" - und DATE ist in der SQL-Norm ein
+     * reserviertes Wort. H2 kommt damit zurecht, andere Datenbanken nicht.
      */
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Column(name = "date_of_entry", nullable = false, updatable = false)
     private LocalDateTime date;
 }
