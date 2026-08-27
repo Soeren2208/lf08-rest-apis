@@ -18,7 +18,7 @@ am Schulzentrum Utbremen, Bremen.
 | Ordner | Inhalt |
 |---|---|
 | `website/` | Die gesamte Website (Docusaurus) — alle Tutorials und Infoblätter |
-| `01-personenverwaltung/` | Lauffähiges Referenzprojekt zu Tutorial 1 (Spring Boot 4.1, Java 25) |
+| `01-personenverwaltung/` | Lauffähiges Referenzprojekt zu Tutorial 1 (Spring Boot 4.1, Java 26) |
 | `02-gaestebuch/` | Lauffähiges Referenzprojekt zu Tutorial 2 |
 | `03-gaestebuch-tests/` | Referenzprojekt zu Tutorial 3 — dasselbe Gästebuch, mit Service-Schicht und Tests |
 | `_screenshots/` | Screenshots und die Skripte, mit denen sie erzeugt werden |
@@ -250,9 +250,9 @@ davon nicht berührt.
 
 | | Version |
 |---|---|
-| Spring Boot | 4.1.0 |
-| Java | 25 (LTS) |
-| Hibernate | 7.4 |
+| Spring Boot | 4.1.1 |
+| Java | 26 |
+| Hibernate | 7.4.5 |
 | Docusaurus | 3.10.2 |
 | springdoc-openapi | 3.1.0 (Tutorial 2) |
 

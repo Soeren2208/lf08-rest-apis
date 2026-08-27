@@ -35,7 +35,7 @@ Die Beschreibung des Projekts steht in einer einzigen Datei: der `pom.xml`.
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.1.0</version>
+        <version>4.1.1</version>
     </parent>
 
     <groupId>de.szut</groupId>
@@ -63,7 +63,7 @@ Jede Bibliothek der Welt ist über drei Angaben eindeutig bestimmt — man nennt
 |---|---|---|
 | **G**roupId | Wer hat es gebaut? Meist eine umgekehrte Domain | `org.springframework.boot` |
 | **A**rtifactId | Wie heißt das Bauteil? | `spring-boot-starter-webmvc` |
-| **V**ersion | Welcher Stand? | `4.1.0` |
+| **V**ersion | Welcher Stand? | `4.1.1` |
 
 Dein eigenes Projekt hat ebenfalls solche Koordinaten — `de.szut` / `personenverwaltung` / `0.0.1-SNAPSHOT`. Genau die hast du im Spring Initializr eingetragen.
 
@@ -194,18 +194,18 @@ spring-boot-starter-webmvc
   <text x="16" y="120" fontSize="12.5" fontWeight="700" fill="var(--ifm-color-emphasis-800)">Das lädt Maven tatsächlich herunter</text>
   <rect x="16" y="132" width="688" height="36" rx="6" fill="var(--ifm-color-emphasis-300)"/>
   <rect x="16" y="132" width="43" height="36" rx="6" fill="var(--ifm-color-primary)"/>
-  <text x="16" y="192" fontSize="19" fontWeight="800" fill="var(--ifm-color-emphasis-800)">124</text>
+  <text x="16" y="192" fontSize="19" fontWeight="800" fill="var(--ifm-color-emphasis-800)">123</text>
   <text x="58" y="192" fontSize="13" fill="var(--ifm-color-emphasis-800)">JAR-Dateien</text>
 
   {/* Beschriftung der beiden Anteile */}
   <path d="M37 176 L37 168" stroke="var(--ifm-color-primary)" strokeWidth="1.6"/>
   <path d="M380 176 L380 168" stroke="var(--ifm-color-emphasis-600)" strokeWidth="1.6"/>
-  <text x="380" y="192" textAnchor="middle" fontSize="12" fontWeight="700" fill="var(--ifm-color-emphasis-700)">116 kommen automatisch mit</text>
+  <text x="380" y="192" textAnchor="middle" fontSize="12" fontWeight="700" fill="var(--ifm-color-emphasis-700)">115 kommen automatisch mit</text>
   <text x="380" y="216" textAnchor="middle" fontSize="12" fill="var(--ifm-color-emphasis-700)">Das sind die transitiven Abhängigkeiten — Maven verfolgt die Kette für dich</text>
 </svg>
 
 :::info Die Zahl in deinem Projekt
-In deiner `pom.xml` stehen **8 Abhängigkeiten**. Tatsächlich lädt Maven **124 JAR-Dateien** — alles Weitere sind transitive Abhängigkeiten.
+In deiner `pom.xml` stehen **8 Abhängigkeiten**. Tatsächlich lädt Maven **123 JAR-Dateien** — alles Weitere sind transitive Abhängigkeiten.
 
 Das kannst du selbst nachsehen:
 
@@ -235,11 +235,11 @@ Ist dir aufgefallen, dass in der `pom.xml` fast überall die `<version>` fehlt? 
 ```xml
 <parent>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>4.1.0</version>
+    <version>4.1.1</version>
 </parent>
 ```
 
-Dieser Eltern-POM enthält eine große, geprüfte Liste: Zu Spring Boot 4.1.0 gehört Spring Framework 7.0.8, Jackson 3.1.4, Tomcat 11.0.22 und so weiter. Alle diese Versionen sind aufeinander abgestimmt.
+Dieser Eltern-POM enthält eine große, geprüfte Liste: Zu Spring Boot 4.1.1 gehört Spring Framework 7.0.9, Jackson 3.1.5, Tomcat 11.0.24 und so weiter. Alle diese Versionen sind aufeinander abgestimmt.
 
 :::warning Eine Version selbst festlegen
 Du *kannst* eine Version angeben und damit die Vorgabe überstimmen. Tu es nur, wenn du einen guten Grund hast — du verlässt damit die geprüfte Kombination und kannst schwer auffindbare Fehler erzeugen.
@@ -292,7 +292,7 @@ Bibliotheken werden also **nie** ins Projekt kopiert. Weitergegeben wird nur die
 - **Maven** beschafft Bibliotheken, übersetzt, testet und paketiert. Beschrieben wird das Projekt in der `pom.xml`.
 - Jede Bibliothek hat **GAV-Koordinaten**: GroupId, ArtifactId, Version.
 - Bibliotheken kommen aus **Maven Central** und liegen danach im lokalen Repository.
-- **Transitive Abhängigkeiten** zieht Maven automatisch mit — aus 8 Einträgen werden 124 JAR-Dateien.
+- **Transitive Abhängigkeiten** zieht Maven automatisch mit — aus 8 Einträgen werden 123 JAR-Dateien.
 - **Starter** sind Bündel; die `<parent>`-Angabe legt die abgestimmten Versionen fest.
 - Der **Wrapper** (`mvnw`) sorgt dafür, dass alle mit derselben Maven-Version bauen.
 - Bibliotheken landen nie im Projektordner — weitergegeben wird die `pom.xml`.
