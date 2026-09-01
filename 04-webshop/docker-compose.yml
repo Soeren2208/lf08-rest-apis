@@ -1,0 +1,28 @@
+# Die Datenbank des Webshops laeuft in einem Container.
+#
+# Starten:  docker compose up -d
+# Stoppen:  docker compose stop
+# Loeschen: docker compose down -v   (loescht auch die Daten!)
+
+services:
+  webshop-db:
+    image: postgres:17.6
+    container_name: webshop-db
+    environment:
+      POSTGRES_DB: webshop
+      POSTGRES_USER: webshop
+      POSTGRES_PASSWORD: geheim
+    ports:
+      # Aussen 5433, damit eine oertlich installierte PostgreSQL auf dem
+      # Standard-Port 5432 nicht dazwischenfunkt.
+      - "5433:5432"
+    volumes:
+      - webshop-daten:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U webshop -d webshop"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  webshop-daten:
