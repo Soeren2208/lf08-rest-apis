@@ -1,0 +1,192 @@
+.wrapper {
+  margin: 1.5rem 0;
+}
+
+.gesperrt {
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-global-radius);
+  background: var(--ifm-color-emphasis-100);
+}
+
+.frageKopf {
+  margin: 0 0 1rem;
+}
+
+.auswahl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.tippKnopf {
+  min-height: 44px;
+  padding: 0 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ifm-font-color-base);
+  background: var(--ifm-background-surface-color);
+  border: 2px solid var(--ifm-color-emphasis-400);
+  border-radius: var(--ifm-global-radius);
+  cursor: pointer;
+}
+
+.tippKnopf:hover {
+  border-color: var(--ifm-color-primary);
+}
+
+.tippKnopf:focus-visible,
+.artKnopf:focus-visible {
+  outline: 3px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+}
+
+.aufloesung {
+  margin: 0 0 1rem;
+  padding: 0.7rem 0.9rem;
+  border-left: 4px solid var(--ifm-color-primary);
+  background: var(--ifm-color-emphasis-100);
+  border-radius: var(--ifm-global-radius);
+}
+
+/* ---------- Umschalter ---------- */
+
+.schalter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.artKnopf {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex: 1 1 9rem;
+  min-height: 44px;
+  padding: 0.5rem 0.8rem;
+  text-align: left;
+  color: var(--ifm-font-color-base);
+  background: var(--ifm-background-surface-color);
+  border: 2px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-global-radius);
+  cursor: pointer;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
+}
+
+.artKnopf:hover {
+  border-color: var(--ifm-color-emphasis-600);
+}
+
+.artKnopf.aktiv {
+  background: var(--ifm-color-primary-lightest);
+  border-color: var(--ifm-color-primary);
+  color: #14181c;
+}
+
+.artKnopf.aktiv .artUnter {
+  color: #14181c;
+}
+
+.artLabel {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.artUnter {
+  font-size: 0.78rem;
+  color: var(--ifm-color-emphasis-700);
+}
+
+/* ---------- die vier Schichten ---------- */
+
+.schichten {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.schicht {
+  display: grid;
+  grid-template-columns: minmax(7rem, 10rem) 1fr auto;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--ifm-global-radius);
+  border: 2px solid var(--ifm-color-emphasis-300);
+  background: var(--ifm-color-emphasis-100);
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.schichtTitel {
+  font-weight: 700;
+}
+
+.schichtZusatz {
+  font-size: 0.85rem;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.schichtStatus {
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Zustände */
+
+.echt {
+  border-color: var(--ifm-color-success);
+  background: var(--ifm-color-success-contrast-background);
+}
+
+.echt .schichtStatus {
+  color: var(--ifm-color-success-contrast-foreground);
+}
+
+.doppel {
+  border-style: dashed;
+  border-color: var(--ifm-color-warning-dark);
+  background: var(--ifm-color-warning-contrast-background);
+}
+
+.doppel .schichtStatus {
+  color: var(--ifm-color-warning-contrast-foreground);
+}
+
+.aus {
+  border-style: dotted;
+}
+
+.aus .schichtTitel,
+.aus .schichtZusatz,
+.aus .schichtStatus {
+  color: var(--ifm-color-emphasis-700);
+}
+
+.satz {
+  margin: 1rem 0 0;
+  font-size: 0.95rem;
+  color: var(--ifm-color-emphasis-800);
+}
+
+/* Auf schmalen Schirmen untereinander statt in drei Spalten. */
+@media (max-width: 600px) {
+  .schicht {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+  }
+
+  .schichtStatus {
+    white-space: normal;
+  }
+
+  .artKnopf {
+    flex-basis: 100%;
+  }
+}

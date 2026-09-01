@@ -1,0 +1,219 @@
+.wrapper {
+  margin: 1.5rem 0;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-global-radius);
+  background: var(--ifm-color-emphasis-100);
+}
+
+/* ---------- Vorhersage ---------- */
+
+.frageKopf {
+  margin: 0 0 0.8rem;
+}
+
+.frageZeile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0.7rem 0;
+}
+
+.tippFeld {
+  width: 5.5rem;
+  min-height: 44px;
+  padding: 0.4rem 0.7rem;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 1rem;
+  color: var(--ifm-font-color-base);
+  background: var(--ifm-background-surface-color);
+  border: 2px solid var(--ifm-color-emphasis-400);
+  border-radius: var(--ifm-global-radius);
+}
+
+.tippFeld:focus-visible,
+.regler input:focus-visible {
+  outline: 3px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+}
+
+.knopfLeiste {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.knopf {
+  min-height: 44px;
+  padding: 0 1.1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ifm-button-color, #fff);
+  background: var(--ifm-color-primary);
+  border: 2px solid var(--ifm-color-primary);
+  border-radius: var(--ifm-global-radius);
+  cursor: pointer;
+}
+
+.knopf:hover {
+  background: var(--ifm-color-primary-dark);
+  border-color: var(--ifm-color-primary-dark);
+}
+
+.knopfLeise {
+  color: var(--ifm-font-color-base);
+  background: transparent;
+  border-color: var(--ifm-color-emphasis-400);
+}
+
+.knopfLeise:hover {
+  background: var(--ifm-color-emphasis-200);
+  border-color: var(--ifm-color-emphasis-600);
+}
+
+.knopf:focus-visible {
+  outline: 3px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+}
+
+.aufloesung {
+  margin: 0 0 1rem;
+  padding: 0.7rem 0.9rem;
+  border-left: 4px solid var(--ifm-color-primary);
+  background: var(--ifm-background-surface-color);
+  border-radius: var(--ifm-global-radius);
+}
+
+/* ---------- Regler ---------- */
+
+.regler {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+}
+
+.reglerZeile {
+  display: grid;
+  grid-template-columns: minmax(10rem, 14rem) 1fr 2.5rem;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.reglerZeile input[type='range'] {
+  width: 100%;
+  min-height: 44px;
+  accent-color: var(--ifm-color-primary);
+  cursor: pointer;
+}
+
+.wert {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-align: right;
+  color: var(--ifm-color-primary);
+}
+
+.url {
+  display: block;
+  margin-bottom: 0.9rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  background: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-global-radius);
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+/* ---------- die zwölf Einträge ---------- */
+
+.eintraege {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.eintrag {
+  flex: 1 1 2.5rem;
+  min-width: 2.5rem;
+  padding: 0.7rem 0;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.9rem;
+  text-align: center;
+  color: var(--ifm-color-emphasis-700);
+  background: var(--ifm-color-emphasis-200);
+  border: 2px solid transparent;
+  border-radius: var(--ifm-global-radius);
+  transition: background-color 0.12s ease, color 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.eintrag.imFenster {
+  font-weight: 800;
+  color: #14181c;
+  background: var(--ifm-color-primary-lightest);
+  border-color: var(--ifm-color-primary);
+}
+
+.legende {
+  margin: 0 0 1rem;
+  font-size: 0.88rem;
+  color: var(--ifm-color-emphasis-700);
+}
+
+/* ---------- die Felder der Page-Antwort ---------- */
+
+.felder {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.feld {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1 1 7rem;
+  padding: 0.5rem 0.7rem;
+  background: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-global-radius);
+}
+
+.feldName {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.78rem;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.feldWert {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ifm-font-color-base);
+}
+
+.suchauftrag {
+  margin: 1rem 0 0;
+  font-size: 0.92rem;
+  color: var(--ifm-color-emphasis-800);
+}
+
+/* Auf schmalen Schirmen bleibt neben der Beschriftung kein Platz mehr fuer
+   den Regler - dann Beschriftung und Wert in eine Zeile, Regler darunter. */
+@media (max-width: 600px) {
+  .reglerZeile {
+    grid-template-columns: 1fr auto;
+    gap: 0.2rem 0.8rem;
+  }
+
+  .reglerZeile input[type='range'] {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
