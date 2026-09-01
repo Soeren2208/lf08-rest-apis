@@ -72,25 +72,61 @@ Ein Test ist nicht dafür da zu melden, **dass** etwas kaputt ist. Er ist dafür
 
 ## Die Testpyramide
 
-<div style={{overflowX: 'auto'}}>
+<svg viewBox="0 0 720 320" width="100%" role="img"
+     aria-label="Testpyramide: unten viele schnelle Unit-Tests, in der Mitte einige Slice-Tests, oben wenige Integrationstests"
+     fontFamily="var(--ifm-font-family-base)">
 
-```text
-                    ╱╲              wenige
-                   ╱  ╲             Integrationstests        langsam
-                  ╱    ╲            @SpringBootTest          teuer im Betrieb
-                 ╱──────╲                                    aber: prüft das Zusammenspiel
-                ╱        ╲          einige
-               ╱          ╲         Slice-Tests              mittel
-              ╱            ╲        @WebMvcTest              je eine Schicht
-             ╱──────────────╲       @DataJpaTest
-            ╱                ╲
-           ╱                  ╲     viele
-          ╱                    ╲    Unit-Tests               schnell
-         ╱                      ╲   ohne Spring              billig
-        ╱________________________╲  eine Klasse              sehr genaue Aussage
-```
+  {/* ---------- die drei Baender ---------- */}
+  <polygon points="200,24 249,112 151,112"
+           fill="var(--ifm-color-danger)" opacity="0.18"
+           stroke="var(--ifm-color-danger-dark)" strokeWidth="1.6"/>
+  <polygon points="151,112 249,112 295,196 105,196"
+           fill="var(--ifm-color-warning)" opacity="0.20"
+           stroke="var(--ifm-color-warning-dark)" strokeWidth="1.6"/>
+  <polygon points="105,196 295,196 340,280 60,280"
+           fill="var(--ifm-color-success)" opacity="0.20"
+           stroke="var(--ifm-color-success-dark)" strokeWidth="1.6"/>
 
-</div>
+  {/* ---------- Beschriftung in den Baendern ---------- */}
+  <text x="200" y="98" textAnchor="middle" fontSize="12.5" fontWeight="800"
+        fill="var(--ifm-color-emphasis-900)">wenige</text>
+  <text x="200" y="162" textAnchor="middle" fontSize="12.5" fontWeight="800"
+        fill="var(--ifm-color-emphasis-900)">einige</text>
+  <text x="200" y="248" textAnchor="middle" fontSize="12.5" fontWeight="800"
+        fill="var(--ifm-color-emphasis-900)">viele</text>
+
+  {/* ---------- rechte Spalte: was das jeweils ist ---------- */}
+  <g transform="translate(370,58)">
+    <text x="0" y="0" fontSize="14.5" fontWeight="700" fill="var(--ifm-color-danger-dark)">Integrationstests</text>
+    <text x="0" y="20" fontSize="12.5" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-color-emphasis-800)">@SpringBootTest</text>
+    <text x="0" y="40" fontSize="12" fill="var(--ifm-color-emphasis-700)">die ganze Anwendung — langsam, teuer im Unterhalt</text>
+    <text x="0" y="58" fontSize="12" fill="var(--ifm-color-emphasis-700)">dafür: prüft das Zusammenspiel</text>
+  </g>
+
+  <g transform="translate(370,152)">
+    <text x="0" y="0" fontSize="14.5" fontWeight="700" fill="var(--ifm-color-warning-dark)">Slice-Tests</text>
+    <text x="0" y="20" fontSize="12.5" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-color-emphasis-800)">@WebMvcTest · @DataJpaTest</text>
+    <text x="0" y="40" fontSize="12" fill="var(--ifm-color-emphasis-700)">je eine Schicht — mittel</text>
+    <text x="0" y="58" fontSize="12" fill="var(--ifm-color-emphasis-700)">ein roter Test benennt die Schicht</text>
+  </g>
+
+  <g transform="translate(370,244)">
+    <text x="0" y="0" fontSize="14.5" fontWeight="700" fill="var(--ifm-color-success-dark)">Unit-Tests</text>
+    <text x="0" y="20" fontSize="12.5" fill="var(--ifm-color-emphasis-800)">eine Klasse, ohne Spring</text>
+    <text x="0" y="40" fontSize="12" fill="var(--ifm-color-emphasis-700)">schnell, billig — sehr genaue Aussage</text>
+  </g>
+
+  {/* ---------- linker Pfeil: was nach oben zunimmt ---------- */}
+  <path d="M34 268 L34 40" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.8"/>
+  <path d="M29 48 L34 36 L39 48" fill="none" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.8"/>
+  <text x="22" y="160" textAnchor="middle" fontSize="11.5" fontWeight="700"
+        transform="rotate(-90 22 160)" fill="var(--ifm-color-emphasis-700)">langsamer · teurer · ungenauer</text>
+
+  <text x="360" y="308" textAnchor="middle" fontSize="12.5" fontWeight="700"
+        fill="var(--ifm-color-emphasis-800)">So weit unten wie möglich, so weit oben wie nötig</text>
+</svg>
 
 Die Form hat einen Grund. Von unten nach oben wird jede Stufe **langsamer**, **teurer im Unterhalt** und **ungenauer in ihrer Aussage** — dafür prüft sie mehr Zusammenspiel.
 
