@@ -1,13 +1,11 @@
 ---
-title: "AB 04 – Die API dokumentieren"
-sidebar_label: "04 – Die API dokumentieren"
-slug: 04-api-dokumentieren
-sidebar_position: 4
+title: "AB 03 – Die API dokumentieren"
+sidebar_label: "03 – Die API dokumentieren"
+slug: 03-api-dokumentieren
+sidebar_position: 3
 ---
 
-import loesung from '@site/src/data/loesung-tutorial-02.json';
-
-# AB 04 – Die API dokumentieren
+# AB 03 – Die API dokumentieren
 
 ## Die Situation
 
@@ -46,7 +44,7 @@ Damit schließt sich auch ein Kreis zum Infoblatt [Das REST-Paradigma](/infoblae
 
 ### Aufgabe 1 – springdoc einbinden
 
-<Task id="t2-ab04-a1">Ergänze in der `pom.xml` innerhalb von `<dependencies>`:</Task>
+<Task id="t2-ab03-a1">Ergänze in der `pom.xml` innerhalb von `<dependencies>`:</Task>
 
 ```xml
 <dependency>
@@ -56,7 +54,7 @@ Damit schließt sich auch ein Kreis zum Infoblatt [Das REST-Paradigma](/infoblae
 </dependency>
 ```
 
-<Task id="t2-ab04-a1-reload">Lass Maven die Abhängigkeit laden.</Task>
+<Task id="t2-ab03-a1-reload">Lass Maven die Abhängigkeit laden.</Task>
 
 :::note Warum hier eine Version steht
 Bei den Spring-Boot-Startern konntest du die Version weglassen, weil der Eltern-POM sie vorgibt. springdoc gehört nicht zu Spring Boot — deshalb musst du sie hier angeben.
@@ -64,7 +62,7 @@ Bei den Spring-Boot-Startern konntest du die Version weglassen, weil der Eltern-
 Achte darauf, eine Version zu wählen, die zu deiner Spring-Boot-Version passt: Die **3.x**-Linie gehört zu Spring Boot 4, die 2.x-Linie zu Spring Boot 3. Nachschlagen im Infoblatt [Maven und Abhängigkeiten](/infoblaetter/maven).
 :::
 
-<Task id="t2-ab04-a1-prop">Ergänze in `application.properties`:</Task>
+<Task id="t2-ab03-a1-prop">Ergänze in `application.properties`:</Task>
 
 ```properties
 springdoc.swagger-ui.path=/swagger-ui.html
@@ -72,19 +70,65 @@ springdoc.swagger-ui.path=/swagger-ui.html
 
 ### Aufgabe 2 – Die Oberfläche ansehen
 
-<Task id="t2-ab04-a2-start">Starte die Anwendung neu und rufe `http://localhost:8080/swagger-ui.html` auf.</Task>
+<Task id="t2-ab03-a2-start">Starte die Anwendung neu und rufe `http://localhost:8080/swagger-ui.html` auf.</Task>
 
 Du hast **keine Zeile Dokumentation geschrieben** — und siehst trotzdem alle deine Endpunkte, mit Methoden, Pfaden, Parametern und Feldern.
 
-<Task id="t2-ab04-a2-explore">Klappe den POST-Endpunkt auf. Klicke auf **Try it out**, fülle den Rumpf und führe die Anfrage aus.</Task>
+<Task id="t2-ab03-a2-explore">Klappe den POST-Endpunkt auf und klicke auf **Try it out**. Führe die Anfrage <b>zunächst genau so aus, wie sie vorausgefüllt ist.</b></Task>
 
-:::tip Die Oberfläche ist nicht nur zum Lesen
-Über **Try it out** setzt du echte Anfragen an deinen laufenden Dienst ab — direkt aus der Dokumentation. Für einen ersten Blick ist das schneller als Postman.
+:::danger Das vorausgefüllte Beispiel geht schief — und das ist lehrreich
+Du bekommst eine **500**. Der Grund steht im Rumpf, den Swagger dir angeboten hat:
 
-Was Postman weiterhin besser kann: Anfragen speichern, in Sammlungen ordnen und im Team teilen.
+```json
+{
+  "id": 0,
+  "title": "string",
+  "comment": "string",
+  "author": "string",
+  "date": "2026-09-03T08:43:05.489Z"
+}
+```
+
+Beim Datum steht bei dir eine andere Uhrzeit — Swagger setzt dort den aktuellen
+Zeitpunkt ein. Der Rest ist überall gleich.
+
+**Das Feld `id` gehört da nicht hinein.** Wer eine Id mitschickt, behauptet
+damit: „Diesen Eintrag gibt es schon." `save()` versucht daraufhin kein
+`INSERT`, sondern ein `UPDATE` — und findet die Zeile nicht. In der Konsole:
+
+```text
+StaleObjectStateException: Row was already updated or deleted by another
+transaction for entity [de.szut.gaestebuch.model.GuestbookEntry with id '0']
+```
+
+**Das Feld `date` gehört auch nicht hinein** — es richtet nur keinen Schaden an.
+Probier es aus: Schick einen Eintrag mit `"date": "2020-05-17T12:00:00"` und
+**ohne** `id`. Du bekommst `201`, und im Datum steht trotzdem *jetzt*.
+`@CreationTimestamp` überschreibt, was der Client geschickt hat.
 :::
 
-<Task id="t2-ab04-a2-json">Rufe zusätzlich `http://localhost:8080/v3/api-docs` auf. Das ist die OpenAPI-Beschreibung selbst — dieselbe Information als JSON.</Task>
+<Task id="t2-ab03-a2-korrekt">Lösche die Zeilen mit `id` und `date` aus dem Rumpf und führe die Anfrage erneut aus. Jetzt kommt <code>201</code>.</Task>
+
+:::warning Warum steht das überhaupt im Beispiel?
+springdoc kennt nur eine Klasse: deine **Entität**. Und die hat nun einmal ein
+Feld `id` und ein Feld `date`. Dass der Client beide **nicht** schicken soll,
+weiß springdoc nicht — das steht nirgends im Code.
+
+Was hier fehlt, ist eine eigene Klasse für die Eingabe: eine, die nur `title`,
+`comment` und `author` hat. Dann stünde im Beispiel genau das, was hineingehört.
+
+Merk dir die Stelle. Sie ist der Punkt, an dem erzeugte Dokumentation an ihre
+Grenze kommt — und der Grund, warum es DTOs gibt. Der Ausblick am Ende des
+Tutorials kommt darauf zurück.
+:::
+
+:::tip Die Oberfläche ist nicht nur zum Lesen
+Über **Try it out** setzt du echte Anfragen an deinen laufenden Dienst ab — direkt aus der Dokumentation. Für einen ersten Blick ist das bequemer als eine `.http`-Datei: Die Oberfläche kennt die Felder schon.
+
+Was die `.http`-Datei weiterhin besser kann: Sie liegt **im Projekt**, wandert mit in die Versionsverwaltung und hält deine Testfälle fest. Die Swagger-Oberfläche ist zum Ausprobieren da, nicht zum Aufbewahren.
+:::
+
+<Task id="t2-ab03-a2-json">Rufe zusätzlich `http://localhost:8080/v3/api-docs` auf. Das ist die OpenAPI-Beschreibung selbst — dieselbe Information als JSON.</Task>
 
 Diese Datei ist es, die du der Partnerfirma schickst. Aus ihr kann deren Werkzeugkette automatisch Client-Code erzeugen.
 
@@ -98,7 +142,9 @@ Deshalb trennt man in echten Projekten beides: Die Datenbank hat ihre Klasse, di
 
 Die erzeugte Dokumentation erfasst alle Endpunkte, ist aber unpersönlich: Die Anwendung heißt „OpenAPI definition", und bei den Endpunkten steht nur, wie die Java-Methode heißt.
 
-<Task id="t2-ab04-a3-info">Lege im Package `config` eine Klasse `OpenApiConfig` an:</Task>
+<Task id="t2-ab03-a3-pkg">Lege unter `src/main/java/de/szut/gaestebuch/` das Package `config` an — es ist das vierte neben `model`, `repository` und `controller`.</Task>
+
+<Task id="t2-ab03-a3-info">Erstelle darin die Klasse `OpenApiConfig`:</Task>
 
 ```java title="src/main/java/de/szut/gaestebuch/config/OpenApiConfig.java"
 package de.szut.gaestebuch.config;
@@ -118,7 +164,7 @@ public class OpenApiConfig {
 }
 ```
 
-<Task id="t2-ab04-a3-operation">Beschreibe einen Endpunkt genauer. Ergänze am POST-Endpunkt:</Task>
+<Task id="t2-ab03-a3-operation">Beschreibe einen Endpunkt genauer. Ergänze am POST-Endpunkt:</Task>
 
 ```java
 @Operation(summary = "Legt einen neuen Gästebucheintrag an")
@@ -128,7 +174,7 @@ public class OpenApiConfig {
 public ResponseEntity<GuestbookEntry> createEntry(...) { ... }
 ```
 
-<Task id="t2-ab04-a3-check">Lade die Swagger-UI neu und vergleiche.</Task>
+<Task id="t2-ab03-a3-check">Lade die Swagger-UI neu und vergleiche.</Task>
 
 :::warning Was du hier ergänzt, ist wieder von Hand gepflegt
 Beachte den Unterschied: Pfade, Methoden und Feldnamen liest springdoc aus dem Code — die veralten nicht. Ein `@ApiResponse(responseCode = "400", …)` dagegen ist eine **Behauptung**, die du selbst aufstellst. Ändert sich das Verhalten, zieht sie niemand automatisch nach.
@@ -144,10 +190,10 @@ Dass ein `GET` auf `/{id}` einen Eintrag liefert, sieht man auch ohne Beschreibu
 
 ### Aufgabe 4 – Testfälle
 
-<Task id="t2-ab04-a4">Führe die Testfälle aus.</Task>
+<Task id="t2-ab03-a4">Führe die Testfälle aus.</Task>
 
 <TestTable
-  storageKey="t2-ab04-tests"
+  storageKey="t2-ab03-tests"
   tests={[
     {
       id: 'TF-01',
@@ -186,30 +232,19 @@ Dass ein `GET` auf `/{id}` einen Eintrag liefert, sieht man auch ohne Beschreibu
     },
     {
       id: 'TF-06',
-      beschreibung: 'Dokumentation folgt dem Code',
-      vorbedingung: 'Anwendung läuft',
-      schritte: ['Der Entität ein neues Attribut hinzufügen, z.B. private Integer rating;', 'Anwendung neu starten', 'Swagger-UI neu laden'],
-      erwartet: <>Das neue Feld erscheint <b>ohne</b> weiteres Zutun im Schema.</>
+      beschreibung: 'Die Beschreibung kennt die Felder der Entität',
+      vorbedingung: 'TF-01 bestanden',
+      schritte: ['Beim POST-Endpunkt den Abschnitt Request body aufklappen', 'Schema statt Example value wählen'],
+      erwartet: <>Alle Felder von <code>GuestbookEntry</code> stehen dort mit ihrem Datentyp — <code>title</code>, <code>comment</code>, <code>author</code>, <code>date</code>, <code>id</code>. Geschrieben hat sie niemand.</>
     }
   ]}
 />
 
-:::note TF-06 ist der eigentliche Punkt
-Er zeigt, warum erzeugte Dokumentation der handgeschriebenen überlegen ist: Das Gerüst kann nicht veralten, weil es keine zweite Quelle hat.
+:::note Der eigentliche Beweis kommt im nächsten Arbeitsblatt
+Dass erzeugte Dokumentation nicht veralten kann, ist bis hier eine Behauptung. Im nächsten Arbeitsblatt änderst du die Schnittstelle wirklich: Der GET-Endpunkt bekommt Parameter zum Filtern und Blättern.
 
-Denk daran, das Testattribut anschließend wieder zu entfernen.
+Sieh danach noch einmal in die Swagger-Oberfläche. Dort werden sie stehen — und du wirst dafür keine Zeile Dokumentation geschrieben haben.
 :::
-
-## Ausblick
-
-Dein Gästebuch ist funktionsfähig und dokumentiert. Diese Fragen bleiben offen:
-
-- Was passiert, wenn jemand einen Eintrag **ohne Titel** oder mit einem 5000 Zeichen langen Kommentar schickt? *(→ Validierung)*
-- Der Controller redet direkt mit dem Repository. Wo gehören eigentlich **fachliche Regeln** hin — etwa eine Sperre gegen Spam? *(→ Service-Schicht)*
-- Du hast alle Testfälle **von Hand** ausgeführt. Beim nächsten Mal wieder? *(→ automatisierte Tests)*
-- Die API gibt die Entität **unverändert** nach außen. Was, wenn sich die Datenbankstruktur ändert? *(→ DTOs)*
-
-Diese vier Fragen sind kein Restposten, sondern der Stoff, mit dem es weitergeht — im Unterricht und in deinem Ausbildungsbetrieb. Wenn dir dort eine Service-Klasse, ein DTO oder ein `@SpringBootTest` begegnet: Genau davon ist hier die Rede.
 
 ## Zusammenfassung
 
@@ -220,6 +255,12 @@ Diese vier Fragen sind kein Restposten, sondern der Stoff, mit dem es weitergeht
 - Über **Try it out** lassen sich Endpunkte direkt aus der Dokumentation aufrufen.
 - `@OpenAPIDefinition`, `@Operation` und `@ApiResponse` ergänzen, was aus dem Code nicht hervorgeht.
 - springdoc gehört nicht zu Spring Boot — deshalb muss die Version passend zur Boot-Version angegeben werden.
+:::
+
+:::tip Ab jetzt hast du zwei Werkzeuge
+`requests.http` liegt im Projekt und wandert mit in die Versionsverwaltung — dort stehen deine Testfälle.
+
+Die Swagger-Oberfläche musst du dafür nicht pflegen: Sie entsteht aus dem Code. Zum schnellen Ausprobieren ist sie bequemer, weil sie die Eingabefelder selbst kennt. Im nächsten Arbeitsblatt wirst du das merken.
 :::
 
 ## Selbstkontrolle
@@ -240,17 +281,3 @@ Diese vier Fragen sind kein Restposten, sondern der Stoff, mit dem es weitergeht
 5. Wenn etwas dokumentiert werden soll, das aus dem Code nicht hervorgeht — fachliche Bedingungen, besondere Fehlerfälle, Einschränkungen. Nicht für Selbstverständliches.
 
 </details>
-
----
-
-## Musterlösung
-
-Hier steht der vollständige Quelltext des Gästebuchs, so wie er nach allen vier Arbeitsblättern aussieht: die Entität, das Repository, der Controller, die OpenAPI-Konfiguration, die `application.properties` und die Datei `requests.http`.
-
-:::warning Erst selbst versuchen
-Eine Lösung zu lesen fühlt sich an wie Verstehen, ist aber keines. Wer sie aufschlägt, bevor er selbst gescheitert ist, nimmt sich genau den Teil weg, an dem man etwas lernt.
-
-Sinnvoll ist sie in zwei Fällen: **nach** der eigenen Lösung zum Vergleichen — oder wenn du an einer Stelle wirklich nicht weiterkommst. Dann sieh dir nur diese eine Datei an und arbeite danach selbst weiter.
-:::
-
-<Solution daten={loesung} />

@@ -190,7 +190,52 @@ Der Schrägstrich am Ende sagt: Gemeint ist ein **Ordner**, nicht eine Datei die
 
 ### Aufgabe 4 – Die Entität
 
-<Task id="t2-ab01-a4-model">Erstelle im Package `model` die Klasse `GuestbookEntry`:</Task>
+Bevor du etwas tippst: **Was steht eigentlich in einem Gästebuch?**
+
+Denk an ein Gästebuch, wie es in einem Hotel oder einem Museum ausliegt. Jemand
+schlägt es auf und schreibt hinein:
+
+> **Toller Kurs**
+>
+> Hat mir gut gefallen! Besonders der Teil mit den Datenbanken.
+>
+> *Anna, 14. März 2026*
+
+Aus diesem einen Eintrag lassen sich vier Angaben ablesen — und genau die
+werden zu den Attributen deiner Klasse:
+
+| Was im Buch steht | Attribut | Typ | Warum dieser Typ |
+|---|---|---|---|
+| die Überschrift | `title` | `String` | kurzer Text, eine Zeile |
+| der eigentliche Text | `comment` | `String` | kann lang werden — mehr dazu gleich |
+| wer es geschrieben hat | `author` | `String` | ein Name |
+| wann es geschrieben wurde | `date` | `LocalDateTime` | Datum **und** Uhrzeit, damit zwei Einträge desselben Tages eine Reihenfolge haben |
+
+Dazu kommt eine fünfte Angabe, die im Papier-Gästebuch niemand hinschreibt: die
+**Id**. Im Buch genügt die Reihenfolge der Seiten, um einen Eintrag zu finden.
+Eine Datenbank braucht dafür einen eindeutigen Schlüssel — und die Schnittstelle
+braucht ihn, um eine Adresse wie `/guestbook-entries/7` bilden zu können.
+
+Zwei Entscheidungen fallen dabei jetzt schon auf:
+
+- Der **Verfasser ist ein schlichter Text**, keine eigene Klasse `Person`. Für ein
+  Gästebuch reicht das: Wer sich einträgt, hat kein Benutzerkonto. Wäre es ein
+  Forum, sähe es anders aus.
+- Das **Datum setzt nicht der Client**, sondern der Server. Sonst könnte jemand
+  einen Eintrag von 1998 einreichen.
+
+<Task id="t2-ab01-a4-pkg">Lege unter `src/main/java/de/szut/gaestebuch/` — dort, wo `GaestebuchApplication.java` liegt — das Package `model` an. Spring Initializr erzeugt nur das Hauptpackage; die Unterpackages legst du selbst an, so wie im ersten Tutorial.</Task>
+
+:::tip Falls du beim Anlegen ins Stocken kommst
+Ein Package ist nichts weiter als ein **Ordner** plus die passende `package`-Zeile
+in den Dateien darin — und er liegt **nicht** im Projektverzeichnis, sondern
+unterhalb von `src/main/java`. Ob du ihn über *New → Package* oder über
+*New → Directory* anlegst, ist gleichgültig; nur Punkte gehören ausschließlich in
+den ersten der beiden Dialoge. Ausführlich steht das in
+[Tutorial 01, Arbeitsblatt 01](/tutorial-01/01-projekt-aufsetzen).
+:::
+
+<Task id="t2-ab01-a4-model">Erstelle darin die Klasse `GuestbookEntry`:</Task>
 
 ```java title="src/main/java/de/szut/gaestebuch/model/GuestbookEntry.java"
 package de.szut.gaestebuch.model;
@@ -290,18 +335,70 @@ Im ersten Tutorial stand dort `GenerationType.AUTO`. Sieh dir an, was der Unters
 
 | Strategie | Wie die Id entsteht | Was du beobachtest |
 |---|---|---|
-| `AUTO` (Tutorial 1) | Hibernate wählt selbst — meist eine Sequenz, die **50 Werte auf Vorrat** holt | Ids können nach einem Neustart springen, etwa von 3 auf 51 |
+| `AUTO` (Tutorial 1) | Hibernate legt eine **Sequenz** an und holt sich Nummern **blockweise auf Vorrat** | Nach einem Neustart springen die Ids — und zwar weit |
 | `IDENTITY` (hier) | Die Datenbank zählt pro Tabelle einzeln hoch | Ids sind fortlaufend: 1, 2, 3 … |
 
 Für ein Gästebuch, dessen Einträge dauerhaft gespeichert werden, sind fortlaufende Nummern angenehmer.
 
+:::info Wie groß der Sprung wirklich ist
+Im ersten Tutorial lag die Datenbank im Arbeitsspeicher — nach einem Neustart war
+ohnehin alles weg, und die Zählung begann wieder bei 1. Mit einer Datei-Datenbank
+lässt sich das nachmessen. Genau dieses Projekt, nur mit `AUTO` statt `IDENTITY`:
+
+| | Ids der neu angelegten Einträge |
+|---|---|
+| erster Start | 1, 2, 3 |
+| nach dem ersten Neustart | **1552**, 1553 |
+| nach dem zweiten Neustart | **3152** |
+
+Kein Tippfehler. Zwei Vorräte liegen übereinander:
+
+1. **Hibernate** legt die Sequenz mit `increment by 50` an und teilt jede geholte
+   Nummer in einen Block von 50 auf. Im Log steht die Zeile mit:
+   `create sequence guestbook_entry_seq start with 1 increment by 50`
+2. **H2** selbst hält von einer Sequenz standardmäßig noch einmal 32 Werte im
+   Zwischenspeicher.
+
+Beim Herunterfahren sind beide Vorräte verfallen. Beim nächsten Start beginnt die
+Zählung hinter dem verbrauchten Bereich — 32 × 50 = 1600 Nummern weiter.
+
+**Ist das schlimm?** Fachlich nicht: Eine Id soll eindeutig sein, nicht lückenlos.
+Genau deshalb darf man aus einer Id auch nichts ablesen — „wir haben 3152 Einträge"
+wäre hier grob falsch. Wer Nummern ohne Lücken braucht, nimmt `IDENTITY`, zahlt
+dafür aber mit einem Datenbankzugriff je Einfügung: Die Nummer entsteht erst beim
+`INSERT`, deshalb kann Hibernate mehrere Einfügungen nicht mehr sammeln.
+:::
+
 ### Aufgabe 5 – Repository und Controller
 
-<Task id="t2-ab01-a5-repo">Lege im Package `repository` das Interface `GuestbookEntryRepository` an, das `JpaRepository<GuestbookEntry, Long>` erweitert.</Task>
+<Task id="t2-ab01-a5-pkg">Lege an derselben Stelle die beiden Packages `repository` und `controller` an.</Task>
 
-<Task id="t2-ab01-a5-controller">Erstelle im Package `controller` die Klasse `GuestbookEntryController` mit zwei Endpunkten unter `/api/v1/guestbook`: einem **POST**-Endpunkt, über den ein Gästebucheintrag angelegt wird, und einem **GET**-Endpunkt, der alle Einträge zurückgibt.</Task>
+<Task id="t2-ab01-a5-repo">Erstelle im Package `repository` das Interface `GuestbookEntryRepository`, das `JpaRepository<GuestbookEntry, Long>` erweitert.</Task>
+
+<Task id="t2-ab01-a5-controller">Erstelle im Package `controller` die Klasse `GuestbookEntryController` mit zwei Endpunkten unter `/api/v1/guestbook-entries`: einem **POST**-Endpunkt, über den ein Gästebucheintrag angelegt wird, und einem **GET**-Endpunkt, der alle Einträge zurückgibt.</Task>
 
 Das Muster kennst du aus dem ersten Tutorial — es ist dasselbe wie beim `PersonController`: das Repository über den Konstruktor hineingeben, `@PostMapping` mit `@RequestBody` und Status `201`, `@GetMapping` ohne Parameter. Schreibe die Klasse zuerst selbst.
+
+:::info Warum die Adresse `guestbook-entries` heißt und nicht `guestbook`
+Eine Adresse benennt in REST die **Ressource**, um die es geht — und zwar im
+**Plural**, weil unter dieser Adresse eine Sammlung liegt. Im ersten Tutorial war
+das `/api/v1/persons` — nicht `/api/v1/person` (das wäre eine einzelne) und nicht
+`/api/v1/getPersons` (ein Verb; **was** getan wird, sagt schon die HTTP-Methode).
+
+Hier sind die Ressourcen die **Einträge**, nicht das Gästebuch. Das Gästebuch ist
+nur der Zusammenhang, in dem sie stehen. Man sieht es an den anderen Adressen:
+
+| Adresse | liest sich als |
+|---|---|
+| `POST /api/v1/guestbook-entries` | „lege einen Eintrag an" |
+| `GET /api/v1/guestbook-entries/7` | „gib mir Eintrag 7" |
+| `DELETE /api/v1/guestbook-entries/7` | „lösche Eintrag 7" |
+
+Mit `/guestbook` stünde dort „lösche das Gästebuch 7" — das ergibt keinen Sinn.
+
+Zur Schreibweise: kleingeschrieben und mit **Bindestrich**. `guestbookEntries`
+wäre Java-Schreibweise, und Adressen sind kein Java.
+:::
 
 Ein `date` schickst du **nicht** mit — das setzt Hibernate.
 
@@ -310,7 +407,7 @@ Ein `date` schickst du **nicht** mit — das setzt Hibernate.
 
 ```java title="src/main/java/de/szut/gaestebuch/controller/GuestbookEntryController.java"
 @RestController
-@RequestMapping("/api/v1/guestbook")
+@RequestMapping("/api/v1/guestbook-entries")
 public class GuestbookEntryController {
 
     private final GuestbookEntryRepository repository;
@@ -340,7 +437,7 @@ public class GuestbookEntryController {
 
 ```http title="requests.http"
 ### Eintrag anlegen
-POST http://localhost:8080/api/v1/guestbook
+POST http://localhost:8080/api/v1/guestbook-entries
 Content-Type: application/json
 
 {
@@ -350,7 +447,7 @@ Content-Type: application/json
 }
 
 ### Alle Einträge
-GET http://localhost:8080/api/v1/guestbook
+GET http://localhost:8080/api/v1/guestbook-entries
 ```
 
 <Task id="t2-ab01-a6-run">Starte die Anwendung und lege zwei Einträge an.</Task>
@@ -404,7 +501,7 @@ Lege noch einen dritten Eintrag an und achte auf die Id: Sie zählt dort weiter,
       id: 'TF-05',
       beschreibung: 'Daten überleben den Neustart',
       vorbedingung: 'Mindestens zwei Einträge wurden angelegt',
-      schritte: ['Anwendung beenden', 'Anwendung neu starten', 'GET auf /api/v1/guestbook'],
+      schritte: ['Anwendung beenden', 'Anwendung neu starten', 'GET auf /api/v1/guestbook-entries'],
       erwartet: <>Alle vorher angelegten Einträge sind noch vorhanden.</>
     },
     {

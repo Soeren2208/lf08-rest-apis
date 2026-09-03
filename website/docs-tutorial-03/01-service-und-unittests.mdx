@@ -160,7 +160,7 @@ Die Klasse gehört zu keinem einzelnen Controller. Sie gilt für **alle**. Wirft
 
 ```java
 @RestController
-@RequestMapping("/api/v1/guestbook")
+@RequestMapping("/api/v1/guestbook-entries")
 public class GuestbookEntryController {
 
     private final GuestbookEntryService service;
@@ -560,7 +560,7 @@ mvnw test
       id: 'TF-03',
       beschreibung: 'Der abgelehnte Eintrag wurde nicht gespeichert',
       vorbedingung: 'TF-02 wurde ausgeführt',
-      schritte: ['GET auf /api/v1/guestbook'],
+      schritte: ['GET auf /api/v1/guestbook-entries'],
       erwartet: <>Der abgelehnte Eintrag taucht <b>nicht</b> in der Liste auf.</>
     },
     {

@@ -44,6 +44,7 @@ const tutorials = [
     id: 'tutorial-02',
     nummer: '02',
     titel: 'Gästebuch',
+    verweistAuf: ['tutorial-01'],
     stichworte: 'Lombok · ResponseEntity · Paginierung · OpenAPI',
     beschreibung:
       'Die Schnittstelle wird gut: vollständige Antworten, dauerhafte ' +
@@ -53,11 +54,23 @@ const tutorials = [
     id: 'tutorial-03',
     nummer: '03',
     titel: 'Das Gästebuch testen',
+    verweistAuf: ['tutorial-02'],
     stichworte: 'Service-Schicht · JUnit · Mocks · Slice-Tests · Testpyramide',
     beschreibung:
       'Woher weißt du, dass dein Code tut, was du glaubst? Unit-Tests, ' +
       'Slice-Tests für Web und Datenbank — und ein Entwurfsfehler, den ' +
       'erst ein Test ans Licht bringt.',
+  },
+  {
+    id: 'tutorial-04',
+    nummer: '04',
+    titel: 'Webshop',
+    verweistAuf: ['tutorial-02'],
+    stichworte: 'Docker · PostgreSQL · Beziehungen · DTO · Service-Schicht',
+    beschreibung:
+      'Drei Tabellen, die zusammenhängen: Die Datenbank zieht in einen ' +
+      'Container, eine Beziehung legt einen laufenden Endpunkt lahm, und ' +
+      'die Antwort wird zum ersten Mal selbst entworfen.',
   },
 ];
 
@@ -94,6 +107,26 @@ if (unbekannt.length > 0) {
 const freigegeben = angefordert
   ? tutorials.filter((t) => gewuenscht.includes(t.id))
   : tutorials;
+
+// Manche Tutorials verweisen auf ihre Vorgänger. Ein Verweis auf ein nicht
+// freigeschaltetes Tutorial bricht den Build ab — allerdings mit einer
+// Meldung über "broken links", der man die Ursache nicht ansieht. Deshalb
+// hier vorher die verständliche Fassung.
+const fehlend = freigegeben.flatMap((t) =>
+  (t.verweistAuf || [])
+    .filter((id) => !freigegeben.some((f) => f.id === id))
+    .map((id) => `${t.id} verweist auf ${id}`),
+);
+if (fehlend.length > 0) {
+  throw new Error(
+    'Es fehlen vorausgesetzte Tutorials:\n  ' +
+      fehlend.join('\n  ') +
+      '\n\nDie Tutorials bauen aufeinander auf und verlinken einander.\n' +
+      'Schalte die genannten Vorgänger mit frei — sonst zeigen die\n' +
+      'Verweise ins Leere und der Build bricht ab.\n' +
+      'Beispiel: TUTORIALS=tutorial-01,tutorial-02,tutorial-04',
+  );
+}
 
 console.log(
   veroeffentlichung

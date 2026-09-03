@@ -11,7 +11,7 @@ sidebar_position: 2
 
 > Deine Service-Tests sind grün. Trotzdem bleibt eine Lücke, und sie ist nicht klein:
 >
-> Ob aus einer `InvalidEntryException` wirklich eine **400** wird, hat noch nie jemand geprüft. Ob die `Location`-Kopfzeile die richtige Adresse enthält, auch nicht. Ob ein `DELETE` tatsächlich **204** liefert und keinen Rumpf — geprüft hat das bisher nur dein Auge in Postman.
+> Ob aus einer `InvalidEntryException` wirklich eine **400** wird, hat noch nie jemand geprüft. Ob die `Location`-Kopfzeile die richtige Adresse enthält, auch nicht. Ob ein `DELETE` tatsächlich **204** liefert und keinen Rumpf — geprüft hat das bisher nur dein Auge — in der `.http`-Datei oder in der Swagger-Oberfläche.
 >
 > Das alles steckt in der Web-Schicht. Und die hat mit Fachlichkeit nichts zu tun.
 
@@ -144,7 +144,7 @@ void postReturns201WithLocation() throws Exception {
     when(service.create(any(GuestbookEntry.class))).thenReturn(saved);
 
     // Act + Assert
-    mockMvc.perform(post("/api/v1/guestbook")
+    mockMvc.perform(post("/api/v1/guestbook-entries")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""
                             {
@@ -155,7 +155,7 @@ void postReturns201WithLocation() throws Exception {
                             """))
             .andExpect(status().isCreated())
             .andExpect(header().string("Location",
-                    "http://localhost/api/v1/guestbook/1"))
+                    "http://localhost/api/v1/guestbook-entries/1"))
             .andExpect(jsonPath("$.title").value("Toller Kurs"))
             .andExpect(jsonPath("$.author").value("Anna"));
 }
@@ -196,7 +196,7 @@ void postReturns400ForInvalidEntry() throws Exception {
     when(service.create(any(GuestbookEntry.class)))
             .thenThrow(new InvalidEntryException("Der Titel darf nicht leer sein."));
 
-    mockMvc.perform(post("/api/v1/guestbook")
+    mockMvc.perform(post("/api/v1/guestbook-entries")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("{\"comment\":\"ohne Titel\",\"author\":\"Anna\"}"))
             .andExpect(status().isBadRequest())
@@ -223,7 +223,7 @@ Geprüft wird hier nur: Ausnahme rein, **400** samt Begründung raus.
 void getReturns404ForUnknownId() throws Exception {
     when(service.findById(9999L)).thenThrow(new EntryNotFoundException(9999L));
 
-    mockMvc.perform(get("/api/v1/guestbook/9999"))
+    mockMvc.perform(get("/api/v1/guestbook-entries/9999"))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.detail").value(
                     "Kein Gästebucheintrag mit der Id 9999"));
@@ -234,7 +234,7 @@ void getReturns404ForUnknownId() throws Exception {
 void deleteReturns404() throws Exception {
     doThrow(new EntryNotFoundException(9999L)).when(service).deleteById(9999L);
 
-    mockMvc.perform(delete("/api/v1/guestbook/9999"))
+    mockMvc.perform(delete("/api/v1/guestbook-entries/9999"))
             .andExpect(status().isNotFound());
 }
 ```
@@ -251,7 +251,7 @@ void deleteReturns404() throws Exception {
 @Test
 @DisplayName("DELETE liefert 204 ohne Rumpf")
 void deleteReturns204() throws Exception {
-    mockMvc.perform(delete("/api/v1/guestbook/1"))
+    mockMvc.perform(delete("/api/v1/guestbook-entries/1"))
             .andExpect(status().isNoContent());
 }
 ```
@@ -280,7 +280,7 @@ void getReturnsPage() throws Exception {
     Page<GuestbookEntry> page = new PageImpl<>(List.of(sampleEntry()));
     when(service.findAll(eq(null), any(Pageable.class))).thenReturn(page);
 
-    mockMvc.perform(get("/api/v1/guestbook"))
+    mockMvc.perform(get("/api/v1/guestbook-entries"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.content[0].title").value("Toller Kurs"))
             .andExpect(jsonPath("$.totalElements").value(1));
@@ -301,7 +301,7 @@ Steht dort schlicht `null`, bricht Mockito mit `InvalidUseOfMatchersException` a
 @Test
 @DisplayName("fehlerhaftes JSON liefert 400 — dafür sorgt Spring selbst")
 void brokenJsonReturns400() throws Exception {
-    mockMvc.perform(post("/api/v1/guestbook")
+    mockMvc.perform(post("/api/v1/guestbook-entries")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("{\"title\": "))
             .andExpect(status().isBadRequest());

@@ -66,7 +66,7 @@ class GuestbookEntryControllerTest {
         GuestbookEntry saved = sampleEntry();
         when(service.create(any(GuestbookEntry.class))).thenReturn(saved);
 
-        mockMvc.perform(post("/api/v1/guestbook")
+        mockMvc.perform(post("/api/v1/guestbook-entries")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -77,7 +77,7 @@ class GuestbookEntryControllerTest {
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(header().string("Location",
-                        "http://localhost/api/v1/guestbook/1"))
+                        "http://localhost/api/v1/guestbook-entries/1"))
                 .andExpect(jsonPath("$.title").value("Toller Kurs"))
                 .andExpect(jsonPath("$.author").value("Anna"));
     }
@@ -88,7 +88,7 @@ class GuestbookEntryControllerTest {
         when(service.create(any(GuestbookEntry.class)))
                 .thenThrow(new InvalidEntryException("Der Titel darf nicht leer sein."));
 
-        mockMvc.perform(post("/api/v1/guestbook")
+        mockMvc.perform(post("/api/v1/guestbook-entries")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"comment\":\"ohne Titel\",\"author\":\"Anna\"}"))
                 .andExpect(status().isBadRequest())
@@ -100,7 +100,7 @@ class GuestbookEntryControllerTest {
     void getReturns404ForUnknownId() throws Exception {
         when(service.findById(9999L)).thenThrow(new EntryNotFoundException(9999L));
 
-        mockMvc.perform(get("/api/v1/guestbook/9999"))
+        mockMvc.perform(get("/api/v1/guestbook-entries/9999"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.detail").value(
                         "Kein Gaestebucheintrag mit der Id 9999"));
@@ -113,7 +113,7 @@ class GuestbookEntryControllerTest {
                 new PageImpl<>(java.util.List.of(sampleEntry()));
         when(service.findAll(eq(null), any(Pageable.class))).thenReturn(page);
 
-        mockMvc.perform(get("/api/v1/guestbook"))
+        mockMvc.perform(get("/api/v1/guestbook-entries"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].title").value("Toller Kurs"))
                 .andExpect(jsonPath("$.totalElements").value(1));
@@ -122,7 +122,7 @@ class GuestbookEntryControllerTest {
     @Test
     @DisplayName("DELETE liefert 204 ohne Rumpf")
     void deleteReturns204() throws Exception {
-        mockMvc.perform(delete("/api/v1/guestbook/1"))
+        mockMvc.perform(delete("/api/v1/guestbook-entries/1"))
                 .andExpect(status().isNoContent());
     }
 
@@ -131,14 +131,14 @@ class GuestbookEntryControllerTest {
     void deleteReturns404() throws Exception {
         doThrow(new EntryNotFoundException(9999L)).when(service).deleteById(9999L);
 
-        mockMvc.perform(delete("/api/v1/guestbook/9999"))
+        mockMvc.perform(delete("/api/v1/guestbook-entries/9999"))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     @DisplayName("fehlerhaftes JSON liefert 400 - dafuer sorgt Spring selbst")
     void brokenJsonReturns400() throws Exception {
-        mockMvc.perform(post("/api/v1/guestbook")
+        mockMvc.perform(post("/api/v1/guestbook-entries")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\": "))
                 .andExpect(status().isBadRequest());

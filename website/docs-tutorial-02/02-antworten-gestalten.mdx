@@ -23,7 +23,6 @@ Nach Bearbeitung dieses Arbeitsblatts kannst du:
 - **`ResponseEntity`** einsetzen, um Statuscode, Kopfzeilen und Rumpf gemeinsam festzulegen
 - nach dem Anlegen einer Ressource einen korrekten **`Location`**-Header liefern
 - den passenden Statuscode für jede Operation wählen und begründen
-- **Postman** benutzen, um Anfragen zu sammeln und auszuführen
 
 ## Das Problem
 
@@ -49,7 +48,7 @@ Beim Anlegen einer Ressource gehört laut HTTP-Standard die Adresse der neuen Re
 
 ```http
 HTTP/1.1 201 Created
-Location: http://localhost:8080/api/v1/guestbook/1
+Location: http://localhost:8080/api/v1/guestbook-entries/1
 ```
 
 Der Client muss dann nichts zusammenbauen — er liest die fertige Adresse ab. Ändert sich später der Pfad, funktioniert er trotzdem weiter.
@@ -89,7 +88,7 @@ Eine HTTP-Antwort besteht aus drei Teilen. `ResponseEntity` fasst alle drei zusa
           stroke="var(--ifm-color-emphasis-300)"/>
     <text x="16" y="22" fontSize="12" fontWeight="700" fill="var(--ifm-color-emphasis-700)">Kopfzeilen</text>
     <text x="16" y="41" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
-          fill="var(--ifm-font-color-base)">Location: /api/v1/guestbook/1</text>
+          fill="var(--ifm-font-color-base)">Location: /api/v1/guestbook-entries/1</text>
     <text x="624" y="32" textAnchor="end" fontSize="11.5" fill="var(--ifm-color-emphasis-600)">Angaben über die Antwort</text>
   </g>
 
@@ -141,7 +140,7 @@ Die Annotation `@ResponseStatus` entfällt — der Status steckt jetzt in `Respo
 Man könnte schreiben:
 
 ```java
-URI location = URI.create("http://localhost:8080/api/v1/guestbook/" + saved.getId());  // ❌
+URI location = URI.create("http://localhost:8080/api/v1/guestbook-entries/" + saved.getId());  // ❌
 ```
 
 Das funktioniert genau so lange, bis die Anwendung auf einem echten Server unter einem anderen Namen läuft. `ServletUriComponentsBuilder.fromCurrentRequest()` nimmt die Adresse der **aktuellen Anfrage** als Ausgangspunkt und hängt die Id an. Damit stimmt sie immer.
@@ -153,7 +152,7 @@ Du müsstest sehen:
 
 ```http
 HTTP/1.1 201
-Location: http://localhost:8080/api/v1/guestbook/1
+Location: http://localhost:8080/api/v1/guestbook-entries/1
 ```
 
 ### Aufgabe 2 – Die übrigen Endpunkte
@@ -172,6 +171,26 @@ Jetzt lassen sich alle Antworten einheitlich gestalten. `ResponseEntity` bietet 
 :::
 
 <Task id="t2-ab02-a2-getall">Baue den Endpunkt für alle Einträge auf `ResponseEntity` um.</Task>
+
+<details>
+<summary>Wenn du nicht weiterkommst – so sieht der Endpunkt aus</summary>
+
+```java
+@GetMapping
+public ResponseEntity<List<GuestbookEntry>> findAllEntries() {
+    return ResponseEntity.ok(repository.findAll());
+}
+```
+
+Der Rückgabetyp ändert sich mit: aus `List<GuestbookEntry>` wird
+`ResponseEntity<List<GuestbookEntry>>` — die Liste steckt jetzt in der Antwort
+drin, statt selbst die Antwort zu sein.
+
+Eine leere Liste ist übrigens kein Fehlerfall: `200` mit `[]` ist die richtige
+Antwort auf „gib mir alle Einträge", wenn es keine gibt. Ein `404` würde
+behaupten, es gebe die Sammlung nicht.
+
+</details>
 
 <Task id="t2-ab02-a2-getone">Ergänze einen Endpunkt, der einen Eintrag anhand seiner Id liefert:</Task>
 
@@ -365,48 +384,60 @@ Deine API antwortet je nach Situation mit einem anderen Statuscode. Ordne zu:
 
 <Task id="t2-ab02-a3-pruefen">Prüfe anschließend jede Zeile durch Ausprobieren. Erst dann weißt du, ob dein Dienst wirklich das tut, was du eingetragen hast.</Task>
 
-Für die letzten beiden Zeilen brauchst du zwei Aufrufe, die noch nicht in deiner `requests.http` stehen. Ergänze sie:
+Dafür brauchst du mehr Aufrufe, als bisher in deiner `requests.http` stehen.
+Schreib sie nicht selbst ab — kopier den ganzen Block ans Ende der Datei. Er
+deckt die Tabelle **und** die Testfälle aus Aufgabe 4 ab.
+
+<Task id="t2-ab02-a3-requests">Ergänze `requests.http` um diese sechs Aufrufe:</Task>
 
 ```http title="requests.http"
-### Fehlerhaftes JSON
-POST http://localhost:8080/api/v1/guestbook
+### Einen Eintrag abrufen
+GET http://localhost:8080/api/v1/guestbook-entries/1
+
+### Unbekannte Id abrufen - erwartet 404
+GET http://localhost:8080/api/v1/guestbook-entries/9999
+
+### Eintrag ändern - das Datum bleibt unberührt
+PUT http://localhost:8080/api/v1/guestbook-entries/1
+Content-Type: application/json
+
+{
+  "title": "Toller Kurs",
+  "comment": "Nachträglich ergänzt.",
+  "author": "Anna"
+}
+
+### Eintrag löschen - erwartet 204 ohne Rumpf
+DELETE http://localhost:8080/api/v1/guestbook-entries/1
+
+### Unbekannte Id löschen - erwartet 404
+DELETE http://localhost:8080/api/v1/guestbook-entries/9999
+
+### Fehlerhaftes JSON - erwartet 400
+POST http://localhost:8080/api/v1/guestbook-entries
 Content-Type: application/json
 
 {"title":
 
-### DELETE auf die Sammlung statt auf einen Eintrag
-DELETE http://localhost:8080/api/v1/guestbook
+### DELETE auf die Sammlung statt auf einen Eintrag - erwartet 405
+DELETE http://localhost:8080/api/v1/guestbook-entries
 ```
+
+:::note Warum die Aufrufe hier fertig stehen
+Anfragen abzutippen lehrt nichts über REST — es kostet nur Zeit und erzeugt
+Tippfehler, die du dann für einen Fehler in deinem Code hältst. Interessant ist,
+**was zurückkommt**, nicht das Tippen.
+
+Die Id `1` musst du gegebenenfalls anpassen: Wenn du inzwischen Einträge gelöscht
+hast, gibt es sie nicht mehr. Welche Ids es gerade gibt, zeigt dir der Aufruf
+„Alle Einträge".
+:::
 
 Nachschlagen: [HTTP kompakt](/infoblaetter/http-kompakt).
 
-### Aufgabe 4 – Postman
+### Aufgabe 4 – Testfälle
 
-Bisher hast du `.http`-Dateien benutzt. In Betrieben ist **Postman** weit verbreitet — vor allem, weil man Anfragen darin sammeln, gemeinsam nutzen und dokumentieren kann.
-
-:::note Falls Postman nicht installiert ist
-Im Klassenraum ist es meist schon da. Sonst gibt es das Programm kostenlos unter [postman.com/downloads](https://www.postman.com/downloads/); ein Konto brauchst du dafür nicht.
-
-Geht die Installation nicht, ist das kein Beinbruch: Alles, was hier geübt wird, kannst du auch mit deiner `.http`-Datei. Lies die Aufgabe dann und arbeite weiter.
-:::
-
-<Task id="t2-ab02-a4-collection">Öffne Postman und lege eine neue Collection mit dem Namen **Gästebuch** an.</Task>
-
-<Task id="t2-ab02-a4-get">Erstelle einen `GET`-Request auf `http://localhost:8080/api/v1/guestbook`, speichere ihn und führe ihn aus.</Task>
-
-<Task id="t2-ab02-a4-post">Erstelle einen `POST`-Request auf denselben Pfad. Wähle den Reiter **Body**, dort **raw**, und stelle rechts das Format **JSON** ein. Gib einen Eintrag ein und führe ihn aus.</Task>
-
-<Task id="t2-ab02-a4-headers">Sieh dir in der Antwort den Reiter **Headers** an und finde die Zeile `Location`.</Task>
-
-:::tip Was Postman besser kann als die `.http`-Datei
-Antworten werden formatiert dargestellt, Kopfzeilen sind auf einen Blick sichtbar, und man kann eine Collection als Dokumentation exportieren.
-
-Was die `.http`-Datei besser kann: Sie liegt **im Projekt** und wandert mit in die Versionsverwaltung. Beides hat seine Berechtigung — im Betrieb triffst du auf beides.
-:::
-
-### Aufgabe 5 – Testfälle
-
-<Task id="t2-ab02-a5">Führe die Testfälle aus. Achte besonders auf die Kopfzeilen, nicht nur auf den Rumpf.</Task>
+<Task id="t2-ab02-a4">Führe die Testfälle aus. Achte besonders auf die Kopfzeilen, nicht nur auf den Rumpf.</Task>
 
 <TestTable
   storageKey="t2-ab02-tests"
@@ -415,8 +446,8 @@ Was die `.http`-Datei besser kann: Sie liegt **im Projekt** und wandert mit in d
       id: 'TF-01',
       beschreibung: 'Location-Header nach dem Anlegen',
       vorbedingung: 'Anwendung läuft',
-      schritte: ['POST auf /api/v1/guestbook mit einem gültigen Eintrag', 'Kopfzeilen der Antwort ansehen'],
-      erwartet: <>Status <code>201</code> und eine Kopfzeile <code>Location</code>, die auf <code>/api/v1/guestbook/&#123;id&#125;</code> zeigt.</>
+      schritte: ['POST auf /api/v1/guestbook-entries mit einem gültigen Eintrag', 'Kopfzeilen der Antwort ansehen'],
+      erwartet: <>Status <code>201</code> und eine Kopfzeile <code>Location</code>, die auf <code>/api/v1/guestbook-entries/&#123;id&#125;</code> zeigt.</>
     },
     {
       id: 'TF-02',
@@ -429,7 +460,7 @@ Was die `.http`-Datei besser kann: Sie liegt **im Projekt** und wandert mit in d
       id: 'TF-03',
       beschreibung: 'Unbekannte Id beim Lesen',
       vorbedingung: 'Es gibt keinen Eintrag mit Id 9999',
-      schritte: ['GET auf /api/v1/guestbook/9999'],
+      schritte: ['GET auf /api/v1/guestbook-entries/9999'],
       erwartet: <>Status <code>404</code>, im Rumpf ein Feld <code>detail</code> mit der Id.</>
     },
     {
@@ -477,7 +508,6 @@ Das ist ein allgemeines Prinzip beim Testen: Prüfe nicht, ob etwas *dasteht*, s
 - Nach dem Anlegen gehört die Adresse der neuen Ressource in den **`Location`**-Header.
 - `ServletUriComponentsBuilder.fromCurrentRequest()` baut diese Adresse aus der laufenden Anfrage — statt sie fest zu verdrahten.
 - `ok()`, `created()`, `noContent()`, `notFound()` decken die üblichen Fälle ab; `build()` schließt ohne Rumpf ab.
-- **Postman** sammelt und dokumentiert Anfragen; die `.http`-Datei liegt dafür im Projekt.
 :::
 
 ## Selbstkontrolle

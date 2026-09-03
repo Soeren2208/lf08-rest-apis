@@ -6,6 +6,7 @@ import de.szut.gaestebuch.model.GuestbookEntry;
 import de.szut.gaestebuch.service.GuestbookEntryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -33,7 +34,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
  * Datenbank, mit einem Doppel fuer den Service.
  */
 @RestController
-@RequestMapping("/api/v1/guestbook")
+@RequestMapping("/api/v1/guestbook-entries")
 public class GuestbookEntryController {
 
     private final GuestbookEntryService service;
@@ -63,7 +64,7 @@ public class GuestbookEntryController {
     public ResponseEntity<Page<GuestbookEntry>> findAllEntries(
             @RequestParam(required = false) Integer year,
             @PageableDefault(size = 10, sort = "date", direction = Sort.Direction.DESC)
-            Pageable pageable) {
+            @ParameterObject Pageable pageable) {
 
         return ResponseEntity.ok(service.findAll(year, pageable));
     }

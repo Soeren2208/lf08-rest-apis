@@ -1,11 +1,13 @@
 ---
-title: "AB 03 – Suchen und filtern"
-sidebar_label: "03 – Suchen und filtern"
-slug: 03-suchen-und-filtern
-sidebar_position: 3
+title: "AB 04 – Suchen und filtern"
+sidebar_label: "04 – Suchen und filtern"
+slug: 04-suchen-und-filtern
+sidebar_position: 4
 ---
 
-# AB 03 – Suchen, filtern und blättern
+import loesung from '@site/src/data/loesung-tutorial-02.json';
+
+# AB 04 – Suchen, filtern und blättern
 
 ## Die Situation
 
@@ -16,6 +18,8 @@ sidebar_position: 3
 > *„Für den Jahresbericht brauchen wir alle Einträge aus einem bestimmten Jahr."*
 >
 > Und die Kollegin aus dem Betrieb ergänzt: *„Habt ihr euch überlegt, was passiert, wenn da irgendwann 10.000 Einträge drin stehen?"*
+>
+> Die Schnittstelle, die du gerade dokumentiert hast, muss also wachsen. Was das mit der Dokumentation macht, siehst du am Ende dieses Arbeitsblatts.
 
 ## Lernziele
 
@@ -26,12 +30,13 @@ Nach Bearbeitung dieses Arbeitsblatts kannst du:
 - **Request-Parameter** mit `@RequestParam` entgegennehmen und optional gestalten
 - eine Schnittstelle mit `Pageable` **seitenweise** ausliefern
 - den Aufbau einer `Page`-Antwort lesen
+- erklären, warum `@ParameterObject` nötig ist, damit die Dokumentation die Parameter einzeln kennt
 
 ## Aufgaben
 
 ### Aufgabe 1 – Die falsche Reihenfolge
 
-<Task id="t2-ab03-a1-beobachten">Lege vier Einträge nacheinander an und rufe die Sammlung ab. In welcher Reihenfolge kommen sie zurück?</Task>
+<Task id="t2-ab04-a1-beobachten">Lege vier Einträge nacheinander an und rufe die Sammlung ab. In welcher Reihenfolge kommen sie zurück?</Task>
 
 Vermutlich erscheinen die Einträge in der Reihenfolge ihrer Ids — der älteste zuerst. Für ein Gästebuch ist das genau verkehrt herum.
 
@@ -66,7 +71,7 @@ Bei zwanzig Einträgen fällt das nicht auf. Bei zwanzigtausend schon.
 
 Der Auftrag „sortiere nach Datum, absteigend" muss zur Datenbank. Und dorthin kommt er auf eine Weise, die auf den ersten Blick nach einem Trick aussieht: **Du schreibst ihn in den Methodennamen.**
 
-<Task id="t2-ab03-a2-repo">Ergänze im `GuestbookEntryRepository` diese eine Zeile:</Task>
+<Task id="t2-ab04-a2-repo">Ergänze im `GuestbookEntryRepository` diese eine Zeile:</Task>
 
 ```java
 List<GuestbookEntry> findAllByOrderByDateDesc();
@@ -132,7 +137,7 @@ Daraus wird `... order by date_of_entry desc` — ein `where` kommt nicht vor, e
 In Aufgabe 4 füllst du sie: Dort steht hinter `findBy` eine Bedingung — und dann ergibt das `By` auch sichtbar Sinn.
 :::
 
-<Task id="t2-ab03-a2-controller">Rufe die neue Methode im Endpunkt auf, statt selbst zu sortieren. Prüfe im Log, dass im erzeugten SQL ein <code>order by</code> auftaucht.</Task>
+<Task id="t2-ab04-a2-controller">Rufe die neue Methode im Endpunkt auf, statt selbst zu sortieren. Prüfe im Log, dass im erzeugten SQL ein <code>order by</code> auftaucht.</Task>
 
 :::tip Nach `date` sortieren, nicht nach `id`
 Beides liefert hier zufällig dasselbe Ergebnis, weil neuere Einträge auch höhere Ids haben.
@@ -155,24 +160,26 @@ Hier steht die Sortierung fest, deshalb ist der Methodenname der direktere Weg. 
 Jetzt der zweite Wunsch: alle Einträge eines bestimmten Jahres. Das Jahr soll der Client in der URL mitgeben:
 
 ```text
-GET /api/v1/guestbook?year=2026
+GET /api/v1/guestbook-entries?year=2026
 ```
 
 Alles nach dem `?` ist ein **Request-Parameter**. Im Unterschied zur Pfadvariablen bezeichnet er keine eigene Ressource, sondern schränkt eine vorhandene ein.
 
 | | Pfadvariable | Request-Parameter |
 |---|---|---|
-| Beispiel | `/guestbook/7` — die **7** ist die Pfadvariable | `/guestbook?year=2026` — **year=2026** ist der Parameter |
+| Beispiel | `/guestbook-entries/7` — die **7** ist die Pfadvariable | `/guestbook-entries?year=2026` — **year=2026** ist der Parameter |
 | Annotation | `@PathVariable` | `@RequestParam` |
 | Bedeutung | *welche* Ressource | *wie* eingeschränkt |
 | Pflicht? | ja, Teil des Pfades | meist optional |
 
-Als Zwischenschritt bekommt der Filter gleich noch eine eigene Adresse — `/guestbook/jahr`. Sie verschwindet in Aufgabe 5 wieder; hier geht es erst einmal darum, dass überhaupt gefiltert wird.
+Als Zwischenschritt bekommt der Filter gleich noch eine eigene Adresse — `/guestbook-entries/by-year`. Sie verschwindet in Aufgabe 5 wieder; hier geht es erst einmal darum, dass überhaupt gefiltert wird.
 
-<Task id="t2-ab03-a3-naiv">Implementiere den Filter zunächst so:</Task>
+Beachte die Schreibweise: **englisch und mit Bindestrich**. Adressen sind Teil der Schnittstelle — an ihnen liest ein fremder Client ab, was er bekommt. Deutsche Wörter und `camelCase` haben dort so wenig zu suchen wie im Quelltext.
+
+<Task id="t2-ab04-a3-naiv">Implementiere den Filter zunächst so:</Task>
 
 ```java
-@GetMapping("/jahr")
+@GetMapping("/by-year")
 public ResponseEntity<List<GuestbookEntry>> findByYear(@RequestParam Integer year) {
     List<GuestbookEntry> filtered = repository.findAll().stream()
             .filter(entry -> entry.getDate().getYear() == year)
@@ -181,7 +188,7 @@ public ResponseEntity<List<GuestbookEntry>> findByYear(@RequestParam Integer yea
 }
 ```
 
-<Task id="t2-ab03-a3-test">Probiere den Endpunkt aus — er liegt jetzt unter <code>http://localhost:8080/api/v1/guestbook/jahr?year=2026</code>, nicht unter der Adresse von oben. Er liefert das richtige Ergebnis.</Task>
+<Task id="t2-ab04-a3-test">Probiere den Endpunkt aus — er liegt jetzt unter <code>http://localhost:8080/api/v1/guestbook-entries/by-year?year=2026</code>, nicht unter der Adresse von oben. Er liefert das richtige Ergebnis.</Task>
 
 :::warning Dasselbe Problem wie in Aufgabe 1 — nur schlimmer
 `repository.findAll()` holt **jeden einzelnen Eintrag** aus der Datenbank. Anschließend wirft der Filter die meisten davon weg.
@@ -193,21 +200,25 @@ Sieh dir das erzeugte SQL im Log an: Dort steht ein schlichtes `select ... from 
 
 ### Aufgabe 4 – Die Abfrage ins Repository verlagern
 
-Dasselbe Verfahren wie in Aufgabe 2 — nur ist die leere Stelle hinter `By` diesmal gefüllt, und die Methode nimmt Werte entgegen.
+Dasselbe Verfahren wie in Aufgabe 2 — mit drei Unterschieden: Die leere Stelle
+hinter `By` ist diesmal gefüllt, die Methode nimmt Werte entgegen, und die
+Sortierung aus Aufgabe 2 hängt hinten wieder mit dran. Sie soll ja nicht
+verlorengehen, nur weil gefiltert wird.
 
-<Task id="t2-ab03-a4-repo">Ergänze im `GuestbookEntryRepository`:</Task>
+<Task id="t2-ab04-a4-repo">Ergänze im `GuestbookEntryRepository`:</Task>
 
 ```java
-List<GuestbookEntry> findByDateGreaterThanEqualAndDateLessThan(
+List<GuestbookEntry> findByDateGreaterThanEqualAndDateLessThanOrderByDateDesc(
         LocalDateTime from, LocalDateTime to);
 ```
 
-Mehr nicht. Kein Rumpf, kein SQL.
+Mehr nicht. Kein Rumpf, kein SQL — und ein langer Name, der genau deshalb lang
+ist: Er enthält die vollständige Abfrage.
 
 So liest Spring Data den Namen:
 
-<svg viewBox="0 0 720 190" width="100%" role="img"
-     aria-label="Der Methodenname findByDateGreaterThanEqualAndDateLessThan zerfällt in sechs Wortbestandteile"
+<svg viewBox="0 0 720 290" width="100%" role="img"
+     aria-label="Der Methodenname zerfaellt in neun Wortbestandteile: sechs fuer die Bedingung, drei fuer die Sortierung"
      fontFamily="var(--ifm-font-family-base)">
 
   <g transform="translate(16,20)">
@@ -256,16 +267,44 @@ So liest Spring Data den Namen:
   <text x="564" y="96" textAnchor="middle" fontSize="12" fontFamily="var(--ifm-font-family-monospace)"
         fill="var(--ifm-color-emphasis-700)">&lt; ?</text>
 
-  <path d="M360 118 L360 136" stroke="var(--ifm-color-emphasis-500)" strokeWidth="2"/>
-  <path d="M355 130 L360 138 L365 130" fill="none" stroke="var(--ifm-color-emphasis-500)" strokeWidth="2"/>
-  <g transform="translate(110,144)">
-    <rect width="500" height="34" rx="7" fill="var(--ifm-color-emphasis-200)"/>
-    <text x="250" y="22" textAnchor="middle" fontSize="13"
-          fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-font-color-base)">where date_of_entry &gt;= ? and date_of_entry &lt; ?</text>
+  {/* ---------- zweite Zeile: die Sortierung ---------- */}
+  <g transform="translate(16,124)">
+    <rect width="94" height="38" rx="7" fill="var(--ifm-color-primary)" opacity="0.14"/>
+    <text x="47" y="25" textAnchor="middle" fontSize="14" fontWeight="700"
+          fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-primary)">OrderBy</text>
+  </g>
+  <g transform="translate(118,124)">
+    <rect width="66" height="38" rx="7" fill="var(--ifm-color-success)" opacity="0.22"/>
+    <text x="33" y="25" textAnchor="middle" fontSize="14" fontWeight="700"
+          fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-success-dark)">Date</text>
+  </g>
+  <g transform="translate(192,124)">
+    <rect width="66" height="38" rx="7" fill="var(--ifm-color-warning)" opacity="0.22"/>
+    <text x="33" y="25" textAnchor="middle" fontSize="14" fontWeight="700"
+          fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-warning-dark)">Desc</text>
+  </g>
+
+  <text x="63" y="184" textAnchor="middle" fontSize="12" fill="var(--ifm-color-emphasis-800)">sortiere nach</text>
+  <text x="151" y="184" textAnchor="middle" fontSize="12" fill="var(--ifm-color-emphasis-800)">Attribut</text>
+  <text x="151" y="200" textAnchor="middle" fontSize="12" fontFamily="var(--ifm-font-family-monospace)"
+        fill="var(--ifm-color-emphasis-700)">date</text>
+  <text x="225" y="184" textAnchor="middle" fontSize="12" fill="var(--ifm-color-emphasis-800)">Richtung</text>
+  <text x="225" y="200" textAnchor="middle" fontSize="12" fontFamily="var(--ifm-font-family-monospace)"
+        fill="var(--ifm-color-emphasis-700)">absteigend</text>
+
+  {/* ---------- gemeinsames Ergebnis ---------- */}
+  <path d="M360 214 L360 232" stroke="var(--ifm-color-emphasis-500)" strokeWidth="2"/>
+  <path d="M355 226 L360 234 L365 226" fill="none" stroke="var(--ifm-color-emphasis-500)" strokeWidth="2"/>
+  <g transform="translate(30,240)">
+    <rect width="660" height="38" rx="7" fill="var(--ifm-color-emphasis-200)"/>
+    <text x="330" y="24" textAnchor="middle" fontSize="12.5"
+          fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-font-color-base)">where date_of_entry &gt;= ? and date_of_entry &lt; ? order by date_of_entry desc</text>
   </g>
 </svg>
 
-Daraus wird `... where date_of_entry >= ? and date_of_entry < ?`.
+Neun Bausteine, eine Abfrage. Die oberen sechs bauen die Bedingung, die unteren
+drei die Sortierung — dieselben drei, die in Aufgabe 2 schon
+`order by date_of_entry desc` erzeugt haben.
 
 :::note Attribut hier, Spalte dort
 Im Methodennamen steht `Date` — so heißt das **Attribut** in der Java-Klasse. Im SQL steht `date_of_entry` — so heißt die **Spalte**, festgelegt in Arbeitsblatt 01 mit `@Column(name = "date_of_entry")`.
@@ -321,22 +360,22 @@ Tippe im Repository `findBy` und warte auf die Vorschlagsliste deiner Entwicklun
 Eine Übersicht steht im Infoblatt [Abgeleitete Abfragen](/infoblaetter/abgeleitete-abfragen).
 :::
 
-<Task id="t2-ab03-a4-controller">Rufe die neue Methode im Controller auf. Ein Jahr beginnt am 1. Januar und endet vor dem 1. Januar des Folgejahres:</Task>
+<Task id="t2-ab04-a4-controller">Rufe die neue Methode im Controller auf. Ein Jahr beginnt am 1. Januar und endet vor dem 1. Januar des Folgejahres:</Task>
 
 ```java
 LocalDateTime from = LocalDate.of(year, 1, 1).atStartOfDay();
 LocalDateTime to   = from.plusYears(1);
 ```
 
-<Task id="t2-ab03-a4-sql">Führe den Endpunkt erneut aus und sieh im Log nach. Jetzt muss im SQL ein <code>where</code> stehen.</Task>
+<Task id="t2-ab04-a4-sql">Führe den Endpunkt erneut aus und sieh im Log nach. Jetzt muss im SQL ein <code>where</code> stehen.</Task>
 
 ### Aufgabe 5 – Ein Endpunkt statt zwei
 
-Du hast jetzt zwei Endpunkte: `/guestbook` und `/guestbook/jahr`. Das ist unnötig.
+Du hast jetzt zwei Endpunkte: `/guestbook-entries` und `/guestbook-entries/by-year`. Das ist unnötig.
 
 Überleg einmal fachlich: Beide beantworten dieselbe Frage — „gib mir Gästebucheinträge". Der zweite schränkt sie nur ein. Das ist **kein eigener Anwendungsfall** und verdient deshalb keine eigene Adresse.
 
-<Task id="t2-ab03-a5">Lösche den Endpunkt <code>/jahr</code>. Mache den Parameter am vorhandenen Endpunkt <b>optional</b>:</Task>
+<Task id="t2-ab04-a5">Lösche den Endpunkt <code>/by-year</code>. Mache den Parameter am vorhandenen Endpunkt <b>optional</b>:</Task>
 
 ```java
 @GetMapping
@@ -350,21 +389,21 @@ public ResponseEntity<List<GuestbookEntry>> findAllEntries(
     LocalDateTime from = LocalDate.of(year, 1, 1).atStartOfDay();
     LocalDateTime to   = from.plusYears(1);
     return ResponseEntity.ok(
-            repository.findByDateGreaterThanEqualAndDateLessThan(from, to));
+            repository.findByDateGreaterThanEqualAndDateLessThanOrderByDateDesc(
+                    from, to));
 }
 ```
 
-Jetzt beantwortet **ein** Endpunkt beide Fälle:
+<Task id="t2-ab04-a5-pruefen">Rufe den Endpunkt zweimal auf — einmal ohne Parameter, einmal mit <code>?year=2026</code>. In beiden Fällen steht der neueste Eintrag oben.</Task>
 
-```text
-GET /api/v1/guestbook              →  alle Einträge
-GET /api/v1/guestbook?year=2026    →  nur die aus 2026
-```
+:::tip Eine Adresse, eine Zusage
+Dass beide Fälle gleich sortiert sind, ist keine Kleinigkeit. Ein Client sieht
+**eine** Adresse und verlässt sich auf **eine** Zusage. Hinge die Reihenfolge
+davon ab, ob er einen Filter gesetzt hat, könnte er das nicht ahnen — und würde
+es erst merken, wenn sich jemand über die Anzeige beschwert.
 
-:::info Was passiert ohne `required = false`?
-Dann ist der Parameter Pflicht. Ein Aufruf ohne `?year=…` würde mit `400 Bad Request` abgewiesen.
-
-Probiere es ruhig aus: Lass `required = false` einmal weg und rufe den Endpunkt ohne Parameter auf.
+Beide Methodennamen enden deshalb auf `OrderByDateDesc`. Die Sortierung ist Teil
+der Zusage, nicht Beiwerk eines einzelnen Aufrufs.
 :::
 
 ### Aufgabe 6 – Seitenweise ausliefern
@@ -375,21 +414,26 @@ Auch dann liefert dein Endpunkt **alle** auf einmal. Die Antwort wäre mehrere M
 
 Spring Data bringt das mit: Statt einer `List` gibt man eine **`Page`** zurück und nimmt ein `Pageable` entgegen.
 
-<Task id="t2-ab03-a6-repo">Ändere die Repository-Methode so, dass sie seitenweise arbeitet:</Task>
+<Task id="t2-ab04-a6-repo">Ändere die Repository-Methode so, dass sie seitenweise arbeitet:</Task>
 
 ```java
 Page<GuestbookEntry> findByDateGreaterThanEqualAndDateLessThan(
         LocalDateTime from, LocalDateTime to, Pageable pageable);
 ```
 
-<Task id="t2-ab03-a6-controller">Passe den Controller an:</Task>
+Der Teil `OrderByDateDesc` aus Aufgabe 4 fällt dabei weg: Die Sortierung steht
+jetzt im `Pageable`. Stünde sie an beiden Stellen, gäbe es zwei Quellen für
+dieselbe Entscheidung — und der Client könnte die im Methodennamen nicht mehr
+übersteuern.
+
+<Task id="t2-ab04-a6-controller">Passe den Controller an:</Task>
 
 ```java
 @GetMapping
 public ResponseEntity<Page<GuestbookEntry>> findAllEntries(
         @RequestParam(required = false) Integer year,
         @PageableDefault(size = 10, sort = "date", direction = Sort.Direction.DESC)
-        Pageable pageable) {
+        @ParameterObject Pageable pageable) {
 
     if (year == null) {
         return ResponseEntity.ok(repository.findAll(pageable));
@@ -404,16 +448,26 @@ public ResponseEntity<Page<GuestbookEntry>> findAllEntries(
 
 Das `Pageable` trägt drei Angaben: welche Seite, wie groß, wie sortiert. `@PageableDefault` legt die Werte fest, falls der Client nichts angibt.
 
-Damit erledigt sich die Sortierung aus Aufgabe 2 gleich mit: Du rufst wieder das schlichte `findAll(pageable)` auf, und die Reihenfolge steckt im `Pageable`. Deine Methode `findAllByOrderByDateDesc()` wird nicht mehr gebraucht und kann aus dem Repository verschwinden — genau wie der Endpunkt `/jahr` aus Aufgabe 3.
+:::info Wofür `@ParameterObject` gut ist
+Ein `Pageable` ist für Spring **ein** Parameter, für den Client aber **drei** — `page`, `size` und `sort` stehen einzeln in der URL.
+
+Ohne `@ParameterObject` weiß springdoc davon nichts und schreibt in die Dokumentation genau einen Parameter namens `pageable` vom Typ *object*. In der Swagger-Oberfläche wird daraus ein Textfeld, in das man ein ganzes JSON-Objekt tippen müsste — und das funktioniert nicht, weil Spring die drei Werte einzeln erwartet.
+
+`@ParameterObject` sagt springdoc: Zerlege das. Danach stehen dort drei Felder, jedes mit seinem Vorgabewert.
+
+Der Import lautet `org.springdoc.core.annotations.ParameterObject` — die Annotation gehört zu springdoc, nicht zu Spring.
+:::
+
+Damit erledigt sich die Sortierung aus Aufgabe 2 gleich mit: Du rufst wieder das schlichte `findAll(pageable)` auf, und die Reihenfolge steckt im `Pageable`. Deine Methode `findAllByOrderByDateDesc()` wird nicht mehr gebraucht und kann aus dem Repository verschwinden — genau wie der Endpunkt `/by-year` aus Aufgabe 3.
 
 Das ist kein vergebliches Arbeiten: Jeder dieser Schritte hat etwas gezeigt, was der nächste voraussetzt. So entsteht Software auch im Betrieb.
 
 Der Client steuert es über Parameter:
 
 ```text
-GET /api/v1/guestbook?page=0&size=5
-GET /api/v1/guestbook?page=1&size=5&sort=author,asc
-GET /api/v1/guestbook?year=2026&page=0&size=20
+GET /api/v1/guestbook-entries?page=0&size=5
+GET /api/v1/guestbook-entries?page=1&size=5&sort=author,asc
+GET /api/v1/guestbook-entries?year=2026&page=0&size=20
 ```
 
 Bevor du das ausprobierst, spiel die Einstellungen einmal durch. Die Regler
@@ -421,9 +475,9 @@ verändern dieselben zwei Werte, die auch in der URL stehen. Damit sich der
 Effekt überhaupt zeigt, liegen im Beispiel zwölf Einträge in der Datenbank —
 dein Gästebuch hat bisher weniger:
 
-<PageExplorer storageKey="t2-ab03-blaettern" />
+<PageExplorer storageKey="t2-ab04-blaettern" />
 
-<Task id="t2-ab03-a6-test">Rufe den Endpunkt mit <code>?size=1</code> auf und sieh dir die Antwort genau an.</Task>
+<Task id="t2-ab04-a6-test">Rufe den Endpunkt mit <code>?size=1</code> auf und sieh dir die Antwort genau an.</Task>
 
 Die Antwort sieht jetzt anders aus:
 
@@ -469,9 +523,61 @@ Vorher kam ein Array, jetzt ein Objekt mit den Einträgen unter `content`. Ein C
 Genau deshalb überlegt man sich Paginierung **früh** — ein späterer Umbau trifft alle Clients.
 :::
 
-### Aufgabe 7 – Testfälle
+### Aufgabe 7 – Zurück in die Dokumentation
 
-<Task id="t2-ab03-a7">Führe die Testfälle aus.</Task>
+Im vorigen Arbeitsblatt hast du die Schnittstelle dokumentiert. Seitdem hat sie
+drei Parameter dazubekommen — und du hast dafür keine Dokumentation geschrieben.
+
+<Task id="t2-ab04-a7-swagger">Starte die Anwendung neu und öffne <code>http://localhost:8080/swagger-ui.html</code>. Klappe den GET-Endpunkt auf.</Task>
+
+<Task id="t2-ab04-a7-felder">Zähle die Eingabefelder und vergleiche sie mit deinem Controller. Woher weiß die Oberfläche, dass <code>size</code> standardmäßig 10 ist?</Task>
+
+<Task id="t2-ab04-a7-url">Führe eine Anfrage über <b>Try it out</b> aus. Sieh dir danach die Zeile <b>Request URL</b> an und schreibe sie ab.</Task>
+
+Die letzte Aufgabe ist die wichtigste. Swagger baut dir die Adresse zusammen —
+aber es ist immer noch dieselbe Adresse, die du auch in `requests.http`
+schreiben würdest:
+
+```text
+http://localhost:8080/api/v1/guestbook-entries?page=0&size=10&sort=date%2CDESC
+```
+
+:::tip Was `%2C` bedeutet
+Das ist ein Komma. In einer URL haben manche Zeichen eine eigene Bedeutung,
+deshalb werden sie als `%` und zwei Ziffern geschrieben — hier `,` als `%2C`.
+Der Server macht daraus wieder ein Komma, bevor er `date,DESC` liest.
+
+Für dich heißt das: Eine bequeme Oberfläche nimmt dir das Tippen ab, nicht das
+Verstehen. Darunter liegt immer eine gewöhnliche HTTP-Anfrage.
+:::
+
+### Aufgabe 8 – Die Anfragen zum Ausprobieren
+
+<Task id="t2-ab04-a8-requests">Ergänze `requests.http` um diese fünf Aufrufe:</Task>
+
+```http title="requests.http"
+### Einträge eines Jahres
+GET http://localhost:8080/api/v1/guestbook-entries?year=2026
+
+### Jahr ohne Einträge - erwartet 200 mit leerem content, nicht 404
+GET http://localhost:8080/api/v1/guestbook-entries?year=2019
+
+### Ungültiges Jahr - erwartet 400
+GET http://localhost:8080/api/v1/guestbook-entries?year=abc
+
+### Zwei Einträge je Seite
+GET http://localhost:8080/api/v1/guestbook-entries?size=2
+
+### Die zweite Seite
+GET http://localhost:8080/api/v1/guestbook-entries?size=2&page=1
+```
+
+Den Aufruf mit `/by-year` aus Aufgabe 3 kannst du löschen — den Endpunkt gibt es
+nicht mehr.
+
+### Aufgabe 9 – Testfälle
+
+<Task id="t2-ab04-a9">Führe die Testfälle aus.</Task>
 
 :::note Deine Datenbank ist nicht leer
 Anders als im ersten Tutorial überlebt der Datenbestand hier jeden Neustart — deine Einträge aus den vorigen Arbeitsblättern stehen alle noch da. Die Testfälle prüfen deshalb **Verhältnisse** statt fester Zahlen: „so viele wie vorher", „zwei pro Seite", „nur die aus diesem Jahr".
@@ -480,84 +586,97 @@ Notiere dir vor der Abnahme einmal, wie viele Einträge es gerade gibt (`totalEl
 :::
 
 <TestTable
-  storageKey="t2-ab03-tests"
+  storageKey="t2-ab04-tests"
   tests={[
     {
       id: 'TF-01',
       beschreibung: 'Neueste zuerst',
       vorbedingung: 'Mindestens drei Einträge, nacheinander angelegt',
-      schritte: ['GET auf /api/v1/guestbook'],
+      schritte: ['GET auf /api/v1/guestbook-entries'],
       erwartet: <>Der zuletzt angelegte Eintrag steht in <code>content</code> an erster Stelle.</>
     },
     {
       id: 'TF-02',
       beschreibung: 'Sortierung geschieht in der Datenbank',
       vorbedingung: 'spring.jpa.show-sql=true ist gesetzt',
-      schritte: ['GET auf /api/v1/guestbook', 'Log ansehen'],
+      schritte: ['GET auf /api/v1/guestbook-entries', 'Log ansehen'],
       erwartet: <>Das erzeugte SQL enthält <code>order by</code>.</>
     },
     {
       id: 'TF-03',
       beschreibung: 'Filter greift in der Datenbank',
       vorbedingung: 'Einträge aus dem laufenden Jahr existieren',
-      schritte: ['GET auf /api/v1/guestbook?year=2026', 'Log ansehen'],
+      schritte: ['GET auf /api/v1/guestbook-entries?year=2026', 'Log ansehen'],
       erwartet: <>Das SQL enthält <code>where ge1_0.date_of_entry&gt;=? and ge1_0.date_of_entry&lt;?</code> — <b>nicht</b> ein einfaches select über die ganze Tabelle, und <b>nicht</b> <code>between</code>.</>
     },
     {
       id: 'TF-04',
       beschreibung: 'Jahr ohne Einträge',
       vorbedingung: 'Es gibt keine Einträge aus 2019',
-      schritte: ['GET auf /api/v1/guestbook?year=2019'],
+      schritte: ['GET auf /api/v1/guestbook-entries?year=2019'],
       erwartet: <>Status <code>200</code>, <code>content</code> ist <code>[]</code> und <code>totalElements</code> ist <code>0</code> — nicht 404.</>
     },
     {
       id: 'TF-05',
       beschreibung: 'Parameter ist optional',
       vorbedingung: 'Anwendung läuft',
-      schritte: ['GET auf /api/v1/guestbook ohne jeden Parameter'],
+      schritte: ['GET auf /api/v1/guestbook-entries ohne jeden Parameter'],
       erwartet: <>Status <code>200</code> mit allen Einträgen — nicht 400.</>
     },
     {
       id: 'TF-06',
       beschreibung: 'Seitengröße wirkt',
       vorbedingung: 'Mindestens vier Einträge existieren; ihre Anzahl wurde notiert',
-      schritte: ['GET auf /api/v1/guestbook?size=2'],
+      schritte: ['GET auf /api/v1/guestbook-entries?size=2'],
       erwartet: <><code>content</code> enthält genau 2 Einträge. <code>totalElements</code> entspricht der notierten Gesamtzahl, <code>totalPages</code> ist diese Zahl aufgerundet durch 2.</>
     },
     {
       id: 'TF-07',
       beschreibung: 'Blättern',
       vorbedingung: 'TF-06 wurde ausgeführt',
-      schritte: ['GET auf /api/v1/guestbook?size=2&page=1'],
+      schritte: ['GET auf /api/v1/guestbook-entries?size=2&page=1'],
       erwartet: <>Andere Einträge als auf Seite 0, <code>number</code> ist <code>1</code>. <code>last</code> ist <code>true</code>, sobald du auf der letzten Seite bist — bei mehr als vier Einträgen brauchst du dafür eine höhere <code>page</code>.</>
     },
     {
       id: 'TF-08',
       beschreibung: 'Ungültiges Jahr',
       vorbedingung: 'Anwendung läuft',
-      schritte: ['GET auf /api/v1/guestbook?year=abc'],
+      schritte: ['GET auf /api/v1/guestbook-entries?year=abc'],
       erwartet: <>Status <code>400</code> — der Wert lässt sich nicht in eine Zahl umwandeln.</>
     }
   ]}
 />
 
+## Ausblick
+
+Dein Gästebuch ist funktionsfähig und dokumentiert. Diese Fragen bleiben offen:
+
+- Was passiert, wenn jemand einen Eintrag **ohne Titel** oder mit einem 5000 Zeichen langen Kommentar schickt? *(→ Validierung)*
+- Der Controller redet direkt mit dem Repository. Wo gehören eigentlich **fachliche Regeln** hin — etwa eine Sperre gegen Spam? *(→ Service-Schicht)*
+- Du hast alle Testfälle **von Hand** ausgeführt. Beim nächsten Mal wieder? *(→ automatisierte Tests)*
+- Die API gibt die Entität **unverändert** nach außen. Was, wenn sich die Datenbankstruktur ändert? *(→ DTOs)*
+
+Diese vier Fragen sind kein Restposten, sondern der Stoff, mit dem es weitergeht — im Unterricht und in deinem Ausbildungsbetrieb. Wenn dir dort eine Service-Klasse, ein DTO oder ein `@SpringBootTest` begegnet: Genau davon ist hier die Rede.
+
 ## Zusammenfassung
 
 :::tip Das hast du gelernt
 - Sortieren und Filtern gehören in die **Datenbank**, nicht in den Controller.
-- **Abgeleitete Abfragen** entstehen aus dem Methodennamen — ganz ohne Implementierung. `findAllByOrderByDateDesc` wird zu `order by date_of_entry desc`, `findByDateGreaterThanEqualAndDateLessThan` zu `where date_of_entry >= ? and date_of_entry < ?`. Der Methodenname nennt das **Attribut**, das SQL die **Spalte**.
+- **Abgeleitete Abfragen** entstehen aus dem Methodennamen — ganz ohne Implementierung. `findAllByOrderByDateDesc` wird zu `order by date_of_entry desc`, `findByDateGreaterThanEqualAndDateLessThanOrderByDateDesc` zu `where date_of_entry >= ? and date_of_entry < ? order by date_of_entry desc`. Der Methodenname nennt das **Attribut**, das SQL die **Spalte**.
 - `Between` schließt **beide** Grenzen ein und ist für einen Zeitraum, der vor der oberen Grenze endet, das falsche Werkzeug.
 - `@RequestParam` nimmt Werte aus der URL entgegen; `required = false` macht sie optional.
 - Ein **Filter** rechtfertigt keinen eigenen Endpunkt — er schränkt eine vorhandene Ressource ein.
 - `Pageable` und `Page` liefern Ergebnisse **seitenweise**; `@PageableDefault` setzt Standardwerte.
 - Eine `Page`-Antwort ist ein Objekt mit `content`, `totalElements`, `totalPages` und `number` — kein Array mehr.
 - Im Log lässt sich am erzeugten SQL überprüfen, ob die Arbeit wirklich in der Datenbank passiert.
+- `@ParameterObject` zerlegt das `Pageable` in der Dokumentation in `page`, `size` und `sort`.
+- Die neuen Parameter erscheinen in der Swagger-Oberfläche, **ohne** dass jemand sie dort einträgt — das ist der Beleg für die Behauptung aus Arbeitsblatt 03.
 :::
 
 ## Selbstkontrolle
 
 1. Warum ist Sortieren im Controller schlechter Stil?
-2. Wie wird aus `findByDateGreaterThanEqualAndDateLessThan` eine SQL-Abfrage — und warum steht dort nicht `Between`?
+2. Wie wird aus `findByDateGreaterThanEqualAndDateLessThanOrderByDateDesc` eine SQL-Abfrage — und warum steht dort nicht `Between`?
 3. Wann nimmt man eine Pfadvariable, wann einen Request-Parameter?
 4. Warum bekommt der Jahresfilter keinen eigenen Endpunkt?
 5. Welchen Wert hat `number` auf der ersten Seite?
@@ -568,11 +687,25 @@ Notiere dir vor der Abnahme einmal, wie viele Einträge es gerade gibt (`totalEl
 <summary>Antworten</summary>
 
 1. Weil die Anwendung dafür alle Datensätze aus der Datenbank holen und in den Hauptspeicher übertragen muss. Die Datenbank kann das schneller und mit weniger Datenverkehr.
-2. Spring Data zerlegt den Namen beim Start: `findBy` leitet die Abfrage ein, `Date` benennt jeweils das Attribut, `GreaterThanEqual` und `LessThan` die Vergleiche. Daraus entsteht `where date_of_entry >= ? and date_of_entry < ?` — der Methodenname nennt das Attribut `date`, Hibernate setzt den Spaltennamen ein. `Between` wäre falsch, weil es beide Grenzen einschließt — ein Eintrag exakt am 1. Januar des Folgejahres um 00:00 Uhr fiele dann in zwei Jahre.
-3. Eine Pfadvariable bezeichnet **welche** Ressource gemeint ist (`/guestbook/7`). Ein Request-Parameter schränkt eine Sammlung ein (`?year=2026`).
+2. Spring Data zerlegt den Namen beim Start: `findBy` leitet die Abfrage ein, `Date` benennt jeweils das Attribut, `GreaterThanEqual` und `LessThan` die Vergleiche. `OrderByDateDesc` hängt die Sortierung an. Daraus entsteht `where date_of_entry >= ? and date_of_entry < ? order by date_of_entry desc` — der Methodenname nennt das Attribut `date`, Hibernate setzt den Spaltennamen ein. `Between` wäre falsch, weil es beide Grenzen einschließt — ein Eintrag exakt am 1. Januar des Folgejahres um 00:00 Uhr fiele dann in zwei Jahre.
+3. Eine Pfadvariable bezeichnet **welche** Ressource gemeint ist (`/guestbook-entries/7`). Ein Request-Parameter schränkt eine Sammlung ein (`?year=2026`).
 4. Weil er keinen neuen Anwendungsfall darstellt. Gefragt sind weiterhin Gästebucheinträge — nur eine Teilmenge davon. Deshalb dieselbe Adresse mit optionalem Parameter.
 5. `0`. Die Zählung beginnt bei null.
 6. Das erzeugte SQL enthält eine `where`-Bedingung. Fehlt sie und es steht nur `select ... from guestbook_entry`, wurde die ganze Tabelle geholt und erst danach gefiltert.
-7. Weil `By` in Spring Data immer den Bedingungsteil einleitet. Hier gibt es keine Bedingung — es sollen ja alle Einträge kommen —, deshalb bleibt die Stelle leer und es folgt sofort `OrderBy`. In `findByDateGreaterThanEqualAndDateLessThan` ist dieselbe Stelle gefüllt.
+7. Weil `By` in Spring Data immer den Bedingungsteil einleitet. Hier gibt es keine Bedingung — es sollen ja alle Einträge kommen —, deshalb bleibt die Stelle leer und es folgt sofort `OrderBy`. In `findByDateGreaterThanEqualAndDateLessThanOrderByDateDesc` ist dieselbe Stelle gefüllt.
 
 </details>
+
+---
+
+## Musterlösung
+
+Hier steht der vollständige Quelltext des Gästebuchs, so wie er nach allen vier Arbeitsblättern aussieht: die Entität, das Repository, der Controller, die OpenAPI-Konfiguration, die `application.properties` und die Datei `requests.http`.
+
+:::warning Erst selbst versuchen
+Eine Lösung zu lesen fühlt sich an wie Verstehen, ist aber keines. Wer sie aufschlägt, bevor er selbst gescheitert ist, nimmt sich genau den Teil weg, an dem man etwas lernt.
+
+Sinnvoll ist sie in zwei Fällen: **nach** der eigenen Lösung zum Vergleichen — oder wenn du an einer Stelle wirklich nicht weiterkommst. Dann sieh dir nur diese eine Datei an und arbeite danach selbst weiter.
+:::
+
+<Solution daten={loesung} />

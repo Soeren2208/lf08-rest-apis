@@ -1,6 +1,5 @@
-package de.szut.webshop.contact;
+package de.szut.webshop.model;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -20,11 +19,10 @@ public class Contact {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long cid;
+    private Long id;
 
     private String street;
 
-    @Column(name = "zip")
     private String postcode;
 
     private String city;

@@ -1,0 +1,465 @@
+---
+title: "AB 05 – Den Webshop testen (Zusatz)"
+sidebar_label: "05 – Den Webshop testen (Zusatz)"
+slug: 05-webshop-testen
+sidebar_position: 5
+---
+
+import loesungTests from '@site/src/data/loesung-tutorial-04-tests.json';
+
+# AB 05 – Den Webshop testen
+
+:::info Dieses Arbeitsblatt ist ein Zusatz
+Der Webshop ist nach Arbeitsblatt 04 vollständig. Hier geht es um die Frage danach: **Woher weißt du, dass er das tut, was du glaubst?**
+
+Wenn du das Test-Tutorial zum Gästebuch gemacht hast, findest du alles wieder — an einem Gegenstand mit Beziehungen, und das macht es schwieriger. Wenn nicht, ist das kein Hindernis: Jedes Werkzeug wird hier noch einmal eingeführt.
+:::
+
+## Die Situation
+
+> Du hast im Laufe der vier Arbeitsblätter viermal von Hand geprüft, ob ein Löschversuch verweigert wird. Beim fünften Mal wirst du es vergessen.
+>
+> Und du hast eine Regel eingebaut, die nur in einem einzigen Fall greift: Lieferant löschen, aber nur wenn keine Artikel da sind. Genau solche Regeln fallen bei der nächsten Änderung heraus, ohne dass es jemandem auffällt.
+
+## Lernziele
+
+Nach Bearbeitung dieses Arbeitsblatts kannst du:
+
+- einen **Unit-Test** für eine Klasse ohne Spring und ohne Datenbank schreiben
+- ein **Test-Doppel** mit Mockito einsetzen und benennen, was dadurch *nicht* geprüft wird
+- mit `@WebMvcTest` die Web-Schicht allein prüfen — Statuscodes, Kopfzeilen, JSON-Felder
+- mit `@DataJpaTest` gegen die **echte** Datenbank im Container testen
+- begründen, warum man hier anders testet als im Gästebuch
+
+## Aufgabe 1 – Der Mapper, ganz ohne alles
+
+Der `ArticleMapper` ist reines Java: kein Spring, keine Datenbank, kein HTTP. Ein Test dafür läuft in Millisekunden.
+
+<Task id="t4-ab05-a1">Lege unter `src/test/java/de/szut/webshop/service/` die Klasse `ArticleMapperTest` an:</Task>
+
+```java title="src/test/java/de/szut/webshop/service/ArticleMapperTest.java"
+package de.szut.webshop.service;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.math.BigDecimal;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import de.szut.webshop.dto.ArticleDto;
+import de.szut.webshop.model.Article;
+import de.szut.webshop.model.Supplier;
+
+@DisplayName("ArticleMapper")
+class ArticleMapperTest {
+
+    private final ArticleMapper mapper = new ArticleMapper();
+
+    private Supplier sampleSupplier() {
+        Supplier supplier = new Supplier();
+        supplier.setId(7L);
+        supplier.setName("Testlauf GmbH");
+        return supplier;
+    }
+
+    @Test
+    @DisplayName("nimmt vom Lieferanten nur Kennung und Name mit")
+    void toDtoFlattensSupplier() {
+        Article article = new Article();
+        article.setId(1L);
+        article.setDesignation("Schraube M6");
+        article.setPrice(new BigDecimal("0.45"));
+        article.setSupplier(sampleSupplier());
+
+        ArticleDto dto = mapper.toDto(article);
+
+        assertThat(dto.id()).isEqualTo(1L);
+        assertThat(dto.designation()).isEqualTo("Schraube M6");
+        assertThat(dto.price()).isEqualByComparingTo("0.45");
+        assertThat(dto.supplierId()).isEqualTo(7L);
+        assertThat(dto.supplierName()).isEqualTo("Testlauf GmbH");
+    }
+}
+```
+
+:::note Die statischen Importe
+`assertThat` steht ohne Klassennamen im Code. Möglich macht das ein
+**statischer Import** — die erste Zeile im Block oben:
+
+```java
+import static org.assertj.core.api.Assertions.assertThat;
+```
+
+Alle Prüfmethoden in diesem Arbeitsblatt kommen so herein: `assertThat`,
+`assertThatThrownBy`, `mock`, `when`, `verify`, `never`, `post`, `delete`,
+`status`, `jsonPath`. Sie stehen deshalb in den Importblöcken mit dabei.
+:::
+
+Die drei Abschnitte sind immer dieselben und heißen **Arrange–Act–Assert**: Zuerst wird die Ausgangslage gebaut, dann passiert genau eine Sache, dann wird geprüft.
+
+:::note `isEqualByComparingTo` statt `isEqualTo` beim Preis
+`BigDecimal` unterscheidet `0.45` und `0.450` — beide sind wertgleich, aber nicht `equals`. `isEqualByComparingTo` vergleicht den Wert, nicht die Schreibweise. Ein Test, der an dieser Stelle rot wird, prüft die falsche Sache.
+:::
+
+<Task id="t4-ab05-a1-zweiter">Schreibe einen zweiten Test für `toEntity`. Er soll prüfen, dass der übergebene Lieferant am Artikel hängt — und dass die `id` noch `null` ist, weil die Datenbank sie vergibt.</Task>
+
+## Aufgabe 2 – Die Regel prüfen, ohne Datenbank
+
+Die Regel „ein Lieferant mit Artikeln wird nicht gelöscht" steht im `SupplierService`. Der braucht zwei Repositories — aber keine echten.
+
+<Task id="t4-ab05-a2">Lege `SupplierServiceTest` an:</Task>
+
+```java title="src/test/java/de/szut/webshop/service/SupplierServiceTest.java"
+package de.szut.webshop.service;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import de.szut.webshop.model.Supplier;
+import de.szut.webshop.repository.ArticleRepository;
+import de.szut.webshop.repository.SupplierRepository;
+
+@DisplayName("SupplierService")
+class SupplierServiceTest {
+
+    private SupplierRepository supplierRepository;
+    private ArticleRepository articleRepository;
+    private SupplierService service;
+
+    @BeforeEach
+    void setUp() {
+        supplierRepository = mock(SupplierRepository.class);
+        articleRepository = mock(ArticleRepository.class);
+        service = new SupplierService(supplierRepository, articleRepository, new SupplierMapper());
+    }
+
+    private Supplier sampleSupplier() {
+        Supplier supplier = new Supplier();
+        supplier.setId(1L);
+        supplier.setName("Testlauf GmbH");
+        return supplier;
+    }
+
+    @Test
+    @DisplayName("verweigert das Löschen, solange Artikel da sind")
+    void deleteRefusesWhenArticlesExist() {
+        when(supplierRepository.findById(1L)).thenReturn(Optional.of(sampleSupplier()));
+        when(articleRepository.countBySupplierId(1L)).thenReturn(3L);
+
+        assertThatThrownBy(() -> service.deleteById(1L))
+                .isInstanceOf(SupplierHasArticlesException.class)
+                .hasMessageContaining("3 Artikel");
+
+        verify(supplierRepository, never()).delete(any());
+    }
+}
+```
+
+| Baustein | Bedeutung |
+|---|---|
+| `mock(X.class)` | Ein Doppel: sieht aus wie ein `SupplierRepository`, tut aber nichts |
+| `when(…).thenReturn(…)` | Was das Doppel antworten soll, wenn es gefragt wird |
+| `assertThatThrownBy` | Erwartet, dass der Code eine Ausnahme wirft |
+| `verify(…, never()).delete(…)` | Prüft, dass eine Methode **nicht** aufgerufen wurde |
+
+Die letzte Zeile ist die eigentliche Prüfung. Dass eine Ausnahme fliegt, ist die halbe Miete — entscheidend ist, dass **vorher nichts gelöscht wurde**.
+
+:::warning Was dieser Test nicht prüft
+Er weiß nichts davon, ob `countBySupplierId` in der echten Datenbank die richtige Zahl liefert. Das Doppel sagt `3`, weil du es so eingestellt hast. Diese Lücke schließt erst Aufgabe 4.
+:::
+
+<Task id="t4-ab05-a2-gruen">Schreibe den Gegenfall: Ein Lieferant ohne Artikel <em>wird</em> gelöscht. Prüfe mit <code>verify(supplierRepository).delete(supplier)</code>, dass es passiert ist.</Task>
+
+## Aufgabe 3 – Die Web-Schicht allein
+
+Ob aus einer `SupplierHasArticlesException` wirklich eine `409` wird, hat bisher nur dein Auge geprüft.
+
+<Task id="t4-ab05-a3">Lege unter `src/test/java/de/szut/webshop/controller/` die Klasse `SupplierControllerTest` an:</Task>
+
+```java title="src/test/java/de/szut/webshop/controller/SupplierControllerTest.java"
+package de.szut.webshop.controller;
+
+import static org.mockito.Mockito.doThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import de.szut.webshop.service.SupplierHasArticlesException;
+import de.szut.webshop.service.SupplierService;
+
+@WebMvcTest(SupplierController.class)
+@Import(ApiExceptionHandler.class)
+@DisplayName("SupplierController (Web-Schicht)")
+class SupplierControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockitoBean
+    private SupplierService service;
+
+    @Test
+    @DisplayName("DELETE eines Lieferanten mit Artikeln liefert 409")
+    void deleteWithArticlesReturns409() throws Exception {
+        doThrow(new SupplierHasArticlesException(1L, 3))
+                .when(service).deleteById(1L);
+
+        mockMvc.perform(delete("/api/v1/suppliers/1"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail").value(
+                        org.hamcrest.Matchers.containsString("3 Artikel")));
+    }
+
+    @Test
+    @DisplayName("POST ohne Namen liefert 400 und benennt das Feld")
+    void postWithoutNameReturns400() throws Exception {
+        mockMvc.perform(post("/api/v1/suppliers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "  ",
+                                  "contact": {
+                                    "street": "Hafenstr. 12",
+                                    "postcode": "28217",
+                                    "city": "Bremen"
+                                  }
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.name").exists());
+    }
+}
+```
+
+Ein **Slice-Test** startet von Spring nur einen Ausschnitt — hier die Web-Schicht. Es läuft **kein Server**, es ist **kein Port** offen. `MockMvc` reicht die Anfrage direkt an die Spring-Web-Schicht weiter.
+
+| Annotation | Wirkung |
+|---|---|
+| `@WebMvcTest(SupplierController.class)` | Lädt die Web-Schicht — und von deinen Controllern nur diesen |
+| `@MockitoBean` | Ersetzt eine Bean im Spring-Kontext durch ein Doppel |
+| `@Import(ApiExceptionHandler.class)` | Holt den Ausnahmebehandler dazu |
+
+:::danger `@Import` ist hier nicht optional
+`@WebMvcTest` lädt deinen Controller — aber nicht automatisch jedes `@RestControllerAdvice`. Ohne die Zeile käme aus der `SupplierHasArticlesException` eine `500` statt einer `409`, und du würdest lange nach dem Fehler in einem Code suchen, der richtig ist.
+:::
+
+:::warning Die Import-Pfade haben sich mit Spring Boot 4 geändert
+Findest du im Netz eine Anleitung, steht dort fast immer `org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest`. Das ist der Pfad aus Spring Boot 3 und existiert in Boot 4 nicht mehr. Richtig sind:
+
+```java
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+```
+
+Ebenfalls verschwunden ist `@MockBean`; es heißt jetzt `@MockitoBean`.
+:::
+
+<Task id="t4-ab05-a3-mehr">Ergänze drei weitere Testfälle: <code>POST</code> liefert <code>201</code> mit einer <code>Location</code>-Kopfzeile · <code>GET</code> auf eine unbekannte Kennung liefert <code>404</code> · <code>DELETE</code> ohne Artikel liefert <code>204</code> ohne Rumpf.</Task>
+
+## Aufgabe 4 – Gegen die echte Datenbank
+
+Bleibt die Lücke aus Aufgabe 2: Stimmt in der Datenbank, was der Code annimmt? Verschwindet die Anschrift wirklich mit dem Lieferanten?
+
+<Task id="t4-ab05-a4">Lege unter `src/test/java/de/szut/webshop/repository/` die Klasse `SupplierRepositoryTest` an:</Task>
+
+```java title="src/test/java/de/szut/webshop/repository/SupplierRepositoryTest.java"
+package de.szut.webshop.repository;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
+import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
+
+import de.szut.webshop.model.Contact;
+import de.szut.webshop.model.Supplier;
+
+@DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@DisplayName("Lieferanten in der Datenbank")
+class SupplierRepositoryTest {
+
+    @Autowired
+    private TestEntityManager entityManager;
+
+    @Autowired
+    private SupplierRepository supplierRepository;
+
+    private Supplier newSupplier(String name) {
+        Contact contact = new Contact();
+        contact.setStreet("Hafenstr. 12");
+        contact.setPostcode("28217");
+        contact.setCity("Bremen");
+
+        Supplier supplier = new Supplier();
+        supplier.setName(name);
+        supplier.setContact(contact);
+        return supplier;
+    }
+
+    @Test
+    @DisplayName("löscht die Anschrift mit dem Lieferanten - die gefüllte Raute")
+    void deletingSupplierRemovesContact() {
+        Supplier saved = supplierRepository.save(newSupplier("Testlauf GmbH"));
+        entityManager.flush();
+        Long contactId = saved.getContact().getId();
+
+        supplierRepository.delete(saved);
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(entityManager.find(Contact.class, contactId)).isNull();
+    }
+}
+```
+
+:::warning Auch hier die Boot-4-Importe
+Die drei Annotationen dieses Tests liegen an Pfaden, die IntelliJ nicht von selbst vorschlägt — und die in jeder älteren Anleitung anders lauten:
+
+```java
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
+import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
+```
+
+Drei verschiedene Pfade für drei Dinge, die zusammengehören: Das ist die Folge davon, dass Spring Boot 4 die Test-Bibliotheken auseinandergezogen hat. Tippfehler an dieser Stelle äußern sich als „cannot find symbol".
+:::
+
+Dieser Test ist die Probe auf die gefüllte Raute aus Arbeitsblatt 01. Nirgends im Test wird ein `Contact` gespeichert oder gelöscht — beides macht die Kaskade.
+
+:::info Warum hier **nicht** durch eine Datenbank im Arbeitsspeicher ersetzt wird
+Im Gästebuch ersetzte `@DataJpaTest` die Datenbank automatisch durch eine im Arbeitsspeicher. Das war dort richtig: Es ging um Abfragen, und die sehen überall gleich aus.
+
+Hier geht es um Fremdschlüssel, Eindeutigkeit und Kaskaden — also genau um das Verhalten **dieser** Datenbank. Eine andere Datenbank zu testen als die, die später läuft, würde die Frage nicht beantworten. `replace = NONE` schaltet den Austausch ab.
+
+Der Preis: **Der Container muss laufen.** Ohne ihn scheitern diese Tests, und zwar mit einer Meldung über die Verbindung, nicht über die Fachlichkeit.
+
+Jeder Test wird am Ende zurückgerollt — deine Daten bleiben unangetastet.
+:::
+
+<Task id="t4-ab05-a4-mehr">Ergänze zwei Testfälle: Beim Speichern eines Lieferanten bekommt die Anschrift eine <code>id</code>, ohne dass sie einzeln gespeichert wurde · <code>findAllBySupplierIdOrderByIdDesc</code> und <code>countBySupplierId</code> liefern zu einem Lieferanten mit einem Artikel beide das Richtige.</Task>
+
+## Aufgabe 5 – Welcher Test hätte es gefunden?
+
+<Task id="t4-ab05-a5">Ordne jedem Fehler den Test zu, der ihn als Erster rot macht. Trage den Buchstaben ein.</Task>
+
+<FillInTable
+  storageKey="t4-ab05-zuordnung"
+  spalteLinks="Eingebauter Fehler"
+  spalteRechts="Test (a–d)"
+  platzhalter="a, b, c oder d"
+  zeilen={[
+    {id: 'f1', links: <>Im <code>ArticleMapper</code> wird <code>supplier.getId()</code> durch <code>article.getId()</code> ersetzt</>, loesung: 'a', klartext: 'a — der Unit-Test des Mappers'},
+    {id: 'f2', links: <>Die Prüfung <code>if (articleCount &gt; 0)</code> im Service wird gelöscht</>, loesung: 'b', klartext: 'b — der Unit-Test des Service'},
+    {id: 'f3', links: <>Im <code>ApiExceptionHandler</code> wird <code>CONFLICT</code> durch <code>BAD_REQUEST</code> ersetzt</>, loesung: 'c', klartext: 'c — der Slice-Test der Web-Schicht'},
+    {id: 'f4', links: <>An <code>Supplier.contact</code> wird <code>cascade = ALL</code> entfernt</>, loesung: 'd', klartext: 'd — der Test gegen die Datenbank'},
+    {id: 'f5', links: <>An <code>CreateSupplierDto.name</code> wird <code>@NotBlank</code> entfernt</>, loesung: 'c', klartext: 'c — der Slice-Test der Web-Schicht'},
+  ]}
+/>
+
+Die Buchstaben:
+
+| | Test |
+|---|---|
+| **a** | `ArticleMapperTest` — Unit-Test ohne Spring |
+| **b** | `SupplierServiceTest` — Unit-Test mit Doppeln |
+| **c** | `SupplierControllerTest` — Slice-Test der Web-Schicht |
+| **d** | `SupplierRepositoryTest` — gegen die echte Datenbank |
+
+<Task id="t4-ab05-a5-probe">Baue mindestens zwei dieser Fehler wirklich ein und sieh nach, welcher Test rot wird. Nimm sie danach wieder heraus.</Task>
+
+Das ist keine Spielerei: Ein Test, der nie rot war, hat noch nie bewiesen, dass er etwas prüft.
+
+## Aufgabe 6 – Testfälle
+
+<Task id="t4-ab05-a6">Führe die Testfälle aus.</Task>
+
+<TestTable
+  storageKey="t4-ab05-tests"
+  tests={[
+    {
+      id: 'TF-01',
+      beschreibung: 'Alle Tests laufen durch',
+      vorbedingung: 'Container läuft',
+      schritte: ['In IntelliJ alle Tests starten — oder im Terminal ./mvnw test (Windows: mvnw.cmd test)'],
+      erwartet: <>Alle Tests sind grün, keiner wird übersprungen.</>
+    },
+    {
+      id: 'TF-02',
+      beschreibung: 'Die Unit-Tests brauchen keine Datenbank',
+      vorbedingung: 'Container gestoppt (docker compose stop)',
+      schritte: ['Nur ArticleMapperTest und SupplierServiceTest starten'],
+      erwartet: <>Beide sind grün — sie kennen weder Spring noch Datenbank.</>
+    },
+    {
+      id: 'TF-03',
+      beschreibung: 'Der Datenbanktest braucht den Container',
+      vorbedingung: 'Container gestoppt',
+      schritte: ['SupplierRepositoryTest starten'],
+      erwartet: <>Er scheitert, und zwar an der <strong>Verbindung</strong> — nicht an einer Zusicherung. Danach Container starten und wiederholen: grün.</>
+    },
+    {
+      id: 'TF-04',
+      beschreibung: 'Der Slice-Test braucht keinen Server',
+      vorbedingung: 'Die Anwendung läuft NICHT',
+      schritte: ['SupplierControllerTest starten'],
+      erwartet: <>Grün. Es ist kein Port offen, und es wurde kein Byte über eine Leitung geschickt.</>
+    },
+    {
+      id: 'TF-05',
+      beschreibung: 'Die Tests hinterlassen keine Daten',
+      vorbedingung: 'Alle Tests wurden ausgeführt',
+      schritte: ['Im Datenbankfenster die Tabelle supplier ansehen'],
+      erwartet: <>Nur deine eigenen Lieferanten. Kein Lieferant namens <code>Testlauf GmbH</code> — jeder Test wurde zurückgerollt. Genau dafür heißen die Testdaten anders als deine.</>
+    },
+    {
+      id: 'TF-06',
+      beschreibung: 'Ein eingebauter Fehler wird gefunden',
+      vorbedingung: 'Alle Tests grün',
+      schritte: ['cascade = ALL an Supplier.contact entfernen', 'Alle Tests starten'],
+      erwartet: <>Genau der Datenbanktest wird rot. Die anderen bleiben grün — sie können es nicht sehen.</>
+    },
+  ]}
+/>
+
+## Was die vier Tests zusammen aussagen
+
+| Test | Ist er rot, liegt es an … | Was er nicht sieht |
+|---|---|---|
+| `ArticleMapperTest` | deiner Übersetzung zwischen Entität und DTO | alles andere |
+| `SupplierServiceTest` | deiner fachlichen Regel | ob die Datenbank mitspielt |
+| `SupplierControllerTest` | der Übersetzung zwischen HTTP und Java | ob die Regel stimmt — der Service ist ein Doppel |
+| `SupplierRepositoryTest` | einer Abfrage, einer Kaskade oder einem Fremdschlüssel | alles oberhalb der Datenzugriffsschicht |
+
+Keiner deckt alles ab. Zusammen decken sie jede Stelle ab, an der du in diesem Tutorial etwas entschieden hast.
+
+---
+
+## Musterlösung — die Tests
+
+<Solution daten={loesungTests} />

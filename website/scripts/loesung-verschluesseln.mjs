@@ -78,12 +78,61 @@ const aufgaben = [
       'src/test/java/de/szut/gaestebuch/repository/GuestbookEntryRepositoryTest.java',
     ],
   },
+  {
+    ziel: 'src/data/loesung-tutorial-04.json',
+    passwort: 'solution',
+    projekt: '04-webshop',
+    dateien: [
+      // Modell
+      'src/main/java/de/szut/webshop/model/Contact.java',
+      'src/main/java/de/szut/webshop/model/Supplier.java',
+      'src/main/java/de/szut/webshop/model/Article.java',
+      // Datenzugriff
+      'src/main/java/de/szut/webshop/repository/SupplierRepository.java',
+      'src/main/java/de/szut/webshop/repository/ArticleRepository.java',
+      // DTOs
+      'src/main/java/de/szut/webshop/dto/ContactDto.java',
+      'src/main/java/de/szut/webshop/dto/SupplierDto.java',
+      'src/main/java/de/szut/webshop/dto/ArticleDto.java',
+      'src/main/java/de/szut/webshop/dto/CreateContactDto.java',
+      'src/main/java/de/szut/webshop/dto/CreateSupplierDto.java',
+      'src/main/java/de/szut/webshop/dto/CreateArticleDto.java',
+      // Fachlichkeit
+      'src/main/java/de/szut/webshop/service/SupplierMapper.java',
+      'src/main/java/de/szut/webshop/service/ArticleMapper.java',
+      'src/main/java/de/szut/webshop/service/SupplierNotFoundException.java',
+      'src/main/java/de/szut/webshop/service/SupplierHasArticlesException.java',
+      'src/main/java/de/szut/webshop/service/SupplierService.java',
+      'src/main/java/de/szut/webshop/service/ArticleService.java',
+      // Web
+      'src/main/java/de/szut/webshop/controller/SupplierController.java',
+      'src/main/java/de/szut/webshop/controller/ArticleController.java',
+      'src/main/java/de/szut/webshop/controller/ApiExceptionHandler.java',
+      // Betrieb
+      'src/main/resources/application.properties',
+      'docker-compose.yml',
+      'requests.http',
+    ],
+  },
+  {
+    ziel: 'src/data/loesung-tutorial-04-tests.json',
+    passwort: 'solution',
+    projekt: '04-webshop',
+    dateien: [
+      'src/test/java/de/szut/webshop/service/ArticleMapperTest.java',
+      'src/test/java/de/szut/webshop/service/SupplierServiceTest.java',
+      'src/test/java/de/szut/webshop/controller/SupplierControllerTest.java',
+      'src/test/java/de/szut/webshop/repository/SupplierRepositoryTest.java',
+    ],
+  },
 ];
 
 const sprachen = {
   java: 'java',
   properties: 'properties',
   http: 'http',
+  yml: 'yaml',
+  yaml: 'yaml',
 };
 
 function spracheZu(pfad) {

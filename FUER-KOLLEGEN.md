@@ -124,6 +124,13 @@ Zwei Schritte, jedes Mal dieselben.
    | nur Personenverwaltung | `tutorial-01` |
    | + Gästebuch | `tutorial-01,tutorial-02` |
    | + Testen | `tutorial-01,tutorial-02,tutorial-03` |
+   | + Webshop | `tutorial-01,tutorial-02,tutorial-03,tutorial-04` |
+   | Webshop ohne das Test-Tutorial | `tutorial-01,tutorial-02,tutorial-04` |
+
+   Die Tutorials verlinken einander: 02 verweist auf 01, und 03 wie 04
+   verweisen auf 02. Fehlt ein verlinktes Tutorial, bricht der Lauf ab und
+   sagt genau, welches fehlt. Das Test-Tutorial (03) ist kein Vorgänger von
+   Tutorial 04 und darf weggelassen werden.
 
 4. **Update variable**
 

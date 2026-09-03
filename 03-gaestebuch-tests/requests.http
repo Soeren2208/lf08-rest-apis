@@ -1,5 +1,5 @@
 ### Eintrag anlegen
-POST http://localhost:8080/api/v1/guestbook
+POST http://localhost:8080/api/v1/guestbook-entries
 Content-Type: application/json
 
 {
@@ -9,28 +9,16 @@ Content-Type: application/json
 }
 
 ### Alle Einträge (seitenweise, neueste zuerst)
-GET http://localhost:8080/api/v1/guestbook
-
-### Seite 2 mit je zwei Einträgen
-GET http://localhost:8080/api/v1/guestbook?page=1&size=2
-
-### Nach Verfasser sortiert
-GET http://localhost:8080/api/v1/guestbook?sort=author,asc
-
-### Einträge eines Jahres
-GET http://localhost:8080/api/v1/guestbook?year=2026
-
-### Jahr ohne Einträge - 200 mit leerem content, nicht 404
-GET http://localhost:8080/api/v1/guestbook?year=2019
-
-### Ungültiges Jahr - 400
-GET http://localhost:8080/api/v1/guestbook?year=abc
+GET http://localhost:8080/api/v1/guestbook-entries
 
 ### Einen Eintrag abrufen
-GET http://localhost:8080/api/v1/guestbook/1
+GET http://localhost:8080/api/v1/guestbook-entries/1
+
+### Unbekannte Id abrufen - erwartet 404
+GET http://localhost:8080/api/v1/guestbook-entries/9999
 
 ### Eintrag ändern - das Datum bleibt unberührt
-PUT http://localhost:8080/api/v1/guestbook/1
+PUT http://localhost:8080/api/v1/guestbook-entries/1
 Content-Type: application/json
 
 {
@@ -39,8 +27,38 @@ Content-Type: application/json
   "author": "Anna"
 }
 
-### Eintrag löschen
-DELETE http://localhost:8080/api/v1/guestbook/1
+### Eintrag löschen - erwartet 204 ohne Rumpf
+DELETE http://localhost:8080/api/v1/guestbook-entries/1
+
+### Unbekannte Id löschen - erwartet 404
+DELETE http://localhost:8080/api/v1/guestbook-entries/9999
+
+### Fehlerhaftes JSON - erwartet 400
+POST http://localhost:8080/api/v1/guestbook-entries
+Content-Type: application/json
+
+{"title":
+
+### DELETE auf die Sammlung statt auf einen Eintrag - erwartet 405
+DELETE http://localhost:8080/api/v1/guestbook-entries
+
+### Einträge eines Jahres
+GET http://localhost:8080/api/v1/guestbook-entries?year=2026
+
+### Jahr ohne Einträge - erwartet 200 mit leerem content, nicht 404
+GET http://localhost:8080/api/v1/guestbook-entries?year=2019
+
+### Ungültiges Jahr - erwartet 400
+GET http://localhost:8080/api/v1/guestbook-entries?year=abc
+
+### Zwei Einträge je Seite
+GET http://localhost:8080/api/v1/guestbook-entries?size=2
+
+### Die zweite Seite
+GET http://localhost:8080/api/v1/guestbook-entries?size=2&page=1
+
+### Nach Verfasser sortiert
+GET http://localhost:8080/api/v1/guestbook-entries?sort=author,asc
 
 ### Die API-Beschreibung selbst
 GET http://localhost:8080/v3/api-docs

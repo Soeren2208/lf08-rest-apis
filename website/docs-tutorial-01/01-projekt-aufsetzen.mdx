@@ -328,7 +328,61 @@ Das ist der Grund, warum man bei Webservices immer auf den Statuscode schaut.
 
 Jetzt baust du einen Endpunkt, der einen Begrüßungstext zurückgibt. Er braucht noch keine Datenbank.
 
-<Task id="ab01-a4-pkg">Lege im Package `de.szut.personenverwaltung` ein Unterpackage `controller` an.</Task>
+<Task id="ab01-a4-pkg">Lege unter `src/main/java/de/szut/personenverwaltung/` — also dort, wo schon `PersonenverwaltungApplication.java` liegt — ein Unterpackage `controller` an.</Task>
+
+:::info Package oder Ordner — was denn nun?
+Beides. Ein **Package ist ein Ordner**, mehr steckt physisch nicht dahinter: keine
+Konfigurationsdatei, kein Eintrag irgendwo. Zum Package wird der Ordner erst durch
+die erste Zeile der Dateien darin:
+
+```java
+package de.szut.personenverwaltung.controller;
+```
+
+Ordner **und** diese Zeile müssen zueinander passen — das ist die ganze Regel.
+
+**Und wo liegt dieser Ordner?** Nicht im Projektverzeichnis. Packages beginnen
+erst unterhalb von `src/main/java`:
+
+```text
+personenverwaltung/                         ← das Projektverzeichnis
+├── pom.xml                                    hier liegen KEINE Packages
+├── mvnw
+└── src/
+    ├── main/
+    │   ├── java/
+    │   │   └── de/szut/personenverwaltung/  ← ab hier beginnen die Packages
+    │   │       ├── PersonenverwaltungApplication.java
+    │   │       └── controller/              ← dieses legst du gleich an
+    │   └── resources/
+    │       └── application.properties
+    └── test/
+```
+
+Die drei Ordner `de`, `szut` und `personenverwaltung` sind übrigens auch schon
+Packages — sie entsprechen den drei Teilen von `de.szut.personenverwaltung`.
+Spring Initializr hat sie beim Erzeugen des Projekts angelegt.
+
+**In IntelliJ gibt es zwei Wege dorthin:**
+
+| Weg | Was du eingibst |
+|---|---|
+| Rechtsklick unterhalb von `src/main/java` → *New* → **Package** | den vollen Namen mit Punkten: `de.szut.personenverwaltung.controller` — IntelliJ legt daraus die verschachtelten Ordner an |
+| Rechtsklick auf den Ordner `personenverwaltung` → *New* → **Directory** | nur `controller`, **ohne Punkte** |
+
+Findest du den Eintrag *Package* nicht, hast du außerhalb des Quelltextordners
+geklickt. Schlimm ist das nicht — nimm *Directory*.
+
+**Die häufigste Panne:** einen Namen **mit Punkten** in *New → Directory*
+eintippen. Dann entsteht **ein** Ordner, der wörtlich
+`de.szut.personenverwaltung.controller` heißt, und keine Klasse darin lässt sich
+übersetzen. Punkte gehören in *New → Package*, ein einzelner Name in beides.
+
+**Und wenn du dir das sparen willst:** Du kannst den Ordner ganz weglassen und
+gleich die Klasse anlegen. Gib bei *New* → *Java Class* als Namen
+`controller.Greeting` ein — IntelliJ legt den Ordner mit an und schreibt die
+`package`-Zeile selbst.
+:::
 
 <Task id="ab01-a4-record">Erstelle darin einen **Record** mit dem Bezeichner `Greeting`:</Task>
 

@@ -1,0 +1,558 @@
+---
+title: "AB 03 – Die Antwort selbst entwerfen"
+sidebar_label: "03 – Die Antwort selbst entwerfen"
+slug: 03-antwort-selbst-entwerfen
+sidebar_position: 3
+---
+
+# AB 03 – Die Antwort selbst entwerfen
+
+## Die Situation
+
+> Aus der letzten Sitzung ist ein Satz hängengeblieben:
+>
+> *„Die Antwort ist zwanzigtausend Zeichen lang und der Name des Lieferanten kommt nicht darin vor."*
+>
+> Die Frage, die niemand gestellt hatte, lautet: **Was soll eigentlich in der Antwort stehen?** Bisher hat sie die Datenbank beantwortet — sie kannte ja die Entität. Ab heute beantwortest du sie.
+
+## Lernziele
+
+Nach Bearbeitung dieses Arbeitsblatts kannst du:
+
+- begründen, warum eine JPA-Entität kein geeignetes Antwortformat ist
+- ein **DTO** als `record` entwerfen und benennen, was hinein gehört und was nicht
+- einen **Mapper** schreiben, der zwischen Entität und DTO übersetzt
+- erklären, warum Eingabe und Ausgabe unterschiedliche DTOs brauchen
+- eine **abgeleitete Abfrage** mit zwei Bedingungen im Namen schreiben
+- zwei Endpunkte für eine untergeordnete Ressource bauen
+
+## Entität und DTO sind zwei verschiedene Dinge
+
+<svg viewBox="0 0 720 300" width="100%" role="img"
+     aria-label="Die Entität ist zur Datenbank hin ausgerichtet und enthält Fremdschlüssel, Gegenrichtungen und Zeitstempel. Das DTO ist zum Client hin ausgerichtet und enthält nur die Felder, die dieser braucht."
+     fontFamily="var(--ifm-font-family-base)">
+
+  {/* ---------- Entitaet ---------- */}
+  <g>
+    <rect x="20" y="34" width="300" height="242" rx="10"
+          fill="var(--ifm-color-emphasis-200)"/>
+    <rect x="20" y="34" width="300" height="242" rx="10" fill="none"
+          stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.5"/>
+    <text x="38" y="24" fontSize="14" fontWeight="800"
+          fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-color-emphasis-800)">Supplier</text>
+    <text x="38" y="60" fontSize="12" fontWeight="700"
+          fill="var(--ifm-color-emphasis-700)">gebaut für die DATENBANK</text>
+
+    <text x="38" y="90" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">id</text>
+    <text x="38" y="114" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">name</text>
+    <text x="38" y="138" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">contact</text>
+    <text x="38" y="162" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-color-danger)">articles</text>
+    <text x="150" y="162" fontSize="11.5"
+          fill="var(--ifm-color-danger)">Gegenrichtung</text>
+
+    <text x="38" y="204" fontSize="11.5" fill="var(--ifm-color-emphasis-700)">jedes Feld ist da,</text>
+    <text x="38" y="222" fontSize="11.5" fill="var(--ifm-color-emphasis-700)">weil Hibernate es braucht —</text>
+    <text x="38" y="240" fontSize="11.5" fill="var(--ifm-color-emphasis-700)">nicht, weil ein Client</text>
+    <text x="38" y="258" fontSize="11.5" fill="var(--ifm-color-emphasis-700)">es sehen soll.</text>
+  </g>
+
+  {/* ---------- Mapper ---------- */}
+  <g>
+    <line x1="320" y1="152" x2="400" y2="152"
+          stroke="var(--ifm-color-primary)" strokeWidth="2"/>
+    <polygon points="400,152 386,146 386,158" fill="var(--ifm-color-primary)"/>
+    <text x="360" y="140" textAnchor="middle" fontSize="12" fontWeight="700"
+          fill="var(--ifm-color-primary)">Mapper</text>
+  </g>
+
+  {/* ---------- DTO ---------- */}
+  <g>
+    <rect x="400" y="34" width="300" height="242" rx="10"
+          fill="var(--ifm-color-primary)" opacity="0.10"/>
+    <rect x="400" y="34" width="300" height="242" rx="10" fill="none"
+          stroke="var(--ifm-color-primary)" strokeWidth="2"/>
+    <text x="418" y="24" fontSize="14" fontWeight="800"
+          fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-color-primary)">SupplierDto</text>
+    <text x="418" y="60" fontSize="12" fontWeight="700"
+          fill="var(--ifm-color-primary)">gebaut für den CLIENT</text>
+
+    <text x="418" y="90" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">id</text>
+    <text x="418" y="114" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">name</text>
+    <text x="418" y="138" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">contact</text>
+    <text x="418" y="162" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-color-primary)">articleCount</text>
+    <text x="560" y="162" fontSize="11.5"
+          fill="var(--ifm-color-primary)">nur die Zahl</text>
+
+    <text x="418" y="204" fontSize="11.5" fill="var(--ifm-color-emphasis-800)">jedes Feld ist da,</text>
+    <text x="418" y="222" fontSize="11.5" fill="var(--ifm-color-emphasis-800)">weil jemand es braucht.</text>
+    <text x="418" y="240" fontSize="11.5" fill="var(--ifm-color-emphasis-800)">Kein Feld zeigt zurück —</text>
+    <text x="418" y="258" fontSize="11.5" fill="var(--ifm-color-emphasis-800)">die Kette endet hier.</text>
+  </g>
+</svg>
+
+**DTO** heißt *Data Transfer Object*: ein Objekt, das nur dazu da ist, Daten von hier nach dort zu bringen. Es hat keine Fachlichkeit, keine Datenbankanbindung und keine Beziehungen — nur Felder.
+
+Drei Dinge gewinnst du damit auf einen Schlag:
+
+| | |
+|---|---|
+| **Die Antwort endet** | Kein Feld zeigt zurück, also gibt es keinen Kreis |
+| **Du entscheidest, was sichtbar ist** | Ein Feld, das nicht im DTO steht, verlässt den Server nicht — auch nicht versehentlich |
+| **Die Schnittstelle bleibt stabil** | Ein zusätzliches Feld in der Entität ändert die Antwort nicht mehr von selbst |
+
+## Aufgaben
+
+### Aufgabe 1 – Die Ausgabe-DTOs
+
+Records kennst du aus der Personenverwaltung: eine Zeile, und Konstruktor, Zugriffsmethoden, `equals` und `toString` sind da.
+
+<Task id="t4-ab03-a1-contact">Erstelle im Package `dto` den Record `ContactDto`:</Task>
+
+```java title="src/main/java/de/szut/webshop/dto/ContactDto.java"
+public record ContactDto(
+        String street,
+        String postcode,
+        String city,
+        String phone) {
+}
+```
+
+<Task id="t4-ab03-a1-supplier">Erstelle im Package `dto` den Record `SupplierDto`:</Task>
+
+```java title="src/main/java/de/szut/webshop/dto/SupplierDto.java"
+public record SupplierDto(
+        Long id,
+        String name,
+        ContactDto contact,
+        long articleCount) {
+}
+```
+
+Zwei Entscheidungen stecken darin, über die man reden muss.
+
+**Die Anschrift wandert mit, die Artikel nicht.** Das ist kein Zufall: Der `Contact` gehört zum Lieferanten — ohne ihn wäre die Auskunft unvollständig. Die Artikel dagegen sind eine eigene Liste, die beliebig lang werden kann. Wer sie braucht, ruft ihren eigenen Endpunkt auf. Genau das steht auch im Klassendiagramm: gefüllte Raute gegen schlichte Linie.
+
+**`articleCount` statt der Liste.** Eine Zahl beantwortet die häufigste Frage („hat der Lieferant überhaupt Artikel?"), ohne dass irgendetwas nachgeladen werden muss.
+
+**`ContactDto` hat keine `id`.** Die Anschrift ist nur als Teil des Lieferanten ansprechbar; es gibt keinen Endpunkt `/contacts/3`. Eine Kennung, die niemand benutzen kann, gehört nicht in die Antwort.
+
+<Task id="t4-ab03-a1-article">Erstelle im Package `dto` den Record `ArticleDto`:</Task>
+
+```java title="src/main/java/de/szut/webshop/dto/ArticleDto.java"
+public record ArticleDto(
+        Long id,
+        String designation,
+        BigDecimal price,
+        Long supplierId,
+        String supplierName) {
+}
+```
+
+Hier ist die Stelle, an der der Kreis endet. Vom Lieferanten wandern **zwei Felder** mit, nicht der Lieferant. Ein `ArticleDto` enthält keinen `SupplierDto`, der wieder Artikel enthielte.
+
+:::note Was ist mit `createdAt` und `updatedAt`?
+Sie stehen in der Entität, aber nicht im DTO. Frage dich bei jedem Feld: *Wer draußen braucht das?* Für den Katalog niemand — sie sind Buchhaltung der Anwendung. Sollte die Einkaufsabteilung später fragen, wann ein Preis zuletzt geändert wurde, kommt `updatedAt` dazu. Dann aber bewusst.
+:::
+
+### Aufgabe 2 – Die Eingabe-DTOs
+
+Für das Anlegen brauchst du andere Felder als für die Ausgabe. Eine `id` schickt der Client nicht mit — die vergibt die Datenbank. Eine `articleCount` auch nicht.
+
+<Task id="t4-ab03-a2">Erstelle im Package `dto` diese drei Records:</Task>
+
+```java title="src/main/java/de/szut/webshop/dto/CreateContactDto.java"
+public record CreateContactDto(
+        String street,
+        String postcode,
+        String city,
+        String phone) {
+}
+```
+
+```java title="src/main/java/de/szut/webshop/dto/CreateSupplierDto.java"
+public record CreateSupplierDto(
+        String name,
+        CreateContactDto contact) {
+}
+```
+
+```java title="src/main/java/de/szut/webshop/dto/CreateArticleDto.java"
+public record CreateArticleDto(
+        String designation,
+        BigDecimal price) {
+}
+```
+
+:::info Zwei DTOs für dieselbe Sache — ist das nicht doppelt?
+`ContactDto` und `CreateContactDto` sehen im Moment gleich aus. Trotzdem sind es zwei: Sie beschreiben **verschiedene Richtungen**, und die entwickeln sich auseinander.
+
+Beim `CreateArticleDto` ist es schon jetzt sichtbar: Es hat keinen Lieferanten, weil der in der Adresse steht — `POST /api/v1/suppliers/7/articles`. In Arbeitsblatt 04 kommen an den Eingabe-DTOs außerdem Prüfregeln dazu, die in einer Antwort nichts zu suchen haben.
+
+Wer beides in eine Klasse legt, muss später bei jedem Feld entscheiden, für welche Richtung es gilt. Das ist die teurere Variante.
+:::
+
+### Aufgabe 3 – Der Mapper
+
+Irgendwo muss das Übersetzen stattfinden. Nicht im Controller — der hat mit HTTP zu tun. Nicht in der Entität — die weiß nichts von der Schnittstelle. Also in einer eigenen Klasse.
+
+Der Artikel-Mapper ist als Vorlage schon fertig:
+
+```java title="src/main/java/de/szut/webshop/service/ArticleMapper.java"
+@Component
+public class ArticleMapper {
+
+    public ArticleDto toDto(Article article) {
+        Supplier supplier = article.getSupplier();
+        return new ArticleDto(
+                article.getId(),
+                article.getDesignation(),
+                article.getPrice(),
+                supplier.getId(),
+                supplier.getName());
+    }
+
+    public Article toEntity(CreateArticleDto dto, Supplier supplier) {
+        Article article = new Article();
+        article.setDesignation(dto.designation());
+        article.setPrice(dto.price());
+        article.setSupplier(supplier);
+        return article;
+    }
+}
+```
+
+<Task id="t4-ab03-a3-article">Übernimm den `ArticleMapper` in das Package `service`.</Task>
+
+<Task id="t4-ab03-a3-supplier">Schreibe nach demselben Muster den `SupplierMapper`. Er braucht vier Methoden: `toDto(Supplier, long articleCount)`, `toDto(Contact)`, `toEntity(CreateSupplierDto)` und `toEntity(CreateContactDto)`.</Task>
+
+Zwei Hinweise, bevor du anfängst:
+
+- Die Artikelzahl kann der Mapper nicht selbst ermitteln — er hat kein Repository. Sie wird ihm übergeben.
+- `toDto(Contact)` muss mit `null` umgehen können: Ein Lieferant ohne Anschrift ist zwar unerwünscht, aber bis Arbeitsblatt 04 nicht verboten.
+
+<details>
+<summary>Wenn du nicht weiterkommst: der <code>SupplierMapper</code></summary>
+
+```java title="src/main/java/de/szut/webshop/service/SupplierMapper.java"
+@Component
+public class SupplierMapper {
+
+    public SupplierDto toDto(Supplier supplier, long articleCount) {
+        return new SupplierDto(
+                supplier.getId(),
+                supplier.getName(),
+                toDto(supplier.getContact()),
+                articleCount);
+    }
+
+    public ContactDto toDto(Contact contact) {
+        if (contact == null) {
+            return null;
+        }
+        return new ContactDto(
+                contact.getStreet(),
+                contact.getPostcode(),
+                contact.getCity(),
+                contact.getPhone());
+    }
+
+    public Supplier toEntity(CreateSupplierDto dto) {
+        Supplier supplier = new Supplier();
+        supplier.setName(dto.name());
+        supplier.setContact(toEntity(dto.contact()));
+        return supplier;
+    }
+
+    public Contact toEntity(CreateContactDto dto) {
+        Contact contact = new Contact();
+        contact.setStreet(dto.street());
+        contact.setPostcode(dto.postcode());
+        contact.setCity(dto.city());
+        contact.setPhone(dto.phone());
+        return contact;
+    }
+}
+```
+
+</details>
+
+:::note Warum liegt der Mapper im Package `service` und nicht in `dto`?
+Weil er etwas *tut*. Im Package `dto` liegen Datenbehälter — Records ohne Verhalten. Der Mapper ist eine Klasse mit Logik, auch wenn die Logik schlicht ist. In Arbeitsblatt 04 bekommt er im selben Package Gesellschaft.
+:::
+
+### Aufgabe 4 – Die Abfrage für die Artikelzahl
+
+Der Mapper braucht eine Zahl. Die soll aus der Datenbank kommen, ohne dass ein einziger Artikel geladen wird.
+
+<Task id="t4-ab03-a4-repo">Lege im Package `repository` das Interface `ArticleRepository` an, das `JpaRepository<Article, Long>` erweitert, und ergänze zwei Methoden:</Task>
+
+```java title="src/main/java/de/szut/webshop/repository/ArticleRepository.java"
+public interface ArticleRepository extends JpaRepository<Article, Long> {
+
+    List<Article> findAllBySupplierIdOrderByIdDesc(Long supplierId);
+
+    long countBySupplierId(Long supplierId);
+}
+```
+
+<Task id="t4-ab03-a4-lesen">Zerlege beide Methodennamen in ihre Bestandteile und schreibe auf, welches SQL daraus wird.</Task>
+
+Das Verfahren kennst du aus dem Gästebuch: Spring liest den Namen wie einen Satz.
+
+| Namensteil | Bedeutung |
+|---|---|
+| `count…` | statt der Zeilen nur ihre Anzahl — `SELECT count(*)` |
+| <code>find<b>All</b>…</code> | alle Treffer, nicht nur einen |
+| `…BySupplierId` | `WHERE supplier_id = ?` — Spring liest `SupplierId` als `supplier.id`: erst das Feld `supplier`, darin das Feld `id`. Daraus wird die Fremdschlüsselspalte |
+| `…OrderByIdDesc` | `ORDER BY id DESC` — neueste zuerst |
+
+`countBySupplierId` erzeugt genau eine Zahl in der Datenbank. Kein Artikel wird geladen, kein Objekt gebaut. Das ist der Grund, warum `articleCount` im DTO nichts kostet.
+
+### Aufgabe 5 – Den Lieferanten-Controller umbauen
+
+<Task id="t4-ab03-a5">Baue den `SupplierController` so um, dass er `SupplierDto` und `CreateSupplierDto` verwendet statt der Entität. Er braucht dafür beide Repositories und den `SupplierMapper`.</Task>
+
+<details>
+<summary>Wenn du nicht weiterkommst: der umgebaute Controller</summary>
+
+```java title="src/main/java/de/szut/webshop/controller/SupplierController.java"
+@RestController
+@RequestMapping("/api/v1/suppliers")
+public class SupplierController {
+
+    private final SupplierRepository supplierRepository;
+    private final ArticleRepository articleRepository;
+    private final SupplierMapper mapper;
+
+    public SupplierController(SupplierRepository supplierRepository,
+                              ArticleRepository articleRepository,
+                              SupplierMapper mapper) {
+        this.supplierRepository = supplierRepository;
+        this.articleRepository = articleRepository;
+        this.mapper = mapper;
+    }
+
+    @PostMapping
+    public ResponseEntity<SupplierDto> createSupplier(@RequestBody CreateSupplierDto dto) {
+        Supplier saved = supplierRepository.save(mapper.toEntity(dto));
+        SupplierDto antwort = mapper.toDto(saved, 0);
+
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(antwort.id())
+                .toUri();
+
+        return ResponseEntity.created(location).body(antwort);
+    }
+
+    @GetMapping
+    public List<SupplierDto> findAllSuppliers() {
+        return supplierRepository.findAll().stream()
+                .map(supplier -> mapper.toDto(
+                        supplier,
+                        articleRepository.countBySupplierId(supplier.getId())))
+                .toList();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<SupplierDto> findSupplierById(@PathVariable Long id) {
+        return supplierRepository.findById(id)
+                .map(supplier -> mapper.toDto(
+                        supplier,
+                        articleRepository.countBySupplierId(id)))
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+}
+```
+
+</details>
+
+<Task id="t4-ab03-a5-test">Starte neu und rufe `GET /api/v1/suppliers` auf — mit dem Artikel, den du in Arbeitsblatt 02 von Hand angelegt hast, und mit `fetch = LAZY`.</Task>
+
+```json
+[
+  {
+    "id": 1,
+    "name": "Nordmetall GmbH",
+    "contact": {
+      "street": "Hafenstr. 12",
+      "postcode": "28217",
+      "city": "Bremen",
+      "phone": "0421 123456"
+    },
+    "articleCount": 1
+  }
+]
+```
+
+145 Zeichen statt 19 438. Der Name steht drin. Und `LAZY` ist unverändert geblieben — es war nie das Problem.
+
+### Aufgabe 6 – Die beiden Artikel-Endpunkte
+
+Artikel gehören zu einem Lieferanten. Das soll man der Adresse ansehen:
+
+```text
+POST /api/v1/suppliers/1/articles     einen Artikel bei Lieferant 1 anlegen
+GET  /api/v1/suppliers/1/articles     das Sortiment von Lieferant 1
+```
+
+<Task id="t4-ab03-a6">Erstelle im Package `controller` die Klasse `ArticleController` mit diesen beiden Endpunkten.</Task>
+
+Für den POST brauchst du beides: den Lieferanten aus der Adresse und die Artikeldaten aus dem Rumpf.
+
+<details>
+<summary>Wenn du nicht weiterkommst: der <code>ArticleController</code></summary>
+
+```java title="src/main/java/de/szut/webshop/controller/ArticleController.java"
+@RestController
+@RequestMapping("/api/v1/suppliers/{supplierId}/articles")
+public class ArticleController {
+
+    private final ArticleRepository articleRepository;
+    private final SupplierRepository supplierRepository;
+    private final ArticleMapper mapper;
+
+    public ArticleController(ArticleRepository articleRepository,
+                             SupplierRepository supplierRepository,
+                             ArticleMapper mapper) {
+        this.articleRepository = articleRepository;
+        this.supplierRepository = supplierRepository;
+        this.mapper = mapper;
+    }
+
+    @PostMapping
+    public ResponseEntity<ArticleDto> createArticle(@PathVariable Long supplierId,
+                                                    @RequestBody CreateArticleDto dto) {
+        Supplier supplier = supplierRepository.findById(supplierId).orElseThrow();
+        Article saved = articleRepository.save(mapper.toEntity(dto, supplier));
+        ArticleDto antwort = mapper.toDto(saved);
+
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(antwort.id())
+                .toUri();
+
+        return ResponseEntity.created(location).body(antwort);
+    }
+
+    @GetMapping
+    public List<ArticleDto> findArticlesOfSupplier(@PathVariable Long supplierId) {
+        return articleRepository.findAllBySupplierIdOrderByIdDesc(supplierId).stream()
+                .map(mapper::toDto)
+                .toList();
+    }
+}
+```
+
+</details>
+
+<Task id="t4-ab03-a6-requests">Ergänze `requests.http` um beide Anfragen und lege zwei weitere Artikel an.</Task>
+
+```http title="requests.http"
+### Artikel bei Lieferant 1 anlegen
+POST http://localhost:8080/api/v1/suppliers/1/articles
+Content-Type: application/json
+
+{
+  "designation": "Mutter M6",
+  "price": 0.12
+}
+
+### Sortiment von Lieferant 1
+GET http://localhost:8080/api/v1/suppliers/1/articles
+```
+
+:::note Die `Location`-Kopfzeile zeigt vorerst ins Leere
+Beim Anlegen eines Artikels entsteht als Adresse
+`…/api/v1/suppliers/1/articles/5`. **Diesen Endpunkt gibt es nicht** — es gibt
+keinen, der einen einzelnen Artikel liefert.
+
+Das ist kein Versehen, sondern eine offene Baustelle: Sechs Endpunkte reichen,
+um die Architektur zu verstehen, und jeder weitere kostet Zeit ohne neue
+Einsicht. In Arbeitsblatt 04 steht er als Zusatzaufgabe — dort ist er in fünf
+Minuten gebaut.
+:::
+
+:::danger Was passiert bei einem unbekannten Lieferanten?
+Ruf einmal `POST /api/v1/suppliers/999/articles` auf. Das `orElseThrow()` im Controller wirft eine `NoSuchElementException`, und daraus wird eine **500** — als wäre der Server schuld.
+
+Er ist es nicht: Der Client hat nach etwas gefragt, das es nicht gibt. Das ist eine **404**. Diese Stelle bleibt bis Arbeitsblatt 04 so — dort bekommt sie eine ordentliche Antwort, zusammen mit allen anderen Fehlerfällen.
+:::
+
+### Aufgabe 7 – Testfälle
+
+<Task id="t4-ab03-a7">Führe die Testfälle aus.</Task>
+
+<TestTable
+  storageKey="t4-ab03-tests"
+  tests={[
+    {
+      id: 'TF-01',
+      beschreibung: 'Der Endpunkt liefert wieder eine Antwort',
+      vorbedingung: 'Controller auf DTO umgebaut, fetch = LAZY, ein Artikel vorhanden',
+      schritte: ['GET auf /api/v1/suppliers'],
+      erwartet: <>Status <code>200</code> mit einer Antwort von rund <strong>150 Zeichen</strong>.</>
+    },
+    {
+      id: 'TF-02',
+      beschreibung: 'Die Artikel stehen nicht in der Antwort',
+      vorbedingung: 'TF-01 wurde ausgeführt',
+      schritte: ['Antwort durchsehen'],
+      erwartet: <>Es gibt kein Feld <code>articles</code>, aber ein Feld <code>articleCount</code> mit dem Wert <code>1</code>.</>
+    },
+    {
+      id: 'TF-03',
+      beschreibung: 'LAZY blieb unverändert',
+      vorbedingung: 'TF-01 wurde ausgeführt',
+      schritte: ['In Supplier nachsehen'],
+      erwartet: <>Dort steht weiterhin <code>fetch = FetchType.LAZY</code> — und trotzdem gibt es keinen Fehler mehr.</>
+    },
+    {
+      id: 'TF-04',
+      beschreibung: 'Artikel anlegen',
+      vorbedingung: 'Lieferant 1 existiert',
+      schritte: ['POST auf /api/v1/suppliers/1/articles mit designation und price'],
+      erwartet: <>Status <code>201</code>, eine <code>Location</code>-Kopfzeile, und im Rumpf stehen <code>supplierId</code> und <code>supplierName</code> — aber kein verschachtelter Lieferant.</>
+    },
+    {
+      id: 'TF-05',
+      beschreibung: 'Sortiment abrufen, neueste zuerst',
+      vorbedingung: 'Mindestens drei Artikel bei Lieferant 1',
+      schritte: ['GET auf /api/v1/suppliers/1/articles'],
+      erwartet: <>Alle Artikel dieses Lieferanten, absteigend nach <code>id</code> sortiert.</>
+    },
+    {
+      id: 'TF-06',
+      beschreibung: 'Der Zähler stimmt',
+      vorbedingung: 'TF-05 wurde ausgeführt',
+      schritte: ['GET auf /api/v1/suppliers/1'],
+      erwartet: <><code>articleCount</code> entspricht der Anzahl aus TF-05.</>
+    },
+    {
+      id: 'TF-07',
+      beschreibung: 'Bekannter offener Punkt: unbekannter Lieferant',
+      vorbedingung: 'Es gibt keinen Lieferanten 999',
+      schritte: ['POST auf /api/v1/suppliers/999/articles'],
+      erwartet: <>Status <code>500</code>. Das ist <strong>falsch</strong> und wird in Arbeitsblatt 04 zu einer <code>404</code>.</>
+    },
+  ]}
+/>
+
+## Wo du jetzt stehst
+
+Sechs Endpunkte, saubere Antworten. Aber sieh dir den `SupplierController` noch einmal an: Er holt aus zwei Repositories, ruft den Mapper, zählt Artikel und baut Adressen. Vom „entgegennehmen, weiterreichen, antworten" ist wenig übrig.
+
+Und einige Fragen sind gar nicht beantwortet: Was, wenn ein Name leer ist? Wenn ein Preis negativ ist? Wenn jemand einen Lieferanten löscht, der noch Artikel hat?
+
+Keine davon hat mit HTTP zu tun. Sie brauchen einen eigenen Ort.

@@ -7,6 +7,7 @@ import FillInTable from '@site/src/components/FillInTable';
 import Solution from '@site/src/components/Solution';
 import PageExplorer from '@site/src/components/PageExplorer';
 import TestLayers from '@site/src/components/TestLayers';
+import ResponseExplorer from '@site/src/components/ResponseExplorer';
 
 export default {
   // Bestehende Docusaurus-MDX-Komponenten übernehmen ...
@@ -19,4 +20,5 @@ export default {
   Solution,
   PageExplorer,
   TestLayers,
+  ResponseExplorer,
 };

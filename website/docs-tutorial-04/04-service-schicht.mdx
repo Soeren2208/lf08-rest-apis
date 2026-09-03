@@ -1,0 +1,728 @@
+---
+title: "AB 04 – Die Service-Schicht"
+sidebar_label: "04 – Die Service-Schicht"
+slug: 04-service-schicht
+sidebar_position: 4
+---
+
+import loesung from '@site/src/data/loesung-tutorial-04.json';
+
+# AB 04 – Die Service-Schicht
+
+## Die Situation
+
+> Der Katalog läuft. Dann kommt eine Rückmeldung aus dem Einkauf:
+>
+> *„Wir haben aus Versehen einen Lieferanten gelöscht, der noch achtzig Artikel im Sortiment hatte. Was passiert da eigentlich?"*
+>
+> Gute Frage. Und daneben stehen die anderen, die bisher niemand gestellt hat: Was, wenn ein Name leer ist? Wenn ein Preis negativ ist? Wenn jemand einen Artikel bei einem Lieferanten anlegt, den es gar nicht gibt?
+>
+> Keine dieser Fragen hat mit HTTP zu tun. Und keine hat mit der Datenbank zu tun. Sie brauchen einen eigenen Platz.
+
+## Lernziele
+
+Nach Bearbeitung dieses Arbeitsblatts kannst du:
+
+- begründen, warum zwischen Controller und Repository eine dritte Schicht gehört
+- eine **Service-Schicht** aufbauen und Fachlichkeit dorthin verlagern
+- eine fachliche Regel als eigene Ausnahme formulieren
+- die Statuscodes **404**, **409** und **400** auseinanderhalten und begründen
+- Eingaben mit **Bean Validation** prüfen lassen statt von Hand
+- eine Fehlerantwort so gestalten, dass sie benennt, **welches Feld** falsch war
+
+## Warum eine dritte Schicht?
+
+Sieh dir an, was dein `SupplierController` inzwischen tut: aus zwei Repositories holen, den Mapper rufen, Artikel zählen, Adressen bauen, Statuscodes setzen. Das ist eine Menge — und das meiste davon hat mit HTTP nichts zu tun.
+
+<svg viewBox="0 0 720 330" width="100%" role="img"
+     aria-label="Drei Schichten übereinander: Controller, Service und Repository. Die Anfrage läuft von oben nach unten, die Antwort zurück nach oben. Jede Schicht weiß nichts von der übernächsten."
+     fontFamily="var(--ifm-font-family-base)">
+
+  {/* ---------- Pfeil hinunter ---------- */}
+  <line x1="30" y1="34" x2="30" y2="292" stroke="var(--ifm-color-emphasis-400)" strokeWidth="2"/>
+  <polygon points="30,300 23,286 37,286" fill="var(--ifm-color-emphasis-400)"/>
+  <text x="30" y="22" textAnchor="middle" fontSize="11" fontWeight="700"
+        fill="var(--ifm-color-emphasis-700)">Anfrage</text>
+
+  {/* ---------- Controller ---------- */}
+  <g>
+    <rect x="56" y="26" width="640" height="82" rx="10"
+          fill="var(--ifm-color-primary)" opacity="0.10"/>
+    <rect x="56" y="26" width="640" height="82" rx="10" fill="none"
+          stroke="var(--ifm-color-primary)" strokeWidth="2"/>
+    <text x="76" y="52" fontSize="15" fontWeight="800"
+          fill="var(--ifm-color-primary)">Controller</text>
+    <text x="76" y="74" fontSize="12.5" fill="var(--ifm-font-color-base)">nimmt entgegen, reicht weiter, antwortet mit einem Statuscode</text>
+    <text x="76" y="94" fontSize="11.5" fill="var(--ifm-color-emphasis-700)">weiß nichts von SQL · kennt kein Repository</text>
+  </g>
+
+  {/* ---------- Service ---------- */}
+  <g>
+    <rect x="56" y="124" width="640" height="82" rx="10"
+          fill="var(--ifm-color-primary)" opacity="0.10"/>
+    <rect x="56" y="124" width="640" height="82" rx="10" fill="none"
+          stroke="var(--ifm-color-primary)" strokeWidth="2"/>
+    <text x="76" y="150" fontSize="15" fontWeight="800"
+          fill="var(--ifm-color-primary)">Service</text>
+    <text x="76" y="172" fontSize="12.5" fill="var(--ifm-font-color-base)">prüft die Regeln, entscheidet, übersetzt zwischen Entität und DTO</text>
+    <text x="76" y="192" fontSize="11.5" fill="var(--ifm-color-emphasis-700)">weiß nichts von HTTP · kennt keinen Statuscode</text>
+  </g>
+
+  {/* ---------- Repository ---------- */}
+  <g>
+    <rect x="56" y="222" width="640" height="82" rx="10"
+          fill="var(--ifm-color-primary)" opacity="0.10"/>
+    <rect x="56" y="222" width="640" height="82" rx="10" fill="none"
+          stroke="var(--ifm-color-primary)" strokeWidth="2"/>
+    <text x="76" y="248" fontSize="15" fontWeight="800"
+          fill="var(--ifm-color-primary)">Repository</text>
+    <text x="76" y="270" fontSize="12.5" fill="var(--ifm-font-color-base)">liest und schreibt — sonst nichts</text>
+    <text x="76" y="290" fontSize="11.5" fill="var(--ifm-color-emphasis-700)">weiß nichts von Regeln · kennt kein DTO</text>
+  </g>
+</svg>
+
+Die dritte Zeile jeder Schicht ist die wichtigste: Sie sagt, was die Schicht **nicht** weiß. Genau daraus entsteht der Nutzen.
+
+- Der Service kennt keinen Statuscode. Deshalb lässt er sich prüfen, ohne dass ein Server läuft — und deshalb ließe sich dieselbe Fachlichkeit später auch von einer Kommandozeile aus benutzen.
+- Der Controller kennt kein SQL. Deshalb ändert sich an ihm nichts, wenn eine Abfrage umgebaut wird.
+
+:::info Wenn du Tutorial 03 gemacht hast
+Dann ist dir die Service-Schicht vertraut — dort ist sie entstanden, weil sich der Controller nicht testen ließ. Hier entsteht sie aus einem anderen Grund: weil es eine fachliche Regel gibt, für die es keinen Ort gibt. Zwei Wege, dasselbe Ziel.
+:::
+
+## Aufgaben
+
+### Aufgabe 1 – Der Lieferanten-Service
+
+<Task id="t4-ab04-a1-service">Erstelle im Package `service` die Klasse `SupplierService`. Sie übernimmt aus dem Controller: die beiden Repositories, den Mapper, und alles, was zwischen „Anfrage angekommen" und „Antwort steht fest" passiert.</Task>
+
+```java title="src/main/java/de/szut/webshop/service/SupplierService.java"
+@Service
+public class SupplierService {
+
+    private final SupplierRepository supplierRepository;
+    private final ArticleRepository articleRepository;
+    private final SupplierMapper mapper;
+
+    public SupplierService(SupplierRepository supplierRepository,
+                           ArticleRepository articleRepository,
+                           SupplierMapper mapper) {
+        this.supplierRepository = supplierRepository;
+        this.articleRepository = articleRepository;
+        this.mapper = mapper;
+    }
+
+    @Transactional
+    public SupplierDto create(CreateSupplierDto dto) {
+        Supplier saved = supplierRepository.save(mapper.toEntity(dto));
+        return mapper.toDto(saved, 0);
+    }
+
+    @Transactional(readOnly = true)
+    public List<SupplierDto> findAll() {
+        return supplierRepository.findAll().stream()
+                .map(supplier -> mapper.toDto(
+                        supplier,
+                        articleRepository.countBySupplierId(supplier.getId())))
+                .toList();
+    }
+}
+```
+
+| Annotation | Wirkung |
+|---|---|
+| `@Service` | Spring baut die Klasse einmal und reicht sie überall hinein, wo sie im Konstruktor steht |
+| `@Transactional` | Alles in der Methode gehört zu einem Vorgang: Entweder geht alles durch, oder nichts |
+| `@Transactional(readOnly = true)` | Dasselbe für Lesevorgänge — die Datenbank darf sich dann Arbeit sparen |
+
+<Task id="t4-ab04-a1-controller">Baue den `SupplierController` so um, dass er nur noch den `SupplierService` kennt. Beide Repositories und der Mapper verschwinden aus ihm.</Task>
+
+```java title="src/main/java/de/szut/webshop/controller/SupplierController.java"
+@RestController
+@RequestMapping("/api/v1/suppliers")
+public class SupplierController {
+
+    private final SupplierService service;
+
+    public SupplierController(SupplierService service) {
+        this.service = service;
+    }
+
+    @PostMapping
+    public ResponseEntity<SupplierDto> createSupplier(@RequestBody CreateSupplierDto dto) {
+        SupplierDto created = service.create(dto);
+
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(created.id())
+                .toUri();
+
+        return ResponseEntity.created(location).body(created);
+    }
+
+    @GetMapping
+    public List<SupplierDto> findAllSuppliers() {
+        return service.findAll();
+    }
+}
+```
+
+Der Controller ist wieder das, was er sein soll: entgegennehmen, weiterreichen, antworten. Die beiden übrigen Endpunkte fehlen noch — sie kommen in Aufgabe 3 dazu, wenn es die passenden Ausnahmen gibt.
+
+### Aufgabe 2 – Wenn etwas nicht da ist
+
+Bisher hat der Controller entschieden, was ein unbekannter Lieferant bedeutet — mit `orElse(ResponseEntity.notFound().build())`. Das war die falsche Schicht: *„gibt es nicht"* ist eine fachliche Aussage, `404` ist ihre Übersetzung ins HTTP.
+
+<Task id="t4-ab04-a2-exception">Erstelle im Package `service` die Ausnahme `SupplierNotFoundException`:</Task>
+
+```java title="src/main/java/de/szut/webshop/service/SupplierNotFoundException.java"
+public class SupplierNotFoundException extends RuntimeException {
+
+    public SupplierNotFoundException(Long id) {
+        super("Es gibt keinen Lieferanten mit der Kennung " + id + ".");
+    }
+}
+```
+
+<Task id="t4-ab04-a2-service">Ergänze im `SupplierService` zwei Methoden:</Task>
+
+```java
+    @Transactional(readOnly = true)
+    public SupplierDto findById(Long id) {
+        Supplier supplier = supplierRepository.findById(id)
+                .orElseThrow(() -> new SupplierNotFoundException(id));
+        return mapper.toDto(supplier, articleRepository.countBySupplierId(id));
+    }
+
+    /**
+     * Liefert die Entitaet - nur fuer andere Services gedacht, nicht fuer
+     * den Controller. Nach aussen geht ausschliesslich ein DTO.
+     */
+    @Transactional(readOnly = true)
+    public Supplier getEntity(Long id) {
+        return supplierRepository.findById(id)
+                .orElseThrow(() -> new SupplierNotFoundException(id));
+    }
+```
+
+### Aufgabe 3 – Erst scheitern lassen: das Löschen
+
+Jetzt die Frage aus dem Einkauf. Baue den Endpunkt zunächst **ohne** jede Prüfung — genau so, wie man es zuerst schreiben würde.
+
+<Task id="t4-ab04-a3-naiv">Ergänze im `SupplierService`:</Task>
+
+```java
+    @Transactional
+    public void deleteById(Long id) {
+        Supplier supplier = supplierRepository.findById(id)
+                .orElseThrow(() -> new SupplierNotFoundException(id));
+        supplierRepository.delete(supplier);
+    }
+```
+
+<Task id="t4-ab04-a3-controller">Ergänze im `SupplierController` die beiden fehlenden Endpunkte:</Task>
+
+```java
+    @GetMapping("/{id}")
+    public SupplierDto findSupplierById(@PathVariable Long id) {
+        return service.findById(id);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteSupplier(@PathVariable Long id) {
+        service.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+```
+
+<Task id="t4-ab04-a3-vorhersage">Lege dich fest, bevor du es ausprobierst: Was passiert bei `DELETE /api/v1/suppliers/1`, wenn dieser Lieferant noch Artikel hat? Schreibe deine Antwort auf.</Task>
+
+<Task id="t4-ab04-a3-test">Probiere es aus.</Task>
+
+Es kommt eine **500**. In der Konsole steht eine `DataIntegrityViolationException`, und ganz unten in der Ursachenkette die Meldung der Datenbank: Der Fremdschlüssel `article.supplier_id` verbietet es.
+
+Das ist einerseits beruhigend — die Daten bleiben heil, der Fremdschlüssel aus der Maklerdatenbank tut genau seine Arbeit. Andererseits ist die Antwort unbrauchbar:
+
+- **500** heißt „Serverfehler". Der Client hat aber nichts falsch gemacht — er hat nur etwas verlangt, das im Moment nicht geht.
+- Die Meldung nennt eine Fremdschlüsselbedingung. Damit kann im Einkauf niemand etwas anfangen.
+
+### Was hier der richtige Statuscode ist
+
+<Task id="t4-ab04-a3-fill">Ordne zu, bevor du weiterliest:</Task>
+
+<FillInTable
+  storageKey="t4-ab04-status"
+  spalteLinks="Was ist der Fall?"
+  spalteRechts="Dein Statuscode"
+  platzhalter="z. B. 200"
+  zeilen={[
+    {id: 'leer', links: 'Ein Pflichtfeld im Rumpf ist leer', loesung: '400', klartext: '400 Bad Request'},
+    {id: 'weg', links: 'Die angefragte Kennung gibt es nicht', loesung: '404', klartext: '404 Not Found'},
+    {id: 'konflikt', links: <>Die Anfrage ist richtig, passt aber nicht zum <b>aktuellen Zustand</b> der Daten</>, loesung: '409', klartext: '409 Conflict'},
+    {id: 'kaputt', links: 'Im Server ist etwas kaputt gegangen', loesung: '500', klartext: '500 Internal Server Error'},
+    {id: 'geloescht', links: 'Erfolgreich gelöscht, es gibt nichts zurückzugeben', loesung: '204', klartext: '204 No Content'},
+  ]}
+/>
+
+Der Löschversuch ist der dritte Fall. Die Anfrage war richtig formuliert, die Kennung existiert — es geht nur gerade nicht, weil noch Artikel daranhängen. Der Einkauf müsste erst die Artikel umhängen oder löschen. Das ist **409 Conflict**.
+
+<Task id="t4-ab04-a3-regel">Erstelle die Ausnahme `SupplierHasArticlesException` und **ersetze** `deleteById` durch die Fassung mit Prüfung:</Task>
+
+```java title="src/main/java/de/szut/webshop/service/SupplierHasArticlesException.java"
+public class SupplierHasArticlesException extends RuntimeException {
+
+    public SupplierHasArticlesException(Long id, long articleCount) {
+        super("Lieferant " + id + " hat noch " + articleCount
+                + " Artikel im Sortiment und kann nicht gelöscht werden.");
+    }
+}
+```
+
+```java title="in SupplierService"
+    @Transactional
+    public void deleteById(Long id) {
+        Supplier supplier = supplierRepository.findById(id)
+                .orElseThrow(() -> new SupplierNotFoundException(id));
+
+        long articleCount = articleRepository.countBySupplierId(id);
+        if (articleCount > 0) {
+            throw new SupplierHasArticlesException(id, articleCount);
+        }
+
+        supplierRepository.delete(supplier);
+    }
+```
+
+:::note Die Datenbank hätte es doch auch verhindert — wozu die Prüfung?
+Beide sind nötig, und sie haben verschiedene Aufgaben.
+
+Der **Fremdschlüssel** ist die letzte Verteidigungslinie. Er gilt für jeden Zugriff, auch für den aus einem anderen Programm oder von Hand über das Datenbankfenster. Er darf nie weg.
+
+Die **Prüfung im Service** ist die erste. Sie kennt den fachlichen Grund und kann ihn sagen. Der Fremdschlüssel kennt nur Spalten.
+
+Man baut also nicht das eine *statt* des anderen, sondern das eine *vor* dem anderen.
+:::
+
+### Aufgabe 4 – Ausnahmen in Statuscodes übersetzen
+
+Der Service wirft jetzt zwei Ausnahmen und kennt weiterhin keinen einzigen Statuscode. Die Übersetzung passiert an einer eigenen Stelle.
+
+<Task id="t4-ab04-a4">Erstelle im Package `controller` die Klasse `ApiExceptionHandler`:</Task>
+
+```java title="src/main/java/de/szut/webshop/controller/ApiExceptionHandler.java"
+package de.szut.webshop.controller;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import de.szut.webshop.service.SupplierHasArticlesException;
+import de.szut.webshop.service.SupplierNotFoundException;
+
+@RestControllerAdvice
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public class ApiExceptionHandler {
+
+    @ExceptionHandler(SupplierNotFoundException.class)
+    public ProblemDetail handleNotFound(SupplierNotFoundException ex) {
+        ProblemDetail problem =
+                ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problem.setTitle("Nicht gefunden");
+        return problem;
+    }
+
+    @ExceptionHandler(SupplierHasArticlesException.class)
+    public ProblemDetail handleConflict(SupplierHasArticlesException ex) {
+        ProblemDetail problem =
+                ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problem.setTitle("Löschen nicht möglich");
+        return problem;
+    }
+}
+```
+
+`@RestControllerAdvice` gilt für **alle** Controller: Was dort geworfen wird und hier eine passende Methode findet, wird hier beantwortet. `ProblemDetail` ist das Standardformat für Fehlerantworten nach RFC 9457 — dasselbe, das Spring von sich aus liefert.
+
+:::warning `@Order` ist hier keine Verzierung
+In deiner `application.properties` steht seit Arbeitsblatt 01 `spring.mvc.problemdetails.enabled=true`. Damit bringt Spring **einen eigenen Ausnahmebehandler** mit, und der hat Vorrang.
+
+Für die beiden Ausnahmen oben ist das gleichgültig — Spring kennt sie nicht. In Aufgabe 5 kommt aber eine Methode dazu, für die Spring sich zuständig fühlt. Ohne `@Order(Ordered.HIGHEST_PRECEDENCE)` käme deine Methode dann nie an die Reihe, und du würdest lange suchen, warum deine Fehlermeldung nicht erscheint.
+:::
+
+<Task id="t4-ab04-a4-test">Probiere beide Fälle aus: `GET /api/v1/suppliers/999` und `DELETE` eines Lieferanten mit Artikeln.</Task>
+
+```json
+{
+  "detail": "Lieferant 1 hat noch 1 Artikel im Sortiment und kann nicht gelöscht werden.",
+  "instance": "/api/v1/suppliers/1",
+  "status": 409,
+  "title": "Löschen nicht möglich"
+}
+```
+
+### Aufgabe 5 – Eingaben prüfen lassen
+
+Bleiben die Felder im Rumpf. Ein leerer Name, ein negativer Preis, eine fehlende Anschrift — das ließe sich alles von Hand abfragen. Für so etwas gibt es aber eine fertige Lösung: **Bean Validation**. Die Abhängigkeit hast du in Arbeitsblatt 01 schon mitgewählt.
+
+Die Regeln stehen als Annotationen an den **Eingabe-DTOs** — dort, wo die Daten hereinkommen.
+
+<Task id="t4-ab04-a5-dto">Ergänze die drei Create-DTOs:</Task>
+
+```java title="src/main/java/de/szut/webshop/dto/CreateContactDto.java"
+public record CreateContactDto(
+
+        @NotBlank(message = "Die Straße darf nicht leer sein.")
+        String street,
+
+        @NotBlank(message = "Die Postleitzahl darf nicht leer sein.")
+        String postcode,
+
+        @NotBlank(message = "Der Ort darf nicht leer sein.")
+        String city,
+
+        String phone) {
+}
+```
+
+```java title="src/main/java/de/szut/webshop/dto/CreateSupplierDto.java"
+public record CreateSupplierDto(
+
+        @NotBlank(message = "Der Name darf nicht leer sein.")
+        String name,
+
+        @NotNull(message = "Zu einem Lieferanten gehört eine Anschrift.")
+        @Valid
+        CreateContactDto contact) {
+}
+```
+
+```java title="src/main/java/de/szut/webshop/dto/CreateArticleDto.java"
+public record CreateArticleDto(
+
+        @NotBlank(message = "Die Bezeichnung darf nicht leer sein.")
+        String designation,
+
+        @NotNull(message = "Ein Artikel braucht einen Preis.")
+        @Positive(message = "Der Preis muss größer als 0 sein.")
+        BigDecimal price) {
+}
+```
+
+| Annotation | Prüft |
+|---|---|
+| `@NotNull` | Das Feld ist überhaupt da |
+| `@NotBlank` | Nicht `null`, nicht leer, nicht nur Leerzeichen |
+| `@Positive` | Größer als null |
+| `@Valid` | Prüfe auch **im** verschachtelten Objekt weiter |
+
+Achte auf die Pakete — sie sehen sich zum Verwechseln ähnlich:
+
+```java
+import jakarta.validation.Valid;                    // nur @Valid
+import jakarta.validation.constraints.NotBlank;     // alle Prüfregeln
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+```
+
+`@Valid` an `contact` ist leicht zu übersehen und leicht falsch zu verstehen. `@NotNull` allein prüft nur, dass überhaupt eine Anschrift mitgeschickt wurde — ob deren Felder gefüllt sind, interessiert es nicht. Erst `@Valid` steigt eine Ebene tiefer.
+
+<Task id="t4-ab04-a5-controller">Setze im `SupplierController` ein `@Valid` vor den `@RequestBody`:</Task>
+
+```java
+    public ResponseEntity<SupplierDto> createSupplier(
+            @Valid @RequestBody CreateSupplierDto dto) {
+```
+
+<Task id="t4-ab04-a5-probe">Schicke einen Lieferanten mit leerem Namen und leerem Ort. Sieh dir die Antwort an.</Task>
+
+```json
+{
+  "detail": "Invalid request content.",
+  "status": 400,
+  "title": "Bad Request"
+}
+```
+
+Immerhin eine `400`. Aber welches Feld war es? Die Antwort verrät es nicht — bei zwei Feldern ärgerlich, bei einem Formular mit fünfzehn unbrauchbar.
+
+<Task id="t4-ab04-a5-handler">Ergänze im `ApiExceptionHandler` eine dritte Methode:</Task>
+
+```java
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ProblemDetail handleValidation(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new LinkedHashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach(
+                error -> errors.put(error.getField(), error.getDefaultMessage()));
+
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST, "Die Anfrage enthält ungültige Felder.");
+        problem.setTitle("Ungültige Eingabe");
+        problem.setProperty("errors", errors);
+        return problem;
+    }
+```
+
+<Task id="t4-ab04-a5-again">Schicke dieselbe Anfrage noch einmal.</Task>
+
+```json
+{
+  "detail": "Die Anfrage enthält ungültige Felder.",
+  "instance": "/api/v1/suppliers",
+  "status": 400,
+  "title": "Ungültige Eingabe",
+  "errors": {
+    "name": "Der Name darf nicht leer sein.",
+    "contact.city": "Der Ort darf nicht leer sein."
+  }
+}
+```
+
+Der Pfad `contact.city` zeigt genau auf das Feld im verschachtelten Objekt — das ist die Arbeit von `@Valid`.
+
+:::danger Wenn die Antwort weiterhin „Invalid request content." lautet
+Dann fehlt `@Order(Ordered.HIGHEST_PRECEDENCE)` an deinem `ApiExceptionHandler`. Springs eigener Behandler war schneller.
+:::
+
+### Aufgabe 6 – Der Artikel-Service
+
+Der `ArticleController` hat dieselbe Behandlung verdient — und dabei löst sich der offene Punkt aus Arbeitsblatt 03 auf.
+
+<Task id="t4-ab04-a6-service">Erstelle im Package `service` die Klasse `ArticleService`:</Task>
+
+```java title="src/main/java/de/szut/webshop/service/ArticleService.java"
+@Service
+public class ArticleService {
+
+    private final ArticleRepository articleRepository;
+    private final SupplierService supplierService;
+    private final ArticleMapper mapper;
+
+    public ArticleService(ArticleRepository articleRepository,
+                          SupplierService supplierService,
+                          ArticleMapper mapper) {
+        this.articleRepository = articleRepository;
+        this.supplierService = supplierService;
+        this.mapper = mapper;
+    }
+
+    @Transactional
+    public ArticleDto create(Long supplierId, CreateArticleDto dto) {
+        Supplier supplier = supplierService.getEntity(supplierId);
+        Article saved = articleRepository.save(mapper.toEntity(dto, supplier));
+        return mapper.toDto(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ArticleDto> findAllBySupplier(Long supplierId) {
+        // Wirft, wenn es den Lieferanten nicht gibt - eine leere Liste waere
+        // hier die falsche Antwort: Sie behauptet, der Lieferant existiere.
+        supplierService.getEntity(supplierId);
+
+        return articleRepository.findAllBySupplierIdOrderByIdDesc(supplierId).stream()
+                .map(mapper::toDto)
+                .toList();
+    }
+}
+```
+
+Der `ArticleService` fragt nicht selbst im `SupplierRepository` nach, sondern beim `SupplierService`. Damit gilt die Regel „unbekannter Lieferant → `SupplierNotFoundException`" an genau **einer** Stelle. Aus dem `500` von Arbeitsblatt 03 ist ohne weiteres Zutun eine `404` geworden.
+
+<Task id="t4-ab04-a6-controller">Baue den `ArticleController` so um, dass er nur noch den `ArticleService` kennt — und setze auch dort `@Valid` vor den `@RequestBody`.</Task>
+
+<Task id="t4-ab04-a6-test">Probiere `POST /api/v1/suppliers/999/articles` und `GET /api/v1/suppliers/999/articles`.</Task>
+
+Beide antworten jetzt mit `404` und der Meldung aus dem Service.
+
+### Aufgabe 7 – Die Anfragen zum Ausprobieren
+
+Für die Testfälle brauchst du fünf Anfragen, die es noch nicht gibt.
+
+<Task id="t4-ab04-a7-requests">Ergänze `requests.http`:</Task>
+
+```http title="requests.http"
+### Unbekannter Lieferant -> 404
+GET http://localhost:8080/api/v1/suppliers/999
+
+### Leerer Name und leerer Ort -> 400 mit Feldnamen
+POST http://localhost:8080/api/v1/suppliers
+Content-Type: application/json
+
+{
+  "name": "  ",
+  "contact": {
+    "street": "Hafenstr. 12",
+    "postcode": "28217",
+    "city": ""
+  }
+}
+
+### Ganz ohne Anschrift -> 400
+POST http://localhost:8080/api/v1/suppliers
+Content-Type: application/json
+
+{
+  "name": "Ohne Anschrift GmbH"
+}
+
+### Preis 0 -> 400
+POST http://localhost:8080/api/v1/suppliers/1/articles
+Content-Type: application/json
+
+{
+  "designation": "Kostenlos",
+  "price": 0
+}
+
+### Lieferant mit Artikeln loeschen -> 409
+DELETE http://localhost:8080/api/v1/suppliers/1
+```
+
+Für den Grenzwert aus TF-07 änderst du im vierten Block `0` in `0.01` und
+schickst ihn erneut ab.
+
+### Aufgabe 8 – Testfälle
+
+<Task id="t4-ab04-a8">Führe die Testfälle aus.</Task>
+
+<TestTable
+  storageKey="t4-ab04-tests"
+  tests={[
+    {
+      id: 'TF-01',
+      beschreibung: 'Der Controller kennt kein Repository mehr',
+      vorbedingung: 'Umbau abgeschlossen',
+      schritte: ['Beide Controller-Klassen durchsehen'],
+      erwartet: <>Im Konstruktor steht jeweils nur noch ein Service. Kein <code>Repository</code>, kein <code>Mapper</code>.</>
+    },
+    {
+      id: 'TF-02',
+      beschreibung: 'Unbekannter Lieferant beim Abrufen',
+      vorbedingung: 'Es gibt keinen Lieferanten 999',
+      schritte: ['GET auf /api/v1/suppliers/999'],
+      erwartet: <>Status <code>404</code>, Titel <code>Nicht gefunden</code>, und die Meldung nennt die Kennung <code>999</code>.</>
+    },
+    {
+      id: 'TF-03',
+      beschreibung: 'Unbekannter Lieferant beim Anlegen eines Artikels',
+      vorbedingung: 'Es gibt keinen Lieferanten 999',
+      schritte: ['POST auf /api/v1/suppliers/999/articles'],
+      erwartet: <>Status <code>404</code> — nicht mehr <code>500</code> wie in Arbeitsblatt 03.</>
+    },
+    {
+      id: 'TF-04',
+      beschreibung: 'Löschen mit Artikeln wird verweigert',
+      vorbedingung: 'Lieferant 1 hat mindestens einen Artikel',
+      schritte: ['DELETE auf /api/v1/suppliers/1'],
+      erwartet: <>Status <code>409</code>. Die Meldung nennt die Anzahl der Artikel. In der Konsole steht <strong>keine</strong> <code>DataIntegrityViolationException</code> — es wurde gar nicht erst gelöscht.</>
+    },
+    {
+      id: 'TF-05',
+      beschreibung: 'Löschen ohne Artikel — die gefüllte Raute',
+      vorbedingung: 'Ein Lieferant ohne Artikel wurde angelegt',
+      schritte: ['DELETE auf diesen Lieferanten', 'Im Datenbankfenster die Tabelle contact öffnen'],
+      erwartet: <>Status <code>204</code> ohne Rumpf. Die zugehörige Zeile in <code>contact</code> ist <strong>verschwunden</strong> — ohne dass jemand sie gelöscht hat.</>
+    },
+    {
+      id: 'TF-06',
+      beschreibung: 'Leeres Pflichtfeld',
+      vorbedingung: 'Anwendung läuft',
+      schritte: ['POST eines Lieferanten mit name = "   " und leerem Ort'],
+      erwartet: <>Status <code>400</code>, und unter <code>errors</code> stehen <strong>beide</strong> Felder — darunter <code>contact.city</code>.</>
+    },
+    {
+      id: 'TF-07',
+      beschreibung: 'Grenzwert beim Preis',
+      vorbedingung: 'Lieferant 1 existiert',
+      schritte: ['Artikel mit price = 0 anlegen', 'Artikel mit price = 0.01 anlegen'],
+      erwartet: <><code>0</code> ergibt <code>400</code>, <code>0.01</code> ergibt <code>201</code>. <code>@Positive</code> heißt echt größer als null.</>
+    },
+    {
+      id: 'TF-08',
+      beschreibung: 'Fehlende Anschrift',
+      vorbedingung: 'Anwendung läuft',
+      schritte: ['POST eines Lieferanten ganz ohne Feld contact'],
+      erwartet: <>Status <code>400</code> mit der Meldung zu <code>contact</code>.</>
+    },
+  ]}
+/>
+
+### Zusatzaufgabe – Der Endpunkt, auf den `Location` zeigt
+
+:::tip Fünf Minuten, und eine Unsauberkeit ist weg
+Beim Anlegen eines Artikels antwortet der Server mit einer `Location`-Kopfzeile
+wie `…/api/v1/suppliers/1/articles/5` — und dort ist nichts. Ein `Location`,
+das ins Leere zeigt, ist eine falsche Auskunft.
+
+<Task id="t4-ab04-zusatz-artikel">Baue den fehlenden Endpunkt: `GET /api/v1/suppliers/&#123;supplierId&#125;/articles/&#123;id&#125;` liefert einen einzelnen Artikel — und eine `404`, wenn es ihn nicht gibt oder er zu einem anderen Lieferanten gehört.</Task>
+
+Die zweite Hälfte ist die interessantere: Was soll passieren, wenn es den
+Artikel gibt, er aber bei einem anderen Lieferanten steht? Begründe deine
+Wahl zwischen `404` und `403`.
+:::
+
+### Zusatzaufgabe – Blättern im Sortiment
+
+:::tip Für alle, die schneller sind
+Ein Lieferant mit achthundert Artikeln liefert im Moment achthundert Artikel auf einmal. Im Gästebuch hast du das gelöst.
+
+<Task id="t4-ab04-zusatz">Rüste `GET /api/v1/suppliers/{id}/articles` auf `Page<ArticleDto>` um: `Pageable` in die Signatur, `@PageableDefault(size = 20)`, und im Repository eine Methode, die ein `Page` zurückgibt.</Task>
+
+Überlege dabei: Welche Methode im Repository brauchst du, und wie heißt sie? Der Rest folgt dem Muster aus Tutorial 02.
+:::
+
+<details>
+<summary>Lösungsweg der Zusatzaufgabe</summary>
+
+Im Repository kommt eine zweite Methode dazu — der Name ist derselbe, nur die Rückgabe und ein Parameter ändern sich. Die Sortierung steckt jetzt im `Pageable` und gehört deshalb nicht mehr in den Namen:
+
+```java
+Page<Article> findAllBySupplierId(Long supplierId, Pageable pageable);
+```
+
+Im Service:
+
+```java
+    @Transactional(readOnly = true)
+    public Page<ArticleDto> findAllBySupplier(Long supplierId, Pageable pageable) {
+        supplierService.getEntity(supplierId);
+        return articleRepository.findAllBySupplierId(supplierId, pageable)
+                .map(mapper::toDto);
+    }
+```
+
+`Page.map` gibt es fertig — die Seitenangaben bleiben dabei erhalten, nur der Inhalt wird übersetzt.
+
+Im Controller:
+
+```java
+    @GetMapping
+    public Page<ArticleDto> findArticlesOfSupplier(
+            @PathVariable Long supplierId,
+            @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.DESC)
+            Pageable pageable) {
+        return service.findAllBySupplier(supplierId, pageable);
+    }
+```
+
+</details>
+
+---
+
+## Musterlösung
+
+Hier steht der vollständige Quelltext der Anwendung nach allen vier Arbeitsblättern: die drei Entitäten, beide Repositories, alle DTOs, beide Mapper, beide Services, die Ausnahmen, beide Controller, der `ApiExceptionHandler`, die `application.properties` und die `docker-compose.yml`.
+
+:::warning Erst selbst versuchen
+Eine Lösung zu lesen fühlt sich an wie Verstehen, ist aber keines. Wer sie aufschlägt, bevor er selbst gescheitert ist, nimmt sich genau den Teil weg, an dem man etwas lernt.
+
+Sinnvoll ist sie in zwei Fällen: **nach** der eigenen Lösung zum Vergleichen — oder wenn du an einer Stelle wirklich nicht weiterkommst. Dann sieh dir nur diese eine Datei an und arbeite danach selbst weiter.
+:::
+
+<Solution daten={loesung} />

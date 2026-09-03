@@ -8,6 +8,7 @@ import de.szut.gaestebuch.model.GuestbookEntry;
 import de.szut.gaestebuch.repository.GuestbookEntryRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -34,7 +35,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
  * Kopfzeilen und Rumpf.
  */
 @RestController
-@RequestMapping("/api/v1/guestbook")
+@RequestMapping("/api/v1/guestbook-entries")
 public class GuestbookEntryController {
 
     private final GuestbookEntryRepository repository;
@@ -70,7 +71,7 @@ public class GuestbookEntryController {
     public ResponseEntity<Page<GuestbookEntry>> findAllEntries(
             @RequestParam(required = false) Integer year,
             @PageableDefault(size = 10, sort = "date", direction = Sort.Direction.DESC)
-            Pageable pageable) {
+            @ParameterObject Pageable pageable) {
 
         if (year == null) {
             return ResponseEntity.ok(repository.findAll(pageable));

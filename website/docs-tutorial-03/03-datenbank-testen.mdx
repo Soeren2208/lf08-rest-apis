@@ -237,7 +237,7 @@ void setDateIfMissing() {
 | Eintrag mit eigenem Datum | wird überschrieben | bleibt erhalten |
 
 :::note Im Betrieb ändert sich nichts
-Ein Eintrag, der über `POST /api/v1/guestbook` hereinkommt, hat kein `date` im Rumpf — das Feld ist `null`, und `@PrePersist` setzt den aktuellen Zeitpunkt. Genau wie vorher.
+Ein Eintrag, der über `POST /api/v1/guestbook-entries` hereinkommt, hat kein `date` im Rumpf — das Feld ist `null`, und `@PrePersist` setzt den aktuellen Zeitpunkt. Genau wie vorher.
 
 `updatable = false` gilt unverändert weiter: Das Datum lässt sich nachträglich nicht ändern. Nur **beim Anlegen** darf es jetzt vorgegeben werden.
 :::
@@ -367,7 +367,7 @@ Aus der Behauptung in Tutorial 2 ist damit ein **überprüfbarer Sachverhalt** g
       id: 'TF-02',
       beschreibung: 'Die echten Daten bleiben unberührt',
       vorbedingung: 'In der Datei-Datenbank stehen Einträge',
-      schritte: ['Anzahl der Einträge über GET /api/v1/guestbook notieren', 'Alle Tests ausführen', 'Erneut abrufen'],
+      schritte: ['Anzahl der Einträge über GET /api/v1/guestbook-entries notieren', 'Alle Tests ausführen', 'Erneut abrufen'],
       erwartet: <>Dieselbe Anzahl wie vorher. Die Tests haben nichts angelegt und nichts gelöscht.</>
     },
     {

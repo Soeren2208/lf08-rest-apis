@@ -1,9 +1,8 @@
-package de.szut.webshop.article;
+package de.szut.webshop.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import de.szut.webshop.supplier.Supplier;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -28,7 +27,7 @@ public class Article {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long aid;
+    private Long id;
 
     private String designation;
 
@@ -44,7 +43,7 @@ public class Article {
 
     /** Die Besitzerseite der Beziehung: Hier steht der Fremdschluessel. */
     @ManyToOne
-    @JoinColumn(name = "supplier_id")
+    @JoinColumn(name = "supplier_id", nullable = false)
     private Supplier supplier;
 
     @PrePersist

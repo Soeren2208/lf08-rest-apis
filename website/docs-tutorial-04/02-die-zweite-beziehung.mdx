@@ -1,0 +1,558 @@
+---
+title: "AB 02 – Die zweite Beziehung"
+sidebar_label: "02 – Die zweite Beziehung"
+slug: 02-die-zweite-beziehung
+sidebar_position: 2
+---
+
+# AB 02 – Die zweite Beziehung
+
+## Die Situation
+
+> Der Katalog braucht Artikel. Die Einkaufsabteilung hat dazu einen weiteren Satz beigesteuert:
+>
+> *„Jeder Artikel kommt von genau einem Lieferanten. Ein Lieferant kann viele Artikel haben — oder noch gar keinen, wenn wir ihn gerade erst aufgenommen haben."*
+>
+> Klingt nach einer Annotation Arbeit. Ist es auch. Und danach läuft dein Webshop nicht mehr.
+
+## Lernziele
+
+Nach Bearbeitung dieses Arbeitsblatts kannst du:
+
+- eine 1:n-Beziehung mit `@ManyToOne` und `@OneToMany` abbilden und `mappedBy` erklären
+- den Unterschied zwischen `FetchType.LAZY` und `FetchType.EAGER` beschreiben
+- eine Fehlermeldung sichtbar machen, die die Konsole von sich aus nicht zeigt
+- die Meldung `Cannot lazily initialize collection …` lesen und die Ursache benennen
+- begründen, warum `EAGER` das Problem nicht löst, sondern ein zweites erzeugt
+- erklären, warum eine JPA-Entität kein gutes Antwortformat ist
+
+## Das Klassendiagramm wächst
+
+<svg viewBox="0 0 720 400" width="100%" role="img"
+     aria-label="Klassendiagramm mit drei Klassen: Supplier besitzt genau einen Contact über eine Komposition, und Supplier steht mit null bis beliebig vielen Article über eine einfache Assoziation in Beziehung."
+     fontFamily="var(--ifm-font-family-base)">
+
+  {/* ---------- Supplier ---------- */}
+  <g>
+    <rect x="40" y="62" width="240" height="86" rx="4"
+          fill="var(--ifm-background-surface-color)"
+          stroke="var(--ifm-color-emphasis-700)" strokeWidth="1.5"/>
+    <line x1="40" y1="92" x2="280" y2="92"
+          stroke="var(--ifm-color-emphasis-700)" strokeWidth="1.5"/>
+    <text x="160" y="84" textAnchor="middle" fontSize="15" fontWeight="700"
+          fill="var(--ifm-font-color-base)">Supplier</text>
+    <text x="54" y="114" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">- id: Long</text>
+    <text x="54" y="136" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">- name: String</text>
+  </g>
+
+  {/* ---------- Contact ---------- */}
+  <g>
+    <rect x="440" y="18" width="240" height="174" rx="4"
+          fill="var(--ifm-background-surface-color)"
+          stroke="var(--ifm-color-emphasis-700)" strokeWidth="1.5"/>
+    <line x1="440" y1="48" x2="680" y2="48"
+          stroke="var(--ifm-color-emphasis-700)" strokeWidth="1.5"/>
+    <text x="560" y="40" textAnchor="middle" fontSize="15" fontWeight="700"
+          fill="var(--ifm-font-color-base)">Contact</text>
+    <text x="454" y="70" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">- id: Long</text>
+    <text x="454" y="92" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">- street: String</text>
+    <text x="454" y="114" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">- postcode: String</text>
+    <text x="454" y="136" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">- city: String</text>
+    <text x="454" y="158" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">- phone: String</text>
+  </g>
+
+  {/* ---------- Komposition Supplier - Contact ---------- */}
+  <polygon points="280,105 300,96 320,105 300,114"
+           fill="var(--ifm-color-emphasis-700)"
+           stroke="var(--ifm-color-emphasis-700)" strokeWidth="1.5"/>
+  <line x1="320" y1="105" x2="440" y2="105"
+        stroke="var(--ifm-color-emphasis-700)" strokeWidth="1.5"/>
+  <text x="328" y="98" fontSize="13" fontWeight="700"
+        fill="var(--ifm-font-color-base)">1</text>
+  <text x="432" y="98" textAnchor="end" fontSize="13" fontWeight="700"
+        fill="var(--ifm-font-color-base)">1</text>
+  <text x="380" y="126" textAnchor="middle" fontSize="12.5" fontStyle="italic"
+        fill="var(--ifm-color-emphasis-700)">contact</text>
+
+  {/* ---------- Article ---------- */}
+  <g>
+    <rect x="40" y="240" width="240" height="152" rx="4"
+          fill="var(--ifm-background-surface-color)"
+          stroke="var(--ifm-color-primary)" strokeWidth="2"/>
+    <line x1="40" y1="270" x2="280" y2="270"
+          stroke="var(--ifm-color-primary)" strokeWidth="2"/>
+    <text x="160" y="262" textAnchor="middle" fontSize="15" fontWeight="700"
+          fill="var(--ifm-color-primary)">Article</text>
+    <text x="54" y="292" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">- id: Long</text>
+    <text x="54" y="314" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">- designation: String</text>
+    <text x="54" y="336" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">- price: BigDecimal</text>
+    <text x="54" y="358" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">- createdAt: LocalDateTime</text>
+    <text x="54" y="380" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">- updatedAt: LocalDateTime</text>
+  </g>
+
+  {/* ---------- Assoziation Supplier - Article ---------- */}
+  <line x1="160" y1="148" x2="160" y2="240"
+        stroke="var(--ifm-color-emphasis-700)" strokeWidth="1.5"/>
+  <text x="170" y="168" fontSize="13" fontWeight="700"
+        fill="var(--ifm-font-color-base)">1</text>
+  <text x="170" y="232" fontSize="13" fontWeight="700"
+        fill="var(--ifm-font-color-base)">0..*</text>
+  <text x="150" y="200" textAnchor="end" fontSize="12.5" fontStyle="italic"
+        fill="var(--ifm-color-emphasis-700)">articles</text>
+</svg>
+
+Sieh dir die beiden Linien nebeneinander an. Sie sagen Verschiedenes:
+
+| | zu `Contact` | zu `Article` |
+|---|---|---|
+| Notation | gefüllte Raute | schlichte Linie |
+| Name | Komposition | Assoziation |
+| Multiplizität | `1` — `1` | `1` — `0..*` |
+| Was passiert beim Löschen des Lieferanten? | Die Anschrift verschwindet mit | **offen** — die Artikel gehören ihm nicht |
+
+Die letzte Zeile ist keine Kleinigkeit. Was mit den Artikeln geschehen soll, wenn ein Lieferant aus dem Katalog fliegt, ist eine fachliche Frage — und das Diagramm beantwortet sie bewusst nicht. Du beantwortest sie in Arbeitsblatt 04.
+
+## Aufgaben
+
+### Aufgabe 1 – Die Artikel-Entität
+
+<Task id="t4-ab02-a1-article">Erstelle im Package `model` die Klasse `Article`:</Task>
+
+```java title="src/main/java/de/szut/webshop/model/Article.java"
+package de.szut.webshop.model;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Table(name = "article")
+@Getter
+@Setter
+@NoArgsConstructor
+public class Article {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String designation;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal price;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    @ManyToOne
+    @JoinColumn(name = "supplier_id", nullable = false)
+    private Supplier supplier;
+
+    @PrePersist
+    void setTimestampsOnInsert() {
+        LocalDateTime now = LocalDateTime.now();
+        if (createdAt == null) {
+            createdAt = now;
+        }
+        updatedAt = now;
+    }
+
+    @PreUpdate
+    void setTimestampOnUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+}
+```
+
+:::info `BigDecimal` statt `double`
+`double` rechnet im Binärsystem und kann `0,10` nicht genau darstellen. Drei mal zehn Cent ergeben damit `0.30000000000000004`. Bei einem Warenkorb summiert sich so etwas — deshalb ist Geld in Java ein `BigDecimal`.
+
+`precision = 10, scale = 2` sagt der Datenbank: zehn Stellen insgesamt, davon zwei hinter dem Komma. In der Tabelle wird daraus `numeric(10,2)`.
+:::
+
+:::info Die beiden Zeitstempel-Methoden
+Im Gästebuch hat `@CreationTimestamp` das Datum gesetzt. Hier stehen zwei eigene Methoden, und beide werden **von JPA aufgerufen**, nicht von dir:
+
+| Annotation | Wann die Methode läuft |
+|---|---|
+| `@PrePersist` | einmal, unmittelbar bevor die Zeile zum ersten Mal in die Datenbank geschrieben wird |
+| `@PreUpdate` | vor jedem weiteren Speichern derselben Zeile |
+
+Die Methoden sind absichtlich `void` und ohne Sichtbarkeitswort (also *package-private*): Sie gehen niemanden außerhalb der Klasse etwas an.
+
+Der Vorteil gegenüber `@CreationTimestamp`: Die Prüfung `if (createdAt == null)` lässt einen bereits gesetzten Wert stehen. Beim Importieren alter Datenbestände ist das der Unterschied zwischen „Preis von 2019" und „alle Preise von heute".
+:::
+
+<Task id="t4-ab02-a1-mappedby">Ergänze in `Supplier` die Gegenrichtung:</Task>
+
+```java title="ergänzen in Supplier.java — als weiteres Feld, unter contact"
+    @OneToMany(mappedBy = "supplier", fetch = FetchType.LAZY)
+    private List<Article> articles = new ArrayList<>();
+```
+
+Dazu kommen vier neue Importe in `Supplier.java`:
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToMany;
+```
+
+:::note Nur **eine** Seite trägt den Fremdschlüssel
+In der Datenbank gibt es für eine 1:n-Beziehung genau eine Spalte: `article.supplier_id`. In Java sieht es dagegen nach zwei Beziehungen aus — `Article.supplier` und `Supplier.articles`.
+
+`mappedBy = "supplier"` klärt das auf. Es heißt: *„Diese Beziehung wird woanders verwaltet, nämlich vom Feld `supplier` in `Article`. Ich bin nur die Gegenrichtung."*
+
+Ohne `mappedBy` würde Hibernate zwei getrennte Beziehungen annehmen und dafür eine dritte Tabelle anlegen. Wer im Datenbankfenster plötzlich eine Tabelle `supplier_articles` findet, hat genau das vergessen.
+:::
+
+### Aufgabe 2 – Erst schätzen
+
+Du hast am `SupplierController` **nichts** geändert. Die drei Endpunkte aus Arbeitsblatt 01 stehen unverändert da.
+
+<Task id="t4-ab02-a2">Lege dich fest, bevor du startest: Was passiert bei einem `GET /api/v1/suppliers`, wenn noch **kein einziger Artikel** in der Datenbank steht? Schreibe deine Antwort auf.</Task>
+
+Die naheliegende Erwartung: Es ändert sich nichts, denn es gibt ja keine Artikel.
+
+### Aufgabe 3 – Ausprobieren
+
+<Task id="t4-ab02-a3-start">Starte die Anwendung neu und rufe `GET /api/v1/suppliers` auf.</Task>
+
+<Task id="t4-ab02-a3-single">Rufe auch `GET /api/v1/suppliers/1` auf.</Task>
+
+Beide antworten mit derselben Meldung — nur das Feld `instance` unterscheidet sich:
+
+```json
+{
+  "detail": "Failed to write request",
+  "instance": "/api/v1/suppliers",
+  "status": 500,
+  "title": "Internal Server Error"
+}
+```
+
+Der `POST` funktioniert weiterhin. Nur die beiden `GET`-Endpunkte sind kaputt — ohne dass eine einzige Zeile in ihnen geändert wurde, und ohne dass ein Artikel existiert.
+
+:::danger Und die Konsole schweigt
+Sieh in der Konsole nach. Dort steht **kein Stacktrace**, keine Ausnahme, nichts. Nur die SQL-Abfrage, die sauber durchgelaufen ist.
+
+Das ist der unangenehmste Fall beim Suchen: Die Anwendung weiß, was schiefgelaufen ist, sagt es aber niemandem.
+:::
+
+### Aufgabe 4 – Die Meldung sichtbar machen
+
+Spring hat die Ursache — sie wird nur auf einer Stufe protokolliert, die standardmäßig nicht ausgegeben wird.
+
+<Task id="t4-ab02-a4-debug">Hänge in `application.properties` diese Zeile an:</Task>
+
+```properties
+logging.level.org.springframework.web=DEBUG
+```
+
+<Task id="t4-ab02-a4-again">Starte neu und rufe `GET /api/v1/suppliers` noch einmal auf. Suche in der Konsole nach `Could not write JSON`.</Task>
+
+Jetzt steht dort:
+
+```text
+Resolved [org.springframework.http.converter.HttpMessageNotWritableException:
+  Could not write JSON: Cannot lazily initialize collection of role
+  'de.szut.webshop.model.Supplier.articles' with key '1' (no session)]
+```
+
+<Task id="t4-ab02-a4-lesen">Lies die Meldung Wort für Wort und beantworte: Welche Klasse, welches Feld, und was genau ging nicht?</Task>
+
+:::note Die Ausnahme hat einen Namen — er steht nur nicht da
+Was du siehst, ist die `HttpMessageNotWritableException` von Spring: „Ich
+konnte die Antwort nicht schreiben." Dahinter steckt aber Hibernates
+**`LazyInitializationException`**, und die Meldung nach dem Doppelpunkt ist
+ihre.
+
+Der Name taucht in der Konsole nicht auf, weil Spring nur den Text der
+Ursache übernimmt. Zum Nachschlagen im Netz ist er trotzdem der richtige
+Suchbegriff — er ist einer der bekanntesten Fehler im Umgang mit JPA.
+:::
+
+### Was da passiert ist
+
+`FetchType.LAZY` heißt: Hibernate lädt die Artikel **nicht** mit, wenn es den Lieferanten lädt. Statt der Liste setzt es einen Platzhalter ein, der so tut, als wäre er die Liste. Fragt jemand ihn nach seinem Inhalt, geht er zur Datenbank und holt ihn nach.
+
+Das ist eine gute Idee — solange jemand da ist, der zur Datenbank gehen kann. Diese Verbindung heißt *Session*, und sie wird geschlossen, sobald deine Methode im Controller fertig ist.
+
+Danach kommt Jackson und wandelt das Ergebnis in JSON um. Es geht Feld für Feld durch den Lieferanten, kommt bei `articles` an, fragt den Platzhalter nach seinem Inhalt — und der hat niemanden mehr, den er fragen könnte. **Genau das steht in der Meldung: `(no session)`.**
+
+Dass noch gar keine Artikel existieren, spielt keine Rolle. Der Platzhalter weiß es nicht; um es zu wissen, müsste er nachsehen.
+
+:::note Warum ist die Verbindung schon zu?
+Wegen einer Zeile, die du in Arbeitsblatt 01 selbst eingetragen hast (und die schon im Gästebuch stand):
+
+```properties
+spring.jpa.open-in-view=false
+```
+
+Mit `true` bliebe die Session offen, bis die Antwort vollständig geschrieben ist — der Fehler träte nicht auf. Genau das ist der Grund, warum diese Einstellung so verbreitet ist, und zugleich der Grund, warum sie hier auf `false` steht: Sie verdeckt einen Entwurfsfehler, statt ihn zu beheben. Datenbankzugriffe während des Schreibens der Antwort sind nicht das, was man will — man sieht sie nur nicht mehr.
+:::
+
+### Aufgabe 5 – Die naheliegende Reparatur
+
+Wenn das Problem ist, dass die Artikel nicht geladen wurden — dann lädt man sie eben mit.
+
+<Task id="t4-ab02-a5-eager">Ändere in `Supplier` den Ladezeitpunkt:</Task>
+
+```java
+    @OneToMany(mappedBy = "supplier", fetch = FetchType.EAGER)
+    private List<Article> articles = new ArrayList<>();
+```
+
+<Task id="t4-ab02-a5-test">Starte neu und rufe `GET /api/v1/suppliers` auf.</Task>
+
+Status `200`. Die Antwort sieht sauber aus:
+
+```json
+[
+  {
+    "articles": [],
+    "contact": { "city": "Bremen", "id": 1, "phone": "0421 123456",
+                 "postcode": "28217", "street": "Hafenstr. 12" },
+    "id": 1,
+    "name": "Nordmetall GmbH"
+  }
+]
+```
+
+Sieht nach einer Lösung aus. Bis ein Artikel dazukommt.
+
+<Task id="t4-ab02-a5-insert">Lege im Datenbankfenster von IntelliJ einen Artikel von Hand an. Öffne dazu die Tabelle `article` und trage eine Zeile ein:</Task>
+
+| Spalte | Wert |
+|---|---|
+| `id` | leer lassen — die Datenbank vergibt sie |
+| `designation` | `Schraube M6` |
+| `price` | `0.45` |
+| `created_at` | den aktuellen Zeitpunkt |
+| `updated_at` | denselben Zeitpunkt |
+| `supplier_id` | die `id` deines Lieferanten, also `1` |
+
+Die Änderung wird erst mit dem Knopf **Submit** (Pfeil nach oben, oder Strg+Enter) in die Datenbank geschrieben.
+
+:::tip Warum von Hand und nicht über einen Endpunkt?
+Weil es für Artikel noch keinen gibt. Den baust du im nächsten Arbeitsblatt — und bis dahin ist das Datenbankfenster der kürzeste Weg, um an Daten zu kommen. Genau dafür ist es da.
+:::
+
+<Task id="t4-ab02-a5-again">Rufe `GET /api/v1/suppliers` erneut auf. Sieh dir an, was zurückkommt — und wie lange es ist.</Task>
+
+### Was zurückkommt
+
+Der Status ist `200 OK`. Und trotzdem ist alles falsch:
+
+| Gemessen an dieser Antwort | Wert |
+|---|---|
+| Statuscode | `200 OK` |
+| Länge der Antwort | **19 438 Zeichen** |
+| Größte Verschachtelungstiefe | **500** |
+| Wie oft `"articles"` vorkommt | **167 mal** |
+| Wie oft der Name `Nordmetall GmbH` vorkommt | **0 mal** |
+| Ist es gültiges JSON? | **nein** — mitten im Satz abgeschnitten |
+
+Die letzten beiden Zeilen sind die entscheidenden. Die Antwort ist fast zwanzigtausend Zeichen lang und enthält die eine Angabe nicht, um die es ging. Und sie ist kein gültiges JSON: Kein Client kann sie einlesen.
+
+In der Konsole steht:
+
+```text
+Could not write JSON: Document nesting depth (501) exceeds the maximum allowed (500)
+```
+
+Jackson hat bei Tiefe 500 abgebrochen — mitten im Schreiben. Da der Statuscode `200` zu diesem Zeitpunkt längst gesendet war, konnte niemand ihn noch zurücknehmen.
+
+<svg viewBox="0 0 720 300" width="100%" role="img"
+     aria-label="Supplier verweist auf seine Artikel, jeder Artikel verweist zurück auf den Supplier. Beim Umwandeln in JSON entsteht daraus eine Verschachtelung ohne Ende, die Jackson bei Tiefe 500 abbricht."
+     fontFamily="var(--ifm-font-family-base)">
+
+  {/* ---------- der Kreis ---------- */}
+  <g>
+    <rect x="30" y="58" width="150" height="52" rx="8"
+          fill="var(--ifm-background-surface-color)"
+          stroke="var(--ifm-color-emphasis-700)" strokeWidth="1.5"/>
+    <text x="105" y="90" textAnchor="middle" fontSize="14" fontWeight="700"
+          fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">Supplier</text>
+
+    <rect x="30" y="192" width="150" height="52" rx="8"
+          fill="var(--ifm-background-surface-color)"
+          stroke="var(--ifm-color-emphasis-700)" strokeWidth="1.5"/>
+    <text x="105" y="224" textAnchor="middle" fontSize="14" fontWeight="700"
+          fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">Article</text>
+
+    {/* runter */}
+    <path d="M 62 110 C 40 140, 40 162, 62 192" fill="none"
+          stroke="var(--ifm-color-danger)" strokeWidth="2"/>
+    <polygon points="62,192 50,180 66,178" fill="var(--ifm-color-danger)"/>
+    <text x="26" y="156" textAnchor="middle" fontSize="11.5" fontWeight="700"
+          fill="var(--ifm-color-danger)">articles</text>
+
+    {/* hoch */}
+    <path d="M 148 192 C 170 162, 170 140, 148 110" fill="none"
+          stroke="var(--ifm-color-danger)" strokeWidth="2"/>
+    <polygon points="148,110 144,124 160,122" fill="var(--ifm-color-danger)"/>
+    <text x="196" y="156" textAnchor="middle" fontSize="11.5" fontWeight="700"
+          fill="var(--ifm-color-danger)">supplier</text>
+
+    <text x="105" y="272" textAnchor="middle" fontSize="12"
+          fill="var(--ifm-color-emphasis-700)">zwei Felder, ein Kreis</text>
+  </g>
+
+  {/* ---------- was daraus wird ---------- */}
+  <g transform="translate(268,26)">
+    <rect width="424" height="248" rx="8"
+          fill="var(--ifm-color-danger)" opacity="0.06"/>
+    <rect width="424" height="248" rx="8" fill="none"
+          stroke="var(--ifm-color-danger)" strokeWidth="1.5"/>
+
+    <rect x="18" y="18" width="388" height="212" rx="6" fill="none"
+          stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.5"/>
+    <text x="30" y="38" fontSize="11.5" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-color-emphasis-700)">Supplier</text>
+
+    <rect x="46" y="46" width="332" height="176" rx="6" fill="none"
+          stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.5"/>
+    <text x="58" y="66" fontSize="11.5" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-color-emphasis-700)">articles[0]</text>
+
+    <rect x="74" y="74" width="276" height="140" rx="6" fill="none"
+          stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.5"/>
+    <text x="86" y="94" fontSize="11.5" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-color-emphasis-700)">supplier</text>
+
+    <rect x="102" y="102" width="220" height="104" rx="6" fill="none"
+          stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.5"/>
+    <text x="114" y="122" fontSize="11.5" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-color-emphasis-700)">articles[0]</text>
+
+    <rect x="130" y="130" width="164" height="68" rx="6" fill="none"
+          stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.5"/>
+    <text x="142" y="150" fontSize="11.5" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-color-emphasis-700)">supplier</text>
+
+    <text x="212" y="182" textAnchor="middle" fontSize="22" fontWeight="800"
+          fill="var(--ifm-color-danger)">…</text>
+
+    <text x="212" y="244" textAnchor="middle" fontSize="12" fontWeight="700"
+          fill="var(--ifm-color-danger)">Abbruch bei Tiefe 500</text>
+  </g>
+</svg>
+
+Zwei Felder zeigen aufeinander. In Java ist das harmlos: `supplier.getArticles().get(0).getSupplier()` ist wieder derselbe Lieferant, und der Speicher enthält ihn nur einmal. JSON kann das nicht — es kennt keine Verweise, nur Verschachtelung. Also schreibt Jackson den Lieferanten erneut hin, und darin wieder die Artikel, und darin wieder den Lieferanten.
+
+### Aufgabe 6 – Vier Kombinationen
+
+Du hast zwei davon erlebt. Die anderen beiden gehören dazu, bevor du weitermachst — sie zeigen etwas, das du noch nicht gebaut hast: ein eigenes Antwortobjekt statt der Entität. Es heißt **DTO**, und es ist der Gegenstand des nächsten Arbeitsblatts. Für den Moment genügt: Es ist eine schlichte Klasse, die nur die Felder hat, die in der Antwort stehen sollen — und kein Feld, das zurückzeigt.
+
+<ResponseExplorer storageKey="t4-ab02-antwortform" />
+
+### Die Erkenntnis
+
+`LAZY` und `EAGER` sind nicht die Frage. Beide sind Antworten auf *wann wird geladen* — und keine von beiden beantwortet, **was in der Antwort stehen soll**.
+
+Die Entität ist das Abbild einer Tabellenzeile. Sie enthält alles, was die Datenbank braucht: jeden Fremdschlüssel, jede Gegenrichtung, jeden Zeitstempel. Was ein Client sehen soll, ist eine andere Frage — und niemand hat sie bisher gestellt.
+
+Genau das machst du im nächsten Arbeitsblatt: Du entwirfst die Antwort selbst.
+
+### Aufgabe 7 – Aufräumen
+
+<Task id="t4-ab02-a7-lazy">Stelle `Supplier.articles` wieder auf `FetchType.LAZY`.</Task>
+
+<Task id="t4-ab02-a7-debug">Nimm die Zeile `logging.level.org.springframework.web=DEBUG` wieder heraus.</Task>
+
+Die beiden `GET`-Endpunkte liefern damit wieder `500`. Das ist in Ordnung — sie werden im nächsten Arbeitsblatt ersetzt.
+
+:::tip Die Zeile ist es wert, dass du sie dir merkst
+`logging.level.org.springframework.web=DEBUG` ist der Griff, mit dem du eine `500` ohne Stacktrace zum Sprechen bringst. Er kostet nichts und dauert eine Minute. Im Betrieb bleibt er aus — dort erzeugt er zu viel Ausgabe.
+:::
+
+### Aufgabe 8 – Testfälle
+
+<Task id="t4-ab02-a8">Führe die Testfälle aus. Sie prüfen diesmal auch das, was **nicht** funktioniert — das gehört ebenso geprüft.</Task>
+
+<TestTable
+  storageKey="t4-ab02-tests"
+  tests={[
+    {
+      id: 'TF-01',
+      beschreibung: 'Die dritte Tabelle entsteht',
+      vorbedingung: 'Article wurde angelegt, Anwendung neu gestartet',
+      schritte: ['Im Datenbankfenster den Baum aktualisieren'],
+      erwartet: <>Es gibt eine Tabelle <code>article</code> mit einer Spalte <code>supplier_id</code>.</>
+    },
+    {
+      id: 'TF-02',
+      beschreibung: 'mappedBy verhindert eine vierte Tabelle',
+      vorbedingung: 'Die Beziehung wurde beidseitig eingetragen',
+      schritte: ['Alle Tabellen im Schema public auflisten'],
+      erwartet: <>Es gibt genau <strong>drei</strong> Tabellen. Keine <code>supplier_articles</code>.</>
+    },
+    {
+      id: 'TF-03',
+      beschreibung: 'Der Fremdschlüssel liegt beim Artikel',
+      vorbedingung: 'Tabellen wurden angelegt',
+      schritte: ['Spalten von article ansehen', 'Spalten von supplier ansehen'],
+      erwartet: <><code>article.supplier_id</code> ist Fremdschlüssel und <strong>nicht</strong> eindeutig — anders als <code>supplier.contact_id</code>. Das ist der Unterschied zwischen 1:n und 1:1.</>
+    },
+    {
+      id: 'TF-04',
+      beschreibung: 'LAZY: der Endpunkt bricht ohne einen einzigen Artikel',
+      vorbedingung: 'fetch = LAZY, Tabelle article ist leer',
+      schritte: ['GET auf /api/v1/suppliers'],
+      erwartet: <>Status <code>500</code> mit <code>Failed to write request</code>.</>
+    },
+    {
+      id: 'TF-05',
+      beschreibung: 'Die Ursache wird erst mit DEBUG sichtbar',
+      vorbedingung: 'TF-04 wurde ausgeführt',
+      schritte: ['Konsole ohne DEBUG durchsehen', 'DEBUG-Zeile ergänzen', 'Aufruf wiederholen'],
+      erwartet: <>Ohne die Zeile steht nichts in der Konsole. Mit ihr steht dort <code>Cannot lazily initialize collection of role &#39;…Supplier.articles&#39;</code>.</>
+    },
+    {
+      id: 'TF-06',
+      beschreibung: 'EAGER ohne Artikel sieht wie eine Lösung aus',
+      vorbedingung: 'fetch = EAGER, Tabelle article ist leer',
+      schritte: ['GET auf /api/v1/suppliers'],
+      erwartet: <>Status <code>200</code>, und <code>&quot;articles&quot;</code> ist eine leere Liste.</>
+    },
+    {
+      id: 'TF-07',
+      beschreibung: 'EAGER mit einem Artikel liefert 200 und trotzdem Unsinn',
+      vorbedingung: 'fetch = EAGER, genau ein Artikel in der Tabelle',
+      schritte: ['GET auf /api/v1/suppliers', 'Antwortlänge ansehen', 'nach dem Lieferantennamen suchen'],
+      erwartet: <>Status <code>200</code>, rund <strong>19 000 Zeichen</strong>, und der Name des Lieferanten kommt <strong>kein einziges Mal</strong> vor.</>
+    },
+  ]}
+/>

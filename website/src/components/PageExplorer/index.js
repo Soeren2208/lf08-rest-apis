@@ -107,7 +107,7 @@ export default function PageExplorer({storageKey}) {
           </p>
 
           <code className={styles.url}>
-            GET /api/v1/guestbook?page={FRAGE.page}&amp;size={FRAGE.size}
+            GET /api/v1/guestbook-entries?page={FRAGE.page}&amp;size={FRAGE.size}
           </code>
 
           <div className={styles.frageZeile}>
@@ -199,7 +199,7 @@ export default function PageExplorer({storageKey}) {
           </div>
 
           <code className={styles.url}>
-            GET /api/v1/guestbook?page={sichereSeite}&amp;size={size}
+            GET /api/v1/guestbook-entries?page={sichereSeite}&amp;size={size}
           </code>
 
           <div className={styles.eintraege} aria-hidden="true">

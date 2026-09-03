@@ -22,9 +22,9 @@ Im ersten Tutorial ging es darum, dass eine Schnittstelle **funktioniert**. Hier
 | | Arbeitsblatt | Darum geht es |
 |---|---|---|
 | **01** | [Projekt und Modell](01-projekt-und-modell) | Lombok, Entität mit Zeitstempel, dateibasierte Datenbank |
-| **02** | [Antworten gestalten](02-antworten-gestalten) | `ResponseEntity`, `Location`-Header, Statuscodes, Postman |
-| **03** | [Suchen und filtern](03-suchen-und-filtern) | Abgeleitete Abfragen, Request-Parameter, Paginierung |
-| **04** | [Die API dokumentieren](04-api-dokumentieren) | OpenAPI, springdoc, Swagger-UI |
+| **02** | [Antworten gestalten](02-antworten-gestalten) | `ResponseEntity`, `Location`-Header, Statuscodes |
+| **03** | [Die API dokumentieren](03-api-dokumentieren) | OpenAPI, springdoc, Swagger-UI |
+| **04** | [Suchen und filtern](04-suchen-und-filtern) | Abgeleitete Abfragen, Request-Parameter, Paginierung |
 
 ## Was du am Ende kannst
 

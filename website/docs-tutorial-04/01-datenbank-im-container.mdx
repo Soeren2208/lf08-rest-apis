@@ -1,0 +1,596 @@
+---
+title: "AB 01 – Die Datenbank zieht um"
+sidebar_label: "01 – Die Datenbank zieht um"
+slug: 01-datenbank-im-container
+sidebar_position: 1
+---
+
+# AB 01 – Die Datenbank zieht um
+
+## Die Situation
+
+> Erstes Treffen zum Webshop. Die Einkaufsabteilung bringt einen Zettel mit: *„Lieferant, dazu die Anschrift. Ohne Anschrift kein Lieferant — und die Anschrift gehört zu genau einem."*
+>
+> Der Kollege aus der IT ergänzt: *„Die Datenbank läuft nicht mehr als Datei neben dem Projekt. Wir nehmen PostgreSQL in einem Container — dieselbe Datenbank, die auch im Betrieb läuft."*
+>
+> Heute baust du die Grundlage: das Projekt, den Container, und die erste Beziehung zwischen zwei Tabellen.
+
+## Lernziele
+
+Nach Bearbeitung dieses Arbeitsblatts kannst du:
+
+- eine PostgreSQL-Datenbank über **Docker Compose** starten, stoppen und löschen
+- eine Spring-Boot-Anwendung an eine PostgreSQL statt an eine H2 anbinden
+- mit dem **Datenbankwerkzeug von IntelliJ** in laufende Tabellen sehen
+- ein **Klassendiagramm** mit einer 1:1-Beziehung in JPA-Entitäten übersetzen
+- erklären, was `@OneToOne` mit `cascade = ALL` mit der gefüllten Raute im Diagramm zu tun hat
+- an der erzeugten Tabelle ablesen, wie Hibernate eine 1:1-Beziehung abbildet
+
+:::info Was du schon kannst
+Entität, Repository, Controller, `ResponseEntity` — alles aus dem [Gästebuch](/tutorial-02/). Neu sind hier nur der Container und die Beziehung.
+:::
+
+## Aufgaben
+
+### Aufgabe 1 – Projekt erzeugen
+
+<Task id="t4-ab01-a1-init">Erzeuge über IntelliJ oder auf [start.spring.io](https://start.spring.io) ein neues Projekt:</Task>
+
+| Feld | Wert |
+|---|---|
+| Project / Language | **Maven** / **Java** |
+| Spring Boot | die neueste **4.1.x** |
+| Group | `de.szut` |
+| Artifact | `webshop` |
+| Package name | `de.szut.webshop` |
+| Java | **26** |
+
+<Task id="t4-ab01-a1-deps">Wähle diese Abhängigkeiten: **Spring Web**, **Spring Data JPA**, **PostgreSQL Driver**, **Validation**, **Lombok**, **Spring Boot Actuator**.</Task>
+
+Zwei davon sind neu:
+
+| Abhängigkeit | Wofür |
+|---|---|
+| **PostgreSQL Driver** | statt H2 — der Treiber, mit dem Java mit einer PostgreSQL spricht |
+| **Validation** | brauchst du erst in Arbeitsblatt 04; du sparst dir damit, die `pom.xml` später anzufassen |
+
+### Aufgabe 2 – Die Datenbank in den Container
+
+Bisher lag deine Datenbank als Datei im Projektverzeichnis. Jetzt läuft sie als eigenes Programm in einem **Container** — abgeschottet vom Rest deines Rechners, mit einer eigenen Version, eigenen Einstellungen und eigenem Speicher.
+
+Das Rezept dafür steht in einer Datei.
+
+<Task id="t4-ab01-a2-compose">Lege im Projekthauptverzeichnis — neben der `pom.xml` — die Datei `docker-compose.yml` an:</Task>
+
+```yaml title="docker-compose.yml"
+services:
+  webshop-db:
+    image: postgres:17.6
+    container_name: webshop-db
+    environment:
+      POSTGRES_DB: webshop
+      POSTGRES_USER: webshop
+      POSTGRES_PASSWORD: geheim
+    ports:
+      # links: Port auf deinem Rechner - rechts: Port im Container
+      - "5432:5432"
+    volumes:
+      - webshop-daten:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U webshop -d webshop"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  webshop-daten:
+```
+
+| Zeile | Bedeutung |
+|---|---|
+| `image: postgres:17.6` | Welches Programm im Container läuft — hier PostgreSQL in genau dieser Version |
+| `POSTGRES_DB` / `_USER` / `_PASSWORD` | Datenbank, Benutzer und Kennwort, die beim ersten Start angelegt werden |
+| `ports: "5432:5432"` | Der Port im Container wird nach außen durchgereicht. Links dein Rechner, rechts der Container |
+| `volumes` | Wo die Daten liegen. Ohne diese Zeile wären sie weg, sobald der Container verschwindet |
+| `healthcheck` | Wie Docker prüft, ob die Datenbank schon bereit ist |
+
+<Task id="t4-ab01-a2-up">Öffne ein Terminal im Projektverzeichnis und starte den Container:</Task>
+
+```bash
+docker compose up -d
+```
+
+<Task id="t4-ab01-a2-ps">Prüfe, dass er läuft:</Task>
+
+```bash
+docker compose ps
+```
+
+In der Spalte `STATUS` muss nach einigen Sekunden `Up (healthy)` stehen.
+
+:::warning „port is already allocated"
+Diese Meldung heißt: Auf deinem Rechner läuft bereits etwas auf Port 5432 — meistens eine örtlich installierte PostgreSQL.
+
+Dann ändere in `docker-compose.yml` die **linke** Zahl, zum Beispiel auf `"5433:5432"`, und trage dieselbe Zahl gleich in Aufgabe 3 in die Datenbankadresse ein. Die rechte Zahl bleibt, wie sie ist — sie gilt im Container, und dort ist nichts belegt.
+:::
+
+:::tip Die drei Befehle, die du brauchst
+| Befehl | Wirkung |
+|---|---|
+| `docker compose up -d` | Container starten (`-d` = im Hintergrund) |
+| `docker compose stop` | Container anhalten — die Daten bleiben |
+| `docker compose down -v` | Container **und Daten** löschen. Der nächste Start beginnt bei null |
+
+`down -v` ist dein Notausgang, wenn die Tabellen durcheinandergeraten sind.
+:::
+
+### Aufgabe 3 – Die Anwendung an den Container hängen
+
+<Task id="t4-ab01-a3-props">Trage in `src/main/resources/application.properties` ein:</Task>
+
+```properties title="src/main/resources/application.properties"
+spring.application.name=webshop
+
+# --- Datenbank: PostgreSQL im Docker-Container ---
+# Die Zahl hinter localhost muss zur linken Zahl in docker-compose.yml passen.
+spring.datasource.url=jdbc:postgresql://localhost:5432/webshop
+spring.datasource.username=webshop
+spring.datasource.password=geheim
+
+# --- Hibernate ---
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.open-in-view=false
+
+# --- Fehlerantworten ---
+spring.mvc.problemdetails.enabled=true
+server.error.include-stacktrace=never
+```
+
+Bis auf die vier Datenbankzeilen ist das dieselbe Datei wie im Gästebuch. Benutzername, Kennwort und Datenbankname stehen genau so in der `docker-compose.yml` — die beiden Dateien müssen zueinander passen.
+
+:::note Warum steht das Kennwort im Klartext im Projekt?
+Weil es hier keins schützt: Die Datenbank läuft auf deinem Rechner und ist von außen nicht erreichbar. In einem echten Projekt käme das Kennwort aus einer Umgebungsvariablen und die `docker-compose.yml` würde es von dort lesen. Für dieses Tutorial wäre das nur ein zusätzlicher Handgriff ohne Erkenntnis.
+:::
+
+### Das Klassendiagramm
+
+Aus der Besprechung ist ein Klassendiagramm geworden. Es beschreibt den ersten Teil des Modells:
+
+<svg viewBox="0 0 720 210" width="100%" role="img"
+     aria-label="Klassendiagramm: Supplier steht über eine Komposition mit genau einem Contact in Beziehung. Die gefüllte Raute steht am Supplier."
+     fontFamily="var(--ifm-font-family-base)">
+
+  {/* ---------- Supplier ---------- */}
+  <g>
+    <rect x="40" y="62" width="240" height="86" rx="4"
+          fill="var(--ifm-background-surface-color)"
+          stroke="var(--ifm-color-emphasis-700)" strokeWidth="1.5"/>
+    <line x1="40" y1="92" x2="280" y2="92"
+          stroke="var(--ifm-color-emphasis-700)" strokeWidth="1.5"/>
+    <text x="160" y="84" textAnchor="middle" fontSize="15" fontWeight="700"
+          fill="var(--ifm-font-color-base)">Supplier</text>
+    <text x="54" y="114" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">- id: Long</text>
+    <text x="54" y="136" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">- name: String</text>
+  </g>
+
+  {/* ---------- Contact ---------- */}
+  <g>
+    <rect x="440" y="18" width="240" height="174" rx="4"
+          fill="var(--ifm-background-surface-color)"
+          stroke="var(--ifm-color-emphasis-700)" strokeWidth="1.5"/>
+    <line x1="440" y1="48" x2="680" y2="48"
+          stroke="var(--ifm-color-emphasis-700)" strokeWidth="1.5"/>
+    <text x="560" y="40" textAnchor="middle" fontSize="15" fontWeight="700"
+          fill="var(--ifm-font-color-base)">Contact</text>
+    <text x="454" y="70" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">- id: Long</text>
+    <text x="454" y="92" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">- street: String</text>
+    <text x="454" y="114" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">- postcode: String</text>
+    <text x="454" y="136" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">- city: String</text>
+    <text x="454" y="158" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">- phone: String</text>
+  </g>
+
+  {/* ---------- Komposition ---------- */}
+  <polygon points="280,105 300,96 320,105 300,114"
+           fill="var(--ifm-color-emphasis-700)"
+           stroke="var(--ifm-color-emphasis-700)" strokeWidth="1.5"/>
+  <line x1="320" y1="105" x2="440" y2="105"
+        stroke="var(--ifm-color-emphasis-700)" strokeWidth="1.5"/>
+
+  <text x="328" y="98" fontSize="13" fontWeight="700"
+        fill="var(--ifm-font-color-base)">1</text>
+  <text x="432" y="98" textAnchor="end" fontSize="13" fontWeight="700"
+        fill="var(--ifm-font-color-base)">1</text>
+  <text x="380" y="126" textAnchor="middle" fontSize="12.5" fontStyle="italic"
+        fill="var(--ifm-color-emphasis-700)">contact</text>
+</svg>
+
+Zwei Dinge stehen darin, die im Gästebuch nicht vorkamen.
+
+**Die gefüllte Raute** bedeutet *Komposition*: Der `Contact` gehört zum `Supplier` und hat ohne ihn keinen Sinn. Verschwindet der Lieferant, verschwindet seine Anschrift mit. Wäre die Raute leer (*Aggregation*), hieße das: Die Anschrift lebt weiter, auch wenn dieser Lieferant sie nicht mehr braucht.
+
+**Die Multiplizitäten stehen an beiden Enden.** Links `1`, rechts `1` — jeder Lieferant hat genau eine Anschrift, jede Anschrift gehört zu genau einem Lieferanten. In der Prüfung ist das eine der häufigsten Fehlerquellen: Wer nur eine Seite beschriftet, hat die Beziehung nur halb beschrieben.
+
+:::note Warum heißt das Feld `id` und nicht `sid`?
+In vielen Datenbankentwürfen — auch in der Vorlage zu diesem Diagramm — heißen die Schlüssel `sid`, `cid`, `aid`: der erste Buchstabe der Tabelle plus `id`. Das stammt aus einer Zeit, in der man SQL-Abfragen ohne Tabellenaliase schrieb; dort half der Präfix, `id` von `id` zu unterscheiden.
+
+Im objektorientierten Modell trägt schon die Klasse diese Auskunft. `supplier.getId()` sagt alles; `supplier.getSid()` sagt dasselbe zweimal. Dazu kommt: Wenn in jeder Klasse ein anderes Wort für dieselbe Sache steht, muss man es sich für jede Klasse einzeln merken.
+
+Deshalb heißt der Schlüssel in diesem Tutorial überall `id` — und das Klassendiagramm oben ist entsprechend angepasst. JPA wäre beides recht: Der Feldname ist frei wählbar.
+:::
+
+### Aufgabe 4 – Die beiden Entitäten
+
+<Task id="t4-ab01-a4-contact">Erstelle im Package `model` die Klasse `Contact`:</Task>
+
+```java title="src/main/java/de/szut/webshop/model/Contact.java"
+package de.szut.webshop.model;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Table(name = "contact")
+@Getter
+@Setter
+@NoArgsConstructor
+public class Contact {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String street;
+
+    private String postcode;
+
+    private String city;
+
+    private String phone;
+}
+```
+
+<Task id="t4-ab01-a4-supplier">Erstelle im Package `model` die Klasse `Supplier`:</Task>
+
+```java title="src/main/java/de/szut/webshop/model/Supplier.java"
+package de.szut.webshop.model;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Table(name = "supplier")
+@Getter
+@Setter
+@NoArgsConstructor
+public class Supplier {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String name;
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "contact_id")
+    private Contact contact;
+}
+```
+
+:::tip Die Importe stehen ab jetzt mit im Codeblock
+In den Beispielen dieses Tutorials sind die `import`-Zeilen abgedruckt.
+Das ist nicht überflüssig: `@Valid` und `@NotBlank` liegen in
+**verschiedenen** Paketen, ebenso `@Order` und `Ordered`. IntelliJ schlägt
+mit `Alt`+`Enter` oft mehrere gleich aussehende Möglichkeiten vor — und die
+falsche zu nehmen kostet mehr Zeit als das Abtippen.
+:::
+
+Zwei Stellen verdienen einen zweiten Blick.
+
+**`@Getter @Setter @NoArgsConstructor` statt `@Data`.** Im Gästebuch stand `@Data` an der Entität. Hier nicht — und der Grund ist die Beziehung: `@Data` erzeugt unter anderem `toString()`, `equals()` und `hashCode()`. Sobald zwei Klassen aufeinander zeigen, rufen diese Methoden sich gegenseitig auf und kommen nie zurück. Hier ist es noch harmlos — `Contact` zeigt nicht zurück. Im nächsten Arbeitsblatt schon. Die drei einzelnen Annotationen erzeugen genau das, was gebraucht wird.
+
+**`cascade = CascadeType.ALL` ist die gefüllte Raute.** Sie sagt: Was mit dem Lieferanten geschieht, geschieht mit seiner Anschrift auch. Speichern, Löschen — alles wird weitergereicht. `orphanRemoval = true` ergänzt den Fall, dass die Anschrift nur abgehängt wird, ohne dass der Lieferant verschwindet: Auch dann wird sie gelöscht statt herrenlos liegen zu bleiben.
+
+| Im Diagramm | Im Code |
+|---|---|
+| gefüllte Raute am `Supplier` | `cascade = CascadeType.ALL` auf dem Feld `contact` |
+| `1` an beiden Enden | `@OneToOne` |
+| Linie von `Supplier` zu `Contact` | `@JoinColumn(name = "contact_id")` — der Fremdschlüssel liegt beim Lieferanten |
+
+### Aufgabe 5 – Repository und Controller
+
+<Task id="t4-ab01-a5-repo">Lege im Package `repository` das Interface `SupplierRepository` an, das `JpaRepository<Supplier, Long>` erweitert.</Task>
+
+```java title="src/main/java/de/szut/webshop/repository/SupplierRepository.java"
+package de.szut.webshop.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import de.szut.webshop.model.Supplier;
+
+public interface SupplierRepository extends JpaRepository<Supplier, Long> {
+}
+```
+
+<Task id="t4-ab01-a5-controller">Erstelle im Package `controller` die Klasse `SupplierController` mit drei Endpunkten unter `/api/v1/suppliers`: einem **POST** zum Anlegen, einem **GET** für alle Lieferanten und einem **GET** für einen einzelnen über seine `id`.</Task>
+
+<details>
+<summary>Wenn du nicht weiterkommst: der Controller</summary>
+
+```java title="src/main/java/de/szut/webshop/controller/SupplierController.java"
+@RestController
+@RequestMapping("/api/v1/suppliers")
+public class SupplierController {
+
+    private final SupplierRepository repository;
+
+    public SupplierController(SupplierRepository repository) {
+        this.repository = repository;
+    }
+
+    @PostMapping
+    public ResponseEntity<Supplier> createSupplier(@RequestBody Supplier supplier) {
+        Supplier saved = repository.save(supplier);
+
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(saved.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(saved);
+    }
+
+    @GetMapping
+    public List<Supplier> findAllSuppliers() {
+        return repository.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Supplier> findSupplierById(@PathVariable Long id) {
+        return repository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+}
+```
+
+</details>
+
+:::info Der Controller gibt die Entität direkt heraus
+Das ist genau das, was du im Gästebuch auch gemacht hast — und es funktioniert heute noch. Merke dir diese drei Endpunkte trotzdem gut: In Arbeitsblatt 02 wirst du **keinen einzigen Buchstaben** daran ändern, und zwei von ihnen werden trotzdem aufhören zu funktionieren.
+:::
+
+### Aufgabe 6 – Ausprobieren
+
+<Task id="t4-ab01-a6-file">Lege über **File → New → HTTP Request** im Projekthauptverzeichnis (vorher markieren!) die Datei `requests.http` an.</Task>
+
+<Task id="t4-ab01-a6-content">Trage die drei Anfragen ein:</Task>
+
+```http title="requests.http"
+### Lieferanten anlegen
+POST http://localhost:8080/api/v1/suppliers
+Content-Type: application/json
+
+{
+  "name": "Nordmetall GmbH",
+  "contact": {
+    "street": "Hafenstr. 12",
+    "postcode": "28217",
+    "city": "Bremen",
+    "phone": "0421 123456"
+  }
+}
+
+### Alle Lieferanten
+GET http://localhost:8080/api/v1/suppliers
+
+### Einen Lieferanten
+GET http://localhost:8080/api/v1/suppliers/1
+```
+
+Für die Aufgaben danach brauchst du einen **zweiten** Lieferanten. Ergänze
+deshalb noch diese Anfrage:
+
+```http title="requests.http"
+### Zweiter Lieferant, ohne Telefonnummer
+POST http://localhost:8080/api/v1/suppliers
+Content-Type: application/json
+
+{
+  "name": "Weser Werkzeug KG",
+  "contact": {
+    "street": "Am Deich 4",
+    "postcode": "28199",
+    "city": "Bremen"
+  }
+}
+```
+
+<Task id="t4-ab01-a6-run">Starte die Anwendung — der Container muss laufen — und lege zwei Lieferanten an.</Task>
+
+Sieh dir die Antwort auf den POST genau an: Die Anschrift hat eine eigene `id` bekommen, obwohl du sie nirgends einzeln gespeichert hast. Das ist die Kaskade bei der Arbeit.
+
+### Aufgabe 7 – In die Datenbank sehen
+
+Bei der Maklerdatenbank hast du die Tabellen selbst angelegt. Hier entstehen sie aus deinem Java-Code — und du solltest nachsehen, was daraus geworden ist.
+
+<Task id="t4-ab01-a7-connect">Öffne in IntelliJ rechts die Leiste **Database** und lege über **+ → Data Source → PostgreSQL** eine Verbindung an:</Task>
+
+| Feld | Wert |
+|---|---|
+| Host | `localhost` |
+| Port | `5432` (oder deine geänderte Zahl) |
+| Database | `webshop` |
+| User | `webshop` |
+| Password | `geheim` |
+
+Beim ersten Mal bietet IntelliJ unten an, den Treiber herunterzuladen (**Download missing driver files**) — das ist nötig. Danach prüfst du mit **Test Connection** und bestätigst mit **OK**.
+
+<Task id="t4-ab01-a7-look">Klappe im Baum `webshop → public → tables` auf. Öffne die Tabelle `supplier` per Doppelklick und sieh dir die Spalten an.</Task>
+
+Du solltest das hier finden:
+
+<svg viewBox="0 0 720 250" width="100%" role="img"
+     aria-label="Aus zwei Klassen sind zwei Tabellen geworden. Die Tabelle supplier hat eine Spalte contact_id, die als Fremdschlüssel auf contact.id zeigt und zusätzlich eindeutig sein muss."
+     fontFamily="var(--ifm-font-family-base)">
+
+  {/* ---------- Tabelle supplier ---------- */}
+  <g>
+    <rect x="24" y="44" width="252" height="112" rx="6"
+          fill="var(--ifm-background-surface-color)"
+          stroke="var(--ifm-color-emphasis-400)" strokeWidth="1.5"/>
+    <rect x="24" y="44" width="252" height="28" rx="6"
+          fill="var(--ifm-color-primary)" opacity="0.12"/>
+    <text x="38" y="63" fontSize="13.5" fontWeight="800"
+          fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-color-primary)">supplier</text>
+
+    <text x="38" y="92" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">id</text>
+    <text x="266" y="92" textAnchor="end" fontSize="10.5" fontWeight="700"
+          fill="var(--ifm-color-emphasis-700)">PK</text>
+
+    <text x="38" y="116" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">name</text>
+
+    <text x="38" y="140" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">contact_id</text>
+    <text x="266" y="140" textAnchor="end" fontSize="10.5" fontWeight="700"
+          fill="var(--ifm-color-primary)">FK · UNIQUE</text>
+  </g>
+
+  {/* ---------- Tabelle contact ---------- */}
+  <g>
+    <rect x="444" y="20" width="252" height="184" rx="6"
+          fill="var(--ifm-background-surface-color)"
+          stroke="var(--ifm-color-emphasis-400)" strokeWidth="1.5"/>
+    <rect x="444" y="20" width="252" height="28" rx="6"
+          fill="var(--ifm-color-primary)" opacity="0.12"/>
+    <text x="458" y="39" fontSize="13.5" fontWeight="800"
+          fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-color-primary)">contact</text>
+
+    <text x="458" y="68" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">id</text>
+    <text x="686" y="68" textAnchor="end" fontSize="10.5" fontWeight="700"
+          fill="var(--ifm-color-emphasis-700)">PK</text>
+
+    <text x="458" y="92" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">street</text>
+    <text x="458" y="116" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">postcode</text>
+    <text x="458" y="140" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">city</text>
+    <text x="458" y="164" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
+          fill="var(--ifm-font-color-base)">phone</text>
+  </g>
+
+  {/* ---------- Fremdschluessel ---------- */}
+  <polyline points="276,136 350,136 350,64 432,64" fill="none"
+            stroke="var(--ifm-color-primary)" strokeWidth="2"/>
+  <polygon points="444,64 430,58 430,70"
+           fill="var(--ifm-color-primary)"/>
+  <text x="356" y="100" fontSize="12" fontWeight="700"
+        fill="var(--ifm-color-primary)">zeigt auf</text>
+</svg>
+
+Die entscheidende Zeile ist `contact_id`. Sie trägt **zwei** Bedingungen:
+
+- **Fremdschlüssel** — der Wert muss eine vorhandene `contact.id` sein. Wer im ersten Lehrjahr die Maklerdatenbank geplant hat, kennt das schon.
+- **UNIQUE** — derselbe Wert darf nur einmal vorkommen. Und genau das ist die zweite `1` aus dem Klassendiagramm: Ohne diese Bedingung könnten sich zwei Lieferanten eine Anschrift teilen, und aus der 1:1 wäre eine n:1 geworden.
+
+Hibernate hat die Bedingung von selbst gesetzt, weil `@OneToOne` dort steht und nicht `@ManyToOne`. Ein Buchstabe im Java-Code, eine Bedingung in der Datenbank.
+
+<Task id="t4-ab01-a7-select">Sieh dir auch die Tabelle `contact` an: Deine beiden Anschriften stehen darin, jede mit einer eigenen `id`.</Task>
+
+:::tip Das Datenbankfenster ist ab jetzt dein zweites Auge
+Bis hierhin konntest du alles über die Schnittstelle prüfen. Ab dem nächsten Arbeitsblatt gibt es Fälle, in denen die Schnittstelle etwas behauptet und die Tabelle etwas anderes sagt. Dann entscheidet die Tabelle.
+:::
+
+### Aufgabe 8 – Testfälle
+
+<Task id="t4-ab01-a8">Führe die Testfälle aus.</Task>
+
+<TestTable
+  storageKey="t4-ab01-tests"
+  tests={[
+    {
+      id: 'TF-01',
+      beschreibung: 'Container läuft und ist bereit',
+      vorbedingung: 'docker compose up -d wurde ausgeführt',
+      schritte: ['docker compose ps aufrufen'],
+      erwartet: <>In der Spalte <code>STATUS</code> steht <code>Up</code> mit dem Zusatz <code>(healthy)</code>.</>
+    },
+    {
+      id: 'TF-02',
+      beschreibung: 'Tabellen entstehen beim Start',
+      vorbedingung: 'Container läuft, Anwendung wurde noch nie gestartet',
+      schritte: ['Anwendung starten', 'Konsolenausgabe durchsehen'],
+      erwartet: <>Im Log stehen <code>create table supplier</code> und <code>create table contact</code>.</>
+    },
+    {
+      id: 'TF-03',
+      beschreibung: 'Lieferant anlegen',
+      vorbedingung: 'Anwendung läuft',
+      schritte: ['POST mit name und vollständigem contact'],
+      erwartet: <>Status <code>201</code>, eine Kopfzeile <code>Location</code>, und im Rumpf haben <em>sowohl</em> der Lieferant <em>als auch</em> die Anschrift eine <code>id</code>.</>
+    },
+    {
+      id: 'TF-04',
+      beschreibung: 'Die Anschrift wurde mitgespeichert',
+      vorbedingung: 'TF-03 wurde ausgeführt',
+      schritte: ['Im Datenbankfenster die Tabelle contact öffnen'],
+      erwartet: <>Die Tabelle enthält eine Zeile mit den gesendeten Werten.</>
+    },
+    {
+      id: 'TF-05',
+      beschreibung: 'Die 1:1-Beziehung steht in der Tabelle',
+      vorbedingung: 'Tabellen wurden angelegt',
+      schritte: ['Im Datenbankfenster die Spalten von supplier ansehen'],
+      erwartet: <>Die Spalte <code>contact_id</code> hat einen Fremdschlüssel auf <code>contact.id</code> <strong>und</strong> eine UNIQUE-Bedingung.</>
+    },
+    {
+      id: 'TF-06',
+      beschreibung: 'Unbekannte Kennung',
+      vorbedingung: 'Es gibt keinen Lieferanten mit der Kennung 999',
+      schritte: ['GET auf /api/v1/suppliers/999'],
+      erwartet: <>Status <code>404</code> — kein <code>200</code> mit leerem Rumpf.</>
+    },
+    {
+      id: 'TF-07',
+      beschreibung: 'Daten überleben den Neustart der Anwendung',
+      vorbedingung: 'Mindestens zwei Lieferanten wurden angelegt',
+      schritte: ['Anwendung beenden', 'Anwendung neu starten', 'GET auf /api/v1/suppliers'],
+      erwartet: <>Alle Lieferanten sind noch da. Der Container lief die ganze Zeit weiter.</>
+    },
+  ]}
+/>
+
+## Was du jetzt hast
+
+Drei Endpunkte, zwei Tabellen, eine Beziehung — und eine Datenbank, die nicht mehr im Projektverzeichnis liegt.
+
+Im nächsten Arbeitsblatt kommt die zweite Beziehung dazu: Artikel. Es ist eine einzige Annotation, und du wirst sie an einer Stelle spüren, an der du sie nicht erwartest.

@@ -153,10 +153,26 @@ Danach wieder **Run workflow**. Nach etwa zwei Minuten liefert
 | nur Personenverwaltung | `tutorial-01` |
 | + Gästebuch | `tutorial-01,tutorial-02` |
 | + Testen | `tutorial-01,tutorial-02,tutorial-03` |
-| nur das Gästebuch (z. B. für eine Wiederholungsstunde) | `tutorial-02` |
+| + Webshop | `tutorial-01,tutorial-02,tutorial-03,tutorial-04` |
+| Webshop ohne das Test-Tutorial | `tutorial-01,tutorial-02,tutorial-04` |
 
 Die Reihenfolge in der Liste spielt keine Rolle — die Anordnung auf der Seite
 richtet sich nach der Nummer des Tutorials.
+
+### Vorgänger müssen mit
+
+Die Tutorials verweisen aufeinander: Tutorial 02 verlinkt Tutorial 01,
+Tutorial 03 und Tutorial 04 verlinken jeweils Tutorial 02.
+
+Fehlt ein verlinktes Tutorial, bricht der Lauf ab und nennt den Grund:
+
+```text
+Es fehlen vorausgesetzte Tutorials:
+  tutorial-04 verweist auf tutorial-02
+```
+
+Das Test-Tutorial (03) ist **kein** Vorgänger von Tutorial 04 — es lässt sich
+also weglassen, ohne dass etwas kaputtgeht.
 
 ---
 

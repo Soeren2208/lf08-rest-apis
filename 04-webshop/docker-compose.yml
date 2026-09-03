@@ -3,6 +3,11 @@
 # Starten:  docker compose up -d
 # Stoppen:  docker compose stop
 # Loeschen: docker compose down -v   (loescht auch die Daten!)
+#
+# Falls auf deinem Rechner schon eine PostgreSQL laeuft, ist Port 5432 belegt.
+# Dann meldet Docker beim Start "port is already allocated". In dem Fall
+# aendere hier die LINKE Zahl - zum Beispiel auf 5433:5432 - und traege
+# dieselbe Zahl in application.properties in der Datenbank-Adresse ein.
 
 services:
   webshop-db:
@@ -13,9 +18,8 @@ services:
       POSTGRES_USER: webshop
       POSTGRES_PASSWORD: geheim
     ports:
-      # Aussen 5433, damit eine oertlich installierte PostgreSQL auf dem
-      # Standard-Port 5432 nicht dazwischenfunkt.
-      - "5433:5432"
+      # links: Port auf deinem Rechner - rechts: Port im Container
+      - "5432:5432"
     volumes:
       - webshop-daten:/var/lib/postgresql/data
     healthcheck:

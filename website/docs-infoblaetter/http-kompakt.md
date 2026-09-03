@@ -371,7 +371,7 @@ Der Vorteil gegenüber einer selbst erfundenen Struktur: Andere Programme und We
 | **Browser-Adresszeile** | Nur `GET`. Schnellster Weg für einen Blick |
 | **Entwicklerwerkzeuge** (F12), Reiter *Netzwerk* | Zeigt zu jeder Anfrage Methode, Status, Header und Body |
 | **`.http`-Datei in der IDE** | Requests als Textdatei speichern und ausführen — versionierbar |
-| **Postman** | Grafisches Werkzeug, gut zum Sammeln und Dokumentieren |
+| **Postman** | Eigenständiges grafisches Werkzeug, in Betrieben verbreitet. Sammelt Anfragen in „Collections". In diesen Tutorials nicht nötig — was es kann, decken die `.http`-Datei und die Swagger-Oberfläche ab. Wenn es dir im Betrieb begegnet: Es ist dasselbe HTTP darunter. |
 | **`curl`** | Kommandozeile, überall vorhanden, gut für Skripte |
 
 Dieselbe Anfrage in drei Werkzeugen:

@@ -1,0 +1,104 @@
+### Lieferanten anlegen
+POST http://localhost:8080/api/v1/suppliers
+Content-Type: application/json
+
+{
+  "name": "Nordmetall GmbH",
+  "contact": {
+    "street": "Hafenstr. 12",
+    "postcode": "28217",
+    "city": "Bremen",
+    "phone": "0421 123456"
+  }
+}
+
+### Zweiter Lieferant, ohne Telefonnummer
+POST http://localhost:8080/api/v1/suppliers
+Content-Type: application/json
+
+{
+  "name": "Weser Werkzeug KG",
+  "contact": {
+    "street": "Am Deich 4",
+    "postcode": "28199",
+    "city": "Bremen"
+  }
+}
+
+### Alle Lieferanten
+GET http://localhost:8080/api/v1/suppliers
+
+### Einen Lieferanten
+GET http://localhost:8080/api/v1/suppliers/1
+
+### Unbekannter Lieferant -> 404
+GET http://localhost:8080/api/v1/suppliers/999
+
+### Leerer Name und leerer Ort -> 400 mit Feldnamen
+POST http://localhost:8080/api/v1/suppliers
+Content-Type: application/json
+
+{
+  "name": "  ",
+  "contact": {
+    "street": "Hafenstr. 12",
+    "postcode": "28217",
+    "city": ""
+  }
+}
+
+### Ganz ohne Anschrift -> 400
+POST http://localhost:8080/api/v1/suppliers
+Content-Type: application/json
+
+{
+  "name": "Ohne Anschrift GmbH"
+}
+
+### Artikel bei Lieferant 1 anlegen
+POST http://localhost:8080/api/v1/suppliers/1/articles
+Content-Type: application/json
+
+{
+  "designation": "Schraube M6",
+  "price": 0.45
+}
+
+### Zweiter Artikel
+POST http://localhost:8080/api/v1/suppliers/1/articles
+Content-Type: application/json
+
+{
+  "designation": "Mutter M6",
+  "price": 0.12
+}
+
+### Preis 0 -> 400
+POST http://localhost:8080/api/v1/suppliers/1/articles
+Content-Type: application/json
+
+{
+  "designation": "Kostenlos",
+  "price": 0
+}
+
+### Artikel bei unbekanntem Lieferanten -> 404
+POST http://localhost:8080/api/v1/suppliers/999/articles
+Content-Type: application/json
+
+{
+  "designation": "Schraube M8",
+  "price": 0.55
+}
+
+### Sortiment von Lieferant 1
+GET http://localhost:8080/api/v1/suppliers/1/articles
+
+### Sortiment eines unbekannten Lieferanten -> 404
+GET http://localhost:8080/api/v1/suppliers/999/articles
+
+### Lieferant mit Artikeln loeschen -> 409
+DELETE http://localhost:8080/api/v1/suppliers/1
+
+### Lieferant ohne Artikel loeschen -> 204, die Anschrift verschwindet mit
+DELETE http://localhost:8080/api/v1/suppliers/2
