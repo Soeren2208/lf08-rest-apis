@@ -17,16 +17,137 @@ public Supplier findSupplierById(@PathVariable Long id) {
 }
 ```
 
-Das funktioniert. Beim ersten Versuch. Danach kommen vier Probleme, und jedes einzelne kostet mehr Zeit, als die zwei Klassen gekostet hätten, die sie verhindern.
+Das funktioniert. Beim ersten Versuch. Danach kommen fünf Probleme, und jedes einzelne kostet mehr Zeit, als die zwei Klassen gekostet hätten, die sie verhindern.
 
 | | |
 |---|---|
-| **Die Antwort dreht sich im Kreis** | Der Lieferant kennt seine Artikel, jeder Artikel kennt seinen Lieferanten. Jackson läuft die Kette entlang, bis der Speicher voll ist |
+| **Die Antwort dreht sich im Kreis** | Der Lieferant kennt seine Artikel, jeder Artikel kennt seinen Lieferanten. Was dabei herauskommt, steht im nächsten Abschnitt |
 | **Du verrätst zu viel** | `passwordHash`, `internalNote`, `deletedAt` — alles, was in der Tabelle steht, steht in der Antwort |
 | **Der Client bricht, wenn du die Tabelle änderst** | Ein umbenanntes Feld ist eine Änderung der Datenbank. Sie darf nicht bei fremden Programmen ankommen |
 | **Der Client darf Dinge setzen, die er nicht setzen darf** | Schickt er beim Anlegen eine `id` mit, überschreibt er womöglich einen fremden Datensatz |
+| **Der Client braucht die Daten anders, als sie gespeichert sind** | Eine Oberfläche zeigt eine Kundenkarte. Die Datenbank hat den Kunden auf drei Tabellen verteilt |
 
 **Die Lösung ist ein zweiter Satz Klassen** — nicht als Bürokratie, sondern als Grenze: eine Klasse für das, was in der Datenbank steht, und eine für das, was über die Leitung geht.
+
+## Der Kreis — einmal wirklich gesehen
+
+Von diesem Fehler liest man in jeder Anleitung einen Halbsatz. Ihn einmal gesehen zu haben, ist etwas anderes — vor allem, weil er sich **nicht als Fehler meldet**.
+
+Die Ausgangslage sind zwei Entitäten, die aufeinander zeigen. Genau so steht es im Webshop-Projekt:
+
+```java
+@Entity
+public class Supplier {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String name;
+
+    @OneToMany(mappedBy = "supplier", fetch = FetchType.LAZY)
+    private List<Article> articles = new ArrayList<>();
+}
+```
+
+```java
+@Entity
+public class Article {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String designation;
+
+    @ManyToOne
+    @JoinColumn(name = "supplier_id", nullable = false)
+    private Supplier supplier;
+}
+```
+
+Beide Richtungen sind gewollt: Vom Lieferanten zu seinen Artikeln, vom Artikel zurück zum Lieferanten. In der Datenbank ist das **eine** Spalte — `supplier_id` in der Artikeltabelle. Im Arbeitsspeicher sind es **zwei Verweise, die im Kreis zeigen**.
+
+Und jetzt der Endpunkt, den man beim ersten Mal genau so schreibt:
+
+```java
+@GetMapping("/{id}")
+public Supplier findSupplierById(@PathVariable Long id) {
+    return repository.findById(id).orElseThrow();
+}
+```
+
+### Was herauskommt
+
+Ein Lieferant mit **einem einzigen** Artikel. Gemessen im Webshop-Projekt (Spring Boot 4.1.1, Jackson 3.1.5):
+
+| | |
+|---|---|
+| **Statuscode** | `200 OK` |
+| **Länge der Antwort** | 15 951 Zeichen |
+| **Wie oft der eine Artikel darin steht** | 166 mal |
+| **Verschachtelungstiefe** | 500 |
+| **Meldung im Protokoll** | keine |
+
+Der Anfang der Antwort:
+
+```json
+{"articles":[{"designation":"Wollpullover","id":41,"price":89.90,
+ "supplier":{"articles":[{"designation":"Wollpullover","id":41,"price":89.90,
+ "supplier":{"articles":[{"designation":"Wollpullover","id":41,"price":89.90,
+ "supplier":{"articles":[ …
+```
+
+Und das Ende:
+
+```json
+ … "supplier":{"articles":[]}}]}}]}}]}}]}}]}}]}}]}}]}}]}}]}}]}}]}}]}
+```
+
+Der Serialisierer geht dem Verweis nach: Lieferant → Artikel → Lieferant → Artikel → … Er hört erst auf, als eine eingebaute Grenze greift — Jackson erlaubt höchstens 500 Ebenen Verschachtelung. Dann schließt er alle offenen Klammern und ist fertig.
+
+:::danger Das Tückische ist nicht der Fehler, sondern dass keiner gemeldet wird
+Der Statuscode sagt `200 OK`. Die Antwort ist **syntaktisch gültiges JSON** — jeder Parser nimmt sie an. Im Serverprotokoll steht nichts.
+
+Der Client bekommt also keine Fehlermeldung, sondern eine Antwort, mit der er nichts anfangen kann. Wer nur auf den Statuscode schaut, sucht an der falschen Stelle — und zwar lange.
+
+Mit älteren Jackson-Fassungen flog an dieser Stelle ein `StackOverflowError` und der Server antwortete mit 500. Das war lauter und deshalb ehrlicher gesagt: leichter zu finden.
+:::
+
+:::warning Warum das im eigenen Projekt plötzlich auftritt
+Die Artikel sind mit `FetchType.LAZY` verknüpft — sie werden erst geladen, wenn jemand sie anfasst. In einem frisch erzeugten Spring-Boot-Projekt steht `spring.jpa.open-in-view` auf `true`. Die Datenbanksitzung bleibt dann offen, **bis die Antwort geschrieben ist**.
+
+Damit ist es der Serialisierer selbst, der das Nachladen auslöst — und den Kreis in Gang setzt. Deshalb passiert im Test nichts und beim Aufruf über HTTP alles.
+:::
+
+### Die Reparaturen, die keine sind
+
+| Versuch | Warum er nicht trägt |
+|---|---|
+| `@JsonIgnore` auf `articles` | Das Feld ist damit **überall** weg — auch dort, wo man die Artikel gerade braucht |
+| `@JsonManagedReference` / `@JsonBackReference` | Funktioniert, aber die Entität trägt jetzt Wissen darüber, wie sie über HTTP aussieht. Zwei Aufgaben in einer Klasse |
+| `fetch = FetchType.EAGER` umstellen | Ändert nichts am Kreis — lädt nur noch mehr Daten in ihn hinein |
+| `open-in-view=false` setzen | Aus dem stillen Unsinn wird eine `LazyInitializationException`. Besser, aber immer noch kein Ergebnis, das der Client brauchen kann |
+
+### Was das DTO daran ändert
+
+Die Kette endet, weil das DTO an ihrem Ende **kein Objekt mehr trägt**, das zurückzeigt:
+
+```java
+public record ArticleDto(
+        Long id,
+        String designation,
+        BigDecimal price,
+        Long supplierId,
+        String supplierName) {
+}
+```
+
+Statt des ganzen Lieferanten stehen dort seine Kennung und sein Name. Damit weiß der Client, zu wem der Artikel gehört, und **kann trotzdem nicht im Kreis laufen**: Eine `Long` verweist auf nichts.
+
+Das ist die Regel hinter allen DTO-Entwürfen mit Beziehungen:
+
+> **An der Grenze der Antwort steht ein Wert, kein Verweis.** Wer mehr braucht, ruft den Endpunkt dafür auf.
 
 ## Was ein DTO ist
 
@@ -133,6 +254,190 @@ Ein einziges DTO für hin und zurück sieht sparsam aus und ist es nicht. Was hi
 Die Regel dahinter lautet: **Ein Feld, das der Client nicht setzen darf, hat im Eingangs-DTO nichts verloren.** Nicht „wir ignorieren es dann halt" — es steht gar nicht erst da. Was nicht existiert, kann nicht missbraucht werden.
 
 Deshalb heißen die beiden Klassen im Webshop-Tutorial `CreateSupplierDto` und `SupplierDto`. Das Präfix `Create` sagt: Das ist die Anfrage, nicht die Antwort.
+
+## Der Client bestimmt den Schnitt, nicht die Tabelle
+
+Die vier Punkte oben sind Schutzargumente: Sie sagen, was schiefgeht, wenn man die Entität herausgibt. Der fünfte ist ein Entwurfsargument — und im Alltag der wichtigste.
+
+**Eine Schnittstelle wird für einen Zweck benutzt.** Am anderen Ende sitzt ein Programm, das etwas vorhat: eine Kundenkarte anzeigen, eine Bestellung aufgeben, eine Liste durchblättern. Die Frage, die den Endpunkt entwirft, lautet deshalb nicht „welche Tabellen haben wir?", sondern:
+
+> **Was will der Client tun — und welche Daten braucht er dafür in einem Stück?**
+
+Datenbanken sind auf Speichern hin entworfen: Redundanz vermeiden, Daten auf Tabellen verteilen, jede Sache genau einmal ablegen. Eine Oberfläche ist auf Anzeigen hin entworfen: alles beisammen, was zusammen auf den Bildschirm gehört. Das sind zwei verschiedene Ziele — und deshalb dürfen die Antworten der Schnittstelle nicht so geschnitten sein wie die Tabellen.
+
+### Ein Beispiel
+
+Eine Anwendung zeigt eine Kundenkarte: Name, Anschrift, Telefonnummer. In der Datenbank liegt das auf drei Tabellen — der Kunde, seine Anschrift, seine Kontaktwege.
+
+<svg viewBox="0 0 720 300" width="100%" role="img"
+     aria-label="Links drei Tabellen für Kunde, Anschrift und Kontakt. Rechts eine Kundenkarte in der Oberfläche, die alle drei Angaben zusammen zeigt. Ein einziger Endpunkt liefert alles in einer Antwort."
+     fontFamily="var(--ifm-font-family-base)">
+
+  <text x="16" y="24" fontSize="13" fontWeight="700"
+        fill="var(--ifm-font-color-base)">So ist es gespeichert</text>
+
+  <rect x="16" y="38" width="180" height="52" rx="8"
+        fill="var(--ifm-color-warning-contrast-background)"/>
+  <rect x="16" y="38" width="180" height="52" rx="8" fill="none"
+        stroke="var(--ifm-color-warning-dark)" strokeWidth="1.5"/>
+  <text x="32" y="60" fontSize="12" fontWeight="700"
+        fontFamily="var(--ifm-font-family-monospace)"
+        fill="var(--ifm-font-color-base)">customer</text>
+  <text x="32" y="80" fontSize="11"
+        fill="var(--ifm-color-emphasis-800)">id, first_name, last_name</text>
+
+  <rect x="16" y="102" width="180" height="52" rx="8"
+        fill="var(--ifm-color-warning-contrast-background)"/>
+  <rect x="16" y="102" width="180" height="52" rx="8" fill="none"
+        stroke="var(--ifm-color-warning-dark)" strokeWidth="1.5"/>
+  <text x="32" y="124" fontSize="12" fontWeight="700"
+        fontFamily="var(--ifm-font-family-monospace)"
+        fill="var(--ifm-font-color-base)">address</text>
+  <text x="32" y="144" fontSize="11"
+        fill="var(--ifm-color-emphasis-800)">street, postcode, city</text>
+
+  <rect x="16" y="166" width="180" height="52" rx="8"
+        fill="var(--ifm-color-warning-contrast-background)"/>
+  <rect x="16" y="166" width="180" height="52" rx="8" fill="none"
+        stroke="var(--ifm-color-warning-dark)" strokeWidth="1.5"/>
+  <text x="32" y="188" fontSize="12" fontWeight="700"
+        fontFamily="var(--ifm-font-family-monospace)"
+        fill="var(--ifm-font-color-base)">contact</text>
+  <text x="32" y="208" fontSize="11"
+        fill="var(--ifm-color-emphasis-800)">phone, email</text>
+
+  <text x="16" y="248" fontSize="11.5" fontStyle="italic"
+        fill="var(--ifm-color-emphasis-800)">Getrennt, damit nichts doppelt</text>
+  <text x="16" y="266" fontSize="11.5" fontStyle="italic"
+        fill="var(--ifm-color-emphasis-800)">gespeichert wird.</text>
+
+  <path d="M 210 128 L 286 128" stroke="var(--zeichnung-akzent)" strokeWidth="2.2"
+        markerEnd="url(#pfeil-schnitt)"/>
+  <defs>
+    <marker id="pfeil-schnitt" markerWidth="9" markerHeight="9" refX="8" refY="4.5"
+            orient="auto">
+      <path d="M 0 0 L 9 4.5 L 0 9 z" fill="var(--zeichnung-akzent)"/>
+    </marker>
+  </defs>
+  <text x="248" y="118" textAnchor="middle" fontSize="11" fontWeight="700"
+        fill="var(--zeichnung-akzent)">ein</text>
+  <text x="248" y="152" textAnchor="middle" fontSize="11" fontWeight="700"
+        fill="var(--zeichnung-akzent)">Aufruf</text>
+
+  <text x="300" y="24" fontSize="13" fontWeight="700"
+        fill="var(--ifm-font-color-base)">So wird es gebraucht</text>
+
+  <rect x="300" y="38" width="220" height="180" rx="10"
+        fill="var(--ifm-color-info-contrast-background)"/>
+  <rect x="300" y="38" width="220" height="180" rx="10" fill="none"
+        stroke="var(--ifm-color-info-dark)" strokeWidth="1.6"/>
+  <text x="320" y="66" fontSize="13" fontWeight="700"
+        fill="var(--ifm-font-color-base)">Anna Meyer</text>
+  <text x="320" y="92" fontSize="11.5"
+        fill="var(--ifm-color-emphasis-800)">Am Deich 12</text>
+  <text x="320" y="112" fontSize="11.5"
+        fill="var(--ifm-color-emphasis-800)">28199 Bremen</text>
+  <text x="320" y="140" fontSize="11.5"
+        fill="var(--ifm-color-emphasis-800)">0421 123456</text>
+  <text x="320" y="160" fontSize="11.5"
+        fill="var(--ifm-color-emphasis-800)">anna.meyer@example.de</text>
+  <text x="320" y="196" fontSize="11" fontStyle="italic"
+        fill="var(--zeichnung-blau)">eine Karte, ein Blick</text>
+
+  <rect x="540" y="38" width="164" height="180" rx="10"
+        fill="var(--ifm-color-success-contrast-background)"/>
+  <rect x="540" y="38" width="164" height="180" rx="10" fill="none"
+        stroke="var(--ifm-color-success-dark)" strokeWidth="1.6"/>
+  <text x="556" y="64" fontSize="12" fontWeight="700"
+        fill="var(--zeichnung-gruen)">CustomerCardDto</text>
+  <text x="556" y="88" fontSize="11" fontFamily="var(--ifm-font-family-monospace)"
+        fill="var(--ifm-color-emphasis-800)">id</text>
+  <text x="556" y="108" fontSize="11" fontFamily="var(--ifm-font-family-monospace)"
+        fill="var(--ifm-color-emphasis-800)">fullName</text>
+  <text x="556" y="128" fontSize="11" fontFamily="var(--ifm-font-family-monospace)"
+        fill="var(--ifm-color-emphasis-800)">address</text>
+  <text x="556" y="148" fontSize="11" fontFamily="var(--ifm-font-family-monospace)"
+        fill="var(--ifm-color-emphasis-800)">phone</text>
+  <text x="556" y="168" fontSize="11" fontFamily="var(--ifm-font-family-monospace)"
+        fill="var(--ifm-color-emphasis-800)">email</text>
+  <text x="556" y="200" fontSize="11" fontStyle="italic"
+        fill="var(--ifm-color-emphasis-800)">nach dem Zweck</text>
+  <text x="556" y="214" fontSize="11" fontStyle="italic"
+        fill="var(--ifm-color-emphasis-800)">geschnitten</text>
+</svg>
+
+Wer die Tabellen eins zu eins nach außen reicht, zwingt den Client zu drei Aufrufen für **eine** Karte:
+
+```http
+GET /api/v1/customers/42
+GET /api/v1/customers/42/address
+GET /api/v1/customers/42/contact
+```
+
+Drei Anfragen, drei Wartezeiten, drei Fehlerfälle, die der Client einzeln behandeln muss — und eine Oberfläche, die halb gefüllt dasteht, wenn die zweite Anfrage hängt. Für eine Liste von zwanzig Kunden werden daraus **einundsechzig** Aufrufe.
+
+Ein Endpunkt, der nach dem Zweck geschnitten ist, liefert dasselbe in einem Stück:
+
+```http
+GET /api/v1/customers/42
+```
+
+```json
+{
+  "id": 42,
+  "fullName": "Anna Meyer",
+  "address": { "street": "Am Deich 12", "postcode": "28199", "city": "Bremen" },
+  "phone": "0421 123456",
+  "email": "anna.meyer@example.de"
+}
+```
+
+Beachte `fullName`: In der Datenbank stehen Vor- und Nachname getrennt — und das ist dort richtig, denn nur so lässt sich nach dem Nachnamen sortieren. Wenn aber **jeder** Client die beiden ohnehin sofort zusammensetzt, gehört das auf die Serverseite. Sonst schreiben fünf Clients dieselbe Zeile fünfmal — und der sechste macht es anders.
+
+### Die zwei Fehlerarten
+
+| | Was passiert | Woran man es merkt |
+|---|---|---|
+| **Zu wenig geliefert** | Der Client muss nachfragen, um eine Ansicht zu füllen | Für eine Seite braucht es fünf Aufrufe. Man nennt das eine *geschwätzige* Schnittstelle |
+| **Zu viel geliefert** | Jede Antwort schleppt Felder mit, die niemand ansieht | Die Liste holt zu jedem Lieferanten seine 400 Artikel, angezeigt wird eine Zahl |
+
+Genau der zweite Fall steckt im Webshop-Tutorial:
+
+```java
+public record SupplierDto(
+        Long id,
+        String name,
+        ContactDto contact,
+        long articleCount) {
+}
+```
+
+`articleCount` statt `List<ArticleDto>` — weil die Übersicht eine **Zahl** zeigt. Wer die Artikel wirklich sehen will, ruft den Endpunkt dafür auf:
+
+```http
+GET /api/v1/suppliers/7/articles
+```
+
+:::tip Dieselbe Sache, zwei Ansichten, zwei DTOs
+Eine Übersichtsliste und eine Detailansicht brauchen selten dasselbe. Es ist völlig in Ordnung, für eine Ressource zwei Ausgabe-DTOs zu haben — etwa `SupplierSummaryDto` mit drei Feldern für die Liste und `SupplierDto` mit allem für die Einzelansicht.
+
+Das ist keine Verdopplung, sondern eine Entscheidung: Für jede Ansicht steht an genau einer Stelle geschrieben, was sie braucht.
+:::
+
+:::warning Die Grenze: nicht ein Endpunkt je Bildschirm
+Die Umkehrung wäre genauso falsch. Wenn jeder neue Knopf in der Oberfläche einen neuen Endpunkt bekommt, hängt die Schnittstelle an einem bestimmten Client — und der nächste, den es noch gar nicht gibt, passt nicht mehr.
+
+Die Mitte: Der Zuschnitt folgt dem **fachlichen Vorgang** („eine Kundenkarte anzeigen", „eine Bestellung aufgeben"), nicht dem einzelnen Bildschirmelement. Ein Vorgang überlebt die Umgestaltung der Oberfläche.
+:::
+
+### Die Frage, die man sich vor jedem Endpunkt stellt
+
+1. **Wer ruft das auf, und was hat er damit vor?**
+2. **Welche Felder braucht er dafür — und welche ganz sicher nicht?**
+3. **Muss er nach dieser Antwort noch einmal fragen, um seine Ansicht zu füllen?** Wenn ja: Ist das der Regelfall oder die Ausnahme?
+4. **Wird ein Feld bei jedem Client gleich umgerechnet oder zusammengesetzt?** Dann gehört es fertig in die Antwort.
+
+Diese vier Fragen beantwortet man **bevor** man das DTO schreibt. Das DTO ist das Ergebnis der Antworten — nicht eine Kopie der Entität, aus der man hinterher Felder streicht.
 
 ## Die Schichten
 
@@ -310,6 +615,8 @@ Die Einzelheiten dazu stehen im Infoblatt [Beziehungen mit JPA abbilden](/infobl
 ## Das Wichtigste in Kürze
 
 - Die **Entität** beschreibt die Speicherung, das **DTO** die Schnittstelle. Beide dürfen sich getrennt entwickeln.
+- Gibt man die Entität heraus, **meldet sich kein Fehler**: Der Kreis zwischen zwei Entitäten liefert 200 OK und 16 kB Unsinn.
+- Ein Endpunkt wird nach dem **Vorhaben des Clients** geschnitten, nicht nach dem Aufbau der Tabellen.
 - **Zwei DTOs pro Ressource:** eines für hinein (ohne `id`, ohne Zeitstempel), eines für heraus.
 - Ein DTO ist ein `record` — vier Zeilen, keine Logik.
 - Jede Schicht kennt nur die **direkt darunter**. Nie das Repository aus dem Controller.
