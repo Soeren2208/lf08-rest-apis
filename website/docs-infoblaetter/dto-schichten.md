@@ -21,7 +21,7 @@ Das funktioniert. Beim ersten Versuch. Danach kommen fünf Probleme, und jedes e
 
 | | |
 |---|---|
-| **Die Antwort dreht sich im Kreis** | Der Lieferant kennt seine Artikel, jeder Artikel kennt seinen Lieferanten. Was dabei herauskommt, kannst du unten im ausklappbaren Abschnitt lesen |
+| **Die Antwort dreht sich im Kreis** | Der Lieferant kennt seine Artikel, jeder Artikel kennt seinen Lieferanten. Was dabei herauskommt, kannst du unten im ausklappbaren Abschnitt „Der Kreis — einmal wirklich gesehen" lesen |
 | **Du verrätst zu viel** | `passwordHash`, `internalNote`, `deletedAt` — alles, was in der Tabelle steht, steht in der Antwort |
 | **Der Client bricht, wenn du die Tabelle änderst** | Ein umbenanntes Feld ist eine Änderung der Datenbank. Sie darf nicht bei fremden Programmen ankommen |
 | **Der Client darf Dinge setzen, die er nicht setzen darf** | Schickt er beim Anlegen eine `id` mit, überschreibt er womöglich einen fremden Datensatz |
@@ -31,10 +31,12 @@ Das funktioniert. Beim ersten Versuch. Danach kommen fünf Probleme, und jedes e
 
 ## Der Kreis — einmal wirklich gesehen
 
-Von diesem Fehler liest man in jeder Anleitung einen Halbsatz. Ihn einmal gesehen zu haben, ist etwas anderes — vor allem, weil er sich **nicht als Fehler meldet**. Wer ihn kennt, klappt den Abschnitt zu; für alles Weitere genügt der Satz: Ein DTO lässt diesen Kreis gar nicht erst entstehen.
+Wer den Fehler schon kennt, lässt den Kasten zu; für alles Weitere genügt der Satz: Ein DTO lässt diesen Kreis gar nicht erst entstehen.
 
 <details>
-<summary>Den Fehler einmal in voller Länge ansehen</summary>
+<summary>Der Kreis — einmal wirklich gesehen</summary>
+
+Von diesem Fehler liest man in jeder Anleitung einen Halbsatz. Ihn einmal gesehen zu haben, ist etwas anderes — vor allem, weil er sich **nicht als Fehler meldet**.
 
 Die Ausgangslage sind zwei Entitäten, die aufeinander zeigen. Genau so steht es im Webshop-Projekt:
 
