@@ -3,7 +3,18 @@
 // Welche Tutorials veröffentlicht werden, steht in ./tutorials.js — nicht hier.
 
 import {themes as prismThemes} from 'prism-react-renderer';
-import {freigegeben} from './tutorials.js';
+import {tutorials, freigegeben} from './tutorials.js';
+import nichtFreigegebeneVerweise from './plugins/nicht-freigegebene-verweise.mjs';
+
+// Verweise auf gesperrte Tutorials werden beim Bauen zu Text - warum,
+// steht im Kopf des Plugins.
+const verweisPlugin = [
+  nichtFreigegebeneVerweise,
+  {
+    alle: tutorials.map((t) => t.id),
+    freigegeben: freigegeben.map((t) => t.id),
+  },
+];
 
 // ---------------------------------------------------------------------------
 //  Adresse der Seite - NICHT fest eingetragen, sondern abgeleitet.
@@ -100,6 +111,7 @@ const config = {
         path: 'docs-infoblaetter',
         routeBasePath: 'infoblaetter',
         sidebarPath: './sidebars.js',
+        beforeDefaultRemarkPlugins: [verweisPlugin],
       },
     ],
     // Für jedes freigegebene Tutorial ein eigener Bereich. Nicht freigegebene
@@ -112,6 +124,7 @@ const config = {
         path: `docs-${t.id}`,
         routeBasePath: t.id,
         sidebarPath: './sidebars.js',
+        beforeDefaultRemarkPlugins: [verweisPlugin],
       },
     ]),
   ],
