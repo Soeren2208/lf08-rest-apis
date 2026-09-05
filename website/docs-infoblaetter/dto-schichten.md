@@ -77,6 +77,30 @@ public Supplier findSupplierById(@PathVariable Long id) {
 }
 ```
 
+:::note Wirft `orElseThrow()` denn überhaupt etwas?
+Ja — und zwar von selbst. `Optional.orElseThrow()` ohne Argument gibt es seit Java 10; ist nichts da, wirft es eine `NoSuchElementException`. Die ist **ungeprüft**, deshalb braucht die Signatur kein `throws`, und deshalb übersetzt der Code anstandslos.
+
+Nur ist es die **falsche** Ausnahme. Gemessen im Webshop-Projekt, unbekannte Kennung, laufender Server:
+
+```json
+HTTP 500
+{"timestamp":"…","status":500,"error":"Internal Server Error","path":"/api/v1/suppliers/999"}
+```
+
+Dazu ein vollständiger Stacktrace im Serverprotokoll. Der Server meldet damit „ich habe Mist gebaut" für einen Fall, in dem der Client nach etwas gefragt hat, das es nicht gibt — das ist eine **404**.
+
+Richtig ist die Fassung mit Argument, und die steht auch im Referenzprojekt:
+
+```java
+Supplier supplier = supplierRepository.findById(id)
+        .orElseThrow(() -> new SupplierNotFoundException(id));
+```
+
+Aus dieser fachlichen Ausnahme macht die Übersetzungsstelle eine saubere 404 — wie das geht, steht im Infoblatt [Fehlerantworten](/infoblaetter/fehlerantworten).
+
+**Für den Kreis unten ändert das nichts:** Die falsche Ausnahme greift nur, wenn der Lieferant *nicht* existiert. Findet er sich, läuft alles Weitere genau wie beschrieben. Drei Zeilen, zwei Fehler — und keiner von beiden fällt beim Übersetzen auf.
+:::
+
 ### Was herauskommt
 
 Ein Lieferant mit **einem einzigen** Artikel. Gemessen im Webshop-Projekt (Spring Boot 4.1.1, Jackson 3.1.5):
@@ -616,6 +640,7 @@ Die Einzelheiten dazu stehen im Infoblatt [Beziehungen mit JPA abbilden](/infobl
 
 - Die **Entität** beschreibt die Speicherung, das **DTO** die Schnittstelle. Beide dürfen sich getrennt entwickeln.
 - Gibt man die Entität heraus, **meldet sich kein Fehler**: Der Kreis zwischen zwei Entitäten liefert 200 OK und 16 kB Unsinn.
+- `orElseThrow()` **ohne Argument** wirft eine `NoSuchElementException` — daraus wird eine 500. Für „gibt es nicht" gehört eine eigene fachliche Ausnahme hinein.
 - Ein Endpunkt wird nach dem **Vorhaben des Clients** geschnitten, nicht nach dem Aufbau der Tabellen.
 - **Zwei DTOs pro Ressource:** eines für hinein (ohne `id`, ohne Zeitstempel), eines für heraus.
 - Ein DTO ist ein `record` — vier Zeilen, keine Logik.
