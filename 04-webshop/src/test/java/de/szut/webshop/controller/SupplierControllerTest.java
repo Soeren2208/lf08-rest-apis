@@ -14,7 +14,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -29,11 +28,10 @@ import de.szut.webshop.service.SupplierService;
  * Die Web-Schicht allein. Kein Server, keine Datenbank - der Service ist
  * ein Doppel.
  *
- * @Import holt den ApiExceptionHandler dazu: Ohne ihn kaeme aus einer
- * fachlichen Ausnahme hier eine 500 statt einer 404.
+ * @WebMvcTest laedt neben dem Controller auch den ApiExceptionHandler:
+ * Aus einer fachlichen Ausnahme wird deshalb eine 404, keine 500.
  */
 @WebMvcTest(SupplierController.class)
-@Import(ApiExceptionHandler.class)
 @DisplayName("SupplierController (Web-Schicht)")
 class SupplierControllerTest {
 

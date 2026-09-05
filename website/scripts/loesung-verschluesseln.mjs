@@ -123,6 +123,7 @@ const aufgaben = [
       'src/test/java/de/szut/webshop/service/SupplierServiceTest.java',
       'src/test/java/de/szut/webshop/controller/SupplierControllerTest.java',
       'src/test/java/de/szut/webshop/repository/SupplierRepositoryTest.java',
+      'src/test/java/de/szut/webshop/SupplierIntegrationTest.java',
     ],
   },
 ];
