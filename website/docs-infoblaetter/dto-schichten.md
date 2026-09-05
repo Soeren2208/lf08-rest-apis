@@ -21,7 +21,7 @@ Das funktioniert. Beim ersten Versuch. Danach kommen fünf Probleme, und jedes e
 
 | | |
 |---|---|
-| **Die Antwort dreht sich im Kreis** | Der Lieferant kennt seine Artikel, jeder Artikel kennt seinen Lieferanten. Was dabei herauskommt, steht im nächsten Abschnitt |
+| **Die Antwort dreht sich im Kreis** | Der Lieferant kennt seine Artikel, jeder Artikel kennt seinen Lieferanten. Was dabei herauskommt, kannst du unten im ausklappbaren Abschnitt lesen |
 | **Du verrätst zu viel** | `passwordHash`, `internalNote`, `deletedAt` — alles, was in der Tabelle steht, steht in der Antwort |
 | **Der Client bricht, wenn du die Tabelle änderst** | Ein umbenanntes Feld ist eine Änderung der Datenbank. Sie darf nicht bei fremden Programmen ankommen |
 | **Der Client darf Dinge setzen, die er nicht setzen darf** | Schickt er beim Anlegen eine `id` mit, überschreibt er womöglich einen fremden Datensatz |
@@ -31,7 +31,10 @@ Das funktioniert. Beim ersten Versuch. Danach kommen fünf Probleme, und jedes e
 
 ## Der Kreis — einmal wirklich gesehen
 
-Von diesem Fehler liest man in jeder Anleitung einen Halbsatz. Ihn einmal gesehen zu haben, ist etwas anderes — vor allem, weil er sich **nicht als Fehler meldet**.
+Von diesem Fehler liest man in jeder Anleitung einen Halbsatz. Ihn einmal gesehen zu haben, ist etwas anderes — vor allem, weil er sich **nicht als Fehler meldet**. Wer ihn kennt, klappt den Abschnitt zu; für alles Weitere genügt der Satz: Ein DTO lässt diesen Kreis gar nicht erst entstehen.
+
+<details>
+<summary>Den Fehler einmal in voller Länge ansehen</summary>
 
 Die Ausgangslage sind zwei Entitäten, die aufeinander zeigen. Genau so steht es im Webshop-Projekt:
 
@@ -80,14 +83,7 @@ public Supplier findSupplierById(@PathVariable Long id) {
 :::note Wirft `orElseThrow()` denn überhaupt etwas?
 Ja — und zwar von selbst. `Optional.orElseThrow()` ohne Argument gibt es seit Java 10; ist nichts da, wirft es eine `NoSuchElementException`. Die ist **ungeprüft**, deshalb braucht die Signatur kein `throws`, und deshalb übersetzt der Code anstandslos.
 
-Nur ist es die **falsche** Ausnahme. Gemessen im Webshop-Projekt, unbekannte Kennung, laufender Server:
-
-```json
-HTTP 500
-{"timestamp":"…","status":500,"error":"Internal Server Error","path":"/api/v1/suppliers/999"}
-```
-
-Dazu ein vollständiger Stacktrace im Serverprotokoll. Der Server meldet damit „ich habe Mist gebaut" für einen Fall, in dem der Client nach etwas gefragt hat, das es nicht gibt — das ist eine **404**.
+Nur ist es die **falsche** Ausnahme: Eine unbekannte Kennung ergibt damit eine **500** samt Stacktrace im Protokoll — für einen Fall, in dem der Client nach etwas gefragt hat, das es nicht gibt. Das ist eine **404**.
 
 Richtig ist die Fassung mit Argument, und die steht auch im Referenzprojekt:
 
@@ -98,22 +94,12 @@ Supplier supplier = supplierRepository.findById(id)
 
 Aus dieser fachlichen Ausnahme macht die Übersetzungsstelle eine saubere 404 — wie das geht, steht im Infoblatt [Fehlerantworten](/infoblaetter/fehlerantworten).
 
-**Für den Kreis unten ändert das nichts:** Die falsche Ausnahme greift nur, wenn der Lieferant *nicht* existiert. Findet er sich, läuft alles Weitere genau wie beschrieben. Drei Zeilen, zwei Fehler — und keiner von beiden fällt beim Übersetzen auf.
+**Für den Kreis ändert das nichts:** Die falsche Ausnahme greift nur, wenn der Lieferant *nicht* existiert. Findet er sich, läuft alles Weitere genau wie beschrieben. Drei Zeilen, zwei Fehler — und keiner von beiden fällt beim Übersetzen auf.
 :::
 
-### Was herauskommt
+**Was herauskommt**
 
-Ein Lieferant mit **einem einzigen** Artikel. Gemessen im Webshop-Projekt (Spring Boot 4.1.1, Jackson 3.1.5):
-
-| | |
-|---|---|
-| **Statuscode** | `200 OK` |
-| **Länge der Antwort** | 15 951 Zeichen |
-| **Wie oft der eine Artikel darin steht** | 166 mal |
-| **Verschachtelungstiefe** | 500 |
-| **Meldung im Protokoll** | keine |
-
-Der Anfang der Antwort:
+Ein Lieferant mit **einem einzigen** Artikel ergibt knapp 16 000 Zeichen: derselbe Artikel 166 mal, 500 Ebenen tief verschachtelt. Der Anfang der Antwort:
 
 ```json
 {"articles":[{"designation":"Wollpullover","id":41,"price":89.90,
@@ -144,7 +130,7 @@ Die Artikel sind mit `FetchType.LAZY` verknüpft — sie werden erst geladen, we
 Damit ist es der Serialisierer selbst, der das Nachladen auslöst — und den Kreis in Gang setzt. Deshalb passiert im Test nichts und beim Aufruf über HTTP alles.
 :::
 
-### Die Reparaturen, die keine sind
+**Die Reparaturen, die keine sind**
 
 | Versuch | Warum er nicht trägt |
 |---|---|
@@ -153,7 +139,7 @@ Damit ist es der Serialisierer selbst, der das Nachladen auslöst — und den Kr
 | `fetch = FetchType.EAGER` umstellen | Ändert nichts am Kreis — lädt nur noch mehr Daten in ihn hinein |
 | `open-in-view=false` setzen | Aus dem stillen Unsinn wird eine `LazyInitializationException`. Besser, aber immer noch kein Ergebnis, das der Client brauchen kann |
 
-### Was das DTO daran ändert
+**Was das DTO daran ändert**
 
 Die Kette endet, weil das DTO an ihrem Ende **kein Objekt mehr trägt**, das zurückzeigt:
 
@@ -172,6 +158,8 @@ Statt des ganzen Lieferanten stehen dort seine Kennung und sein Name. Damit wei�
 Das ist die Regel hinter allen DTO-Entwürfen mit Beziehungen:
 
 > **An der Grenze der Antwort steht ein Wert, kein Verweis.** Wer mehr braucht, ruft den Endpunkt dafür auf.
+
+</details>
 
 ## Was ein DTO ist
 
