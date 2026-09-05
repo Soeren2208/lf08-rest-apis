@@ -31,6 +31,8 @@ Nach Bearbeitung dieses Arbeitsblatts kannst du:
 - mit `@DataJpaTest` gegen die **echte** Datenbank im Container testen
 - begründen, warum man hier anders testet als im Gästebuch
 
+Die drei Testarten im Überblick — mit den Importpfaden für Spring Boot 4 — stehen im Infoblatt [Automatisiert testen](/infoblaetter/automatisiert-testen).
+
 ## Aufgabe 1 – Der Mapper, ganz ohne alles
 
 Der `ArticleMapper` ist reines Java: kein Spring, keine Datenbank, kein HTTP. Ein Test dafür läuft in Millisekunden.
@@ -200,7 +202,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -209,7 +210,6 @@ import de.szut.webshop.service.SupplierHasArticlesException;
 import de.szut.webshop.service.SupplierService;
 
 @WebMvcTest(SupplierController.class)
-@Import(ApiExceptionHandler.class)
 @DisplayName("SupplierController (Web-Schicht)")
 class SupplierControllerTest {
 
@@ -258,10 +258,19 @@ Ein **Slice-Test** startet von Spring nur einen Ausschnitt — hier die Web-Schi
 |---|---|
 | `@WebMvcTest(SupplierController.class)` | Lädt die Web-Schicht — und von deinen Controllern nur diesen |
 | `@MockitoBean` | Ersetzt eine Bean im Spring-Kontext durch ein Doppel |
-| `@Import(ApiExceptionHandler.class)` | Holt den Ausnahmebehandler dazu |
 
-:::danger `@Import` ist hier nicht optional
-`@WebMvcTest` lädt deinen Controller — aber nicht automatisch jedes `@RestControllerAdvice`. Ohne die Zeile käme aus der `SupplierHasArticlesException` eine `500` statt einer `409`, und du würdest lange nach dem Fehler in einem Code suchen, der richtig ist.
+:::info Warum der Ausnahmebehandler von selbst dabei ist
+Auffällig: Der Test prüft eine `409` und eine `400` — beide entstehen erst durch
+deinen `ApiExceptionHandler`. Trotzdem steht nirgends, dass er geladen werden soll.
+
+`@WebMvcTest` lädt nämlich nicht nur den genannten Controller, sondern **alles,
+was zur Web-Schicht gehört**: Controller, `@RestControllerAdvice`, Konverter,
+Filter. Nicht geladen werden Services und Repositories — die musst du selbst
+ersetzen, dafür ist `@MockitoBean` da.
+
+**Probier es aus:** Kommentiere im `ApiExceptionHandler` die Zeile
+`@RestControllerAdvice` kurz aus und lass den Test erneut laufen. Aus der `409`
+wird eine `500`. Genau daran siehst du, dass die Klasse vorher mitgeladen war.
 :::
 
 :::warning Die Import-Pfade haben sich mit Spring Boot 4 geändert
@@ -457,6 +466,12 @@ Das ist keine Spielerei: Ein Test, der nie rot war, hat noch nie bewiesen, dass 
 | `SupplierRepositoryTest` | einer Abfrage, einer Kaskade oder einem Fremdschlüssel | alles oberhalb der Datenzugriffsschicht |
 
 Keiner deckt alles ab. Zusammen decken sie jede Stelle ab, an der du in diesem Tutorial etwas entschieden hast.
+
+:::note Es gibt eine fünfte Art — den Integrationstest
+Die vier Tests oben prüfen jeweils **ein** Stück. Was sie nicht prüfen: ob die Stücke zusammenpassen. Genau dafür gibt es den **Integrationstest** — er lässt eine echte Anfrage durch alle Schichten bis in die Datenbank laufen, ohne ein einziges Doppel.
+
+In der Musterlösung liegt eine solche Klasse als Beispiel bei: `SupplierIntegrationTest`. Wie sie aufgebaut ist und was sie an Vorarbeit braucht, steht im Infoblatt [Automatisiert testen](/infoblaetter/automatisiert-testen).
+:::
 
 ---
 

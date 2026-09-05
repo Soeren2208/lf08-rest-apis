@@ -58,7 +58,7 @@ Fast jede Backend-Anwendung ist in Schichten aufgebaut. Jede hat genau eine Aufg
     </g>
     <text x="66" y="27" fontSize="15" fontWeight="700" fill="var(--ifm-font-color-base)">Controller</text>
     <text x="66" y="46" fontSize="12.5" fontFamily="var(--ifm-font-family-monospace)"
-          fill="var(--ifm-color-primary)">@RestController</text>
+          fill="var(--zeichnung-akzent)">@RestController</text>
     <text x="66" y="66" fontSize="12.5" fill="var(--ifm-color-emphasis-700)">nimmt Anfragen entgegen</text>
   </g>
 
@@ -78,7 +78,7 @@ Fast jede Backend-Anwendung ist in Schichten aufgebaut. Jede hat genau eine Aufg
     </g>
     <text x="66" y="27" fontSize="15" fontWeight="700" fill="var(--ifm-font-color-base)">Repository</text>
     <text x="66" y="46" fontSize="12.5" fontFamily="var(--ifm-font-family-monospace)"
-          fill="var(--ifm-color-primary)">extends JpaRepository</text>
+          fill="var(--zeichnung-akzent)">extends JpaRepository</text>
     <text x="66" y="66" fontSize="12.5" fill="var(--ifm-color-emphasis-700)">liest und schreibt Datensätze</text>
   </g>
 
@@ -320,7 +320,7 @@ Beim Start sucht Spring nach einer passenden Instanz und übergibt sie. Das nenn
   <text x="96" y="40" fontSize="16" fontWeight="700" fill="var(--ifm-font-color-base)">Spring-Container</text>
   <text x="96" y="60" fontSize="12.5" fill="var(--ifm-color-emphasis-700)">läuft beim Start und baut alle Objekte, die deine Anwendung braucht</text>
 
-  <circle cx="70" cy="112" r="13" fill="var(--ifm-color-primary)"/>
+  <circle cx="70" cy="112" r="13" fill="var(--zeichnung-marke)"/>
   <text x="70" y="117" textAnchor="middle" fontSize="13" fontWeight="700"
         fill="#ffffff">1</text>
   <text x="94" y="117" fontSize="13.5" fill="var(--ifm-font-color-base)">erzeugt das Repository</text>
@@ -344,7 +344,7 @@ Beim Start sucht Spring nach einer passenden Instanz und übergibt sie. Das nenn
   {/* ---------------- Übergabe ---------------- */}
   <path d="M535 163 L535 205" stroke="var(--ifm-color-primary)" strokeWidth="2.4"/>
   <path d="M528 197 L535 208 L542 197" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2.4"/>
-  <circle cx="382" cy="186" r="13" fill="var(--ifm-color-primary)"/>
+  <circle cx="382" cy="186" r="13" fill="var(--zeichnung-marke)"/>
   <text x="382" y="191" textAnchor="middle" fontSize="13" fontWeight="700"
         fill="#ffffff">2</text>
   <text x="404" y="191" fontSize="13.5" fill="var(--ifm-font-color-base)">und steckt es in den Konstruktor</text>
@@ -371,12 +371,12 @@ Beim Start sucht Spring nach einer passenden Instanz und übergibt sie. Das nenn
     <rect x="96" y="-9" width="20" height="9" rx="2" fill="var(--ifm-color-primary)"/>
     <rect x="134" y="-9" width="20" height="9" rx="2" fill="var(--ifm-color-primary)"/>
     <text x="125" y="22" textAnchor="middle" fontSize="12.5"
-          fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-primary)">PersonRepository repository</text>
+          fontFamily="var(--ifm-font-family-monospace)" fill="var(--zeichnung-akzent)">PersonRepository repository</text>
   </g>
   <text x="516" y="330" fontSize="13.5" fontFamily="var(--ifm-font-family-monospace)"
         fill="var(--ifm-color-emphasis-800)">)</text>
 
-  <circle cx="70" cy="366" r="13" fill="var(--ifm-color-emphasis-600)"/>
+  <circle cx="70" cy="366" r="13" fill="var(--zeichnung-marke)"/>
   <text x="70" y="371" textAnchor="middle" fontSize="13" fontWeight="700"
         fill="#ffffff">3</text>
   <text x="94" y="371" fontSize="13" fill="var(--ifm-color-emphasis-800)">das Feld ist final — nach dem Erzeugen steht es fest</text>
@@ -392,7 +392,7 @@ Beim Start sucht Spring nach einer passenden Instanz und übergibt sie. Das nenn
   </g>
   <text x="86" y="427" fontSize="13" fontWeight="700" fill="var(--ifm-font-color-base)">So nicht:</text>
   <text x="150" y="427" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
-        fill="var(--ifm-color-danger)" textDecoration="line-through">new PersonRepository()</text>
+        fill="var(--zeichnung-rot)" textDecoration="line-through">new PersonRepository()</text>
   <text x="86" y="445" fontSize="12.5" fill="var(--ifm-color-emphasis-700)">dann müsste der Controller selbst wissen, wie ein Repository gebaut wird — und wäre nicht mehr testbar</text>
 </svg>
 
@@ -440,9 +440,9 @@ Zwischen der Außenwelt und deiner Anwendung verläuft eine Grenze. **Draußen g
   <path d="M336 46 L336 424" stroke="var(--ifm-color-emphasis-400)"
         strokeWidth="2" strokeDasharray="8 6"/>
   <text x="168" y="30" textAnchor="middle" fontSize="12.5" fontWeight="700"
-        fill="var(--ifm-color-info-dark)">AUSSENWELT — nur Text</text>
+        fill="var(--zeichnung-blau)">AUSSENWELT — nur Text</text>
   <text x="530" y="30" textAnchor="middle" fontSize="12.5" fontWeight="700"
-        fill="var(--ifm-color-primary)">DEINE ANWENDUNG — Java-Objekte</text>
+        fill="var(--zeichnung-akzent)">DEINE ANWENDUNG — Java-Objekte</text>
 
   {/* =============== POST =============== */}
   <text x="16" y="70" fontSize="13.5" fontWeight="700"
@@ -453,7 +453,7 @@ Zwischen der Außenwelt und deiner Anwendung verläuft eine Grenze. **Draußen g
     <rect width="290" height="44" rx="9" fill="var(--ifm-color-info)" opacity="0.12"/>
     <rect width="290" height="44" rx="9" fill="none" stroke="var(--ifm-color-info-dark)" strokeWidth="1.6"/>
     <text x="14" y="28" fontSize="15" fontWeight="700" fontFamily="var(--ifm-font-family-monospace)"
-          fill="var(--ifm-color-info-dark)">&#123; &#125;</text>
+          fill="var(--zeichnung-blau)">&#123; &#125;</text>
     <text x="42" y="28" fontSize="12" fontFamily="var(--ifm-font-family-monospace)"
           fill="var(--ifm-font-color-base)">{'{"firstname":"Anna", ...}'}</text>
   </g>
@@ -508,7 +508,7 @@ Zwischen der Außenwelt und deiner Anwendung verläuft eine Grenze. **Draußen g
     <rect width="290" height="44" rx="9" fill="var(--ifm-color-info)" opacity="0.12"/>
     <rect width="290" height="44" rx="9" fill="none" stroke="var(--ifm-color-info-dark)" strokeWidth="1.6"/>
     <text x="14" y="28" fontSize="15" fontWeight="700" fontFamily="var(--ifm-font-family-monospace)"
-          fill="var(--ifm-color-info-dark)">&#123; &#125;</text>
+          fill="var(--zeichnung-blau)">&#123; &#125;</text>
     <text x="42" y="28" fontSize="12" fontFamily="var(--ifm-font-family-monospace)"
           fill="var(--ifm-font-color-base)">{'{"firstname":"Anna","id":1, ...}'}</text>
   </g>
@@ -531,7 +531,7 @@ Zwischen der Außenwelt und deiner Anwendung verläuft eine Grenze. **Draußen g
   <path d="M310 314 L392 314" stroke="var(--ifm-color-emphasis-500)" strokeWidth="2" strokeDasharray="6 5"/>
   <path d="M385 309 L394 314 L385 319" fill="none" stroke="var(--ifm-color-emphasis-500)" strokeWidth="2"/>
   <text x="351" y="304" textAnchor="middle" fontSize="11" fontWeight="700"
-        fill="var(--ifm-color-emphasis-600)">kein JSON</text>
+        fill="var(--ifm-color-emphasis-700)">kein JSON</text>
 
   <g transform="translate(396,292)">
     <rect width="150" height="44" rx="9" fill="var(--ifm-color-emphasis-100)"/>
@@ -570,7 +570,7 @@ Zwischen der Außenwelt und deiner Anwendung verläuft eine Grenze. **Draußen g
     <rect width="290" height="44" rx="9" fill="var(--ifm-color-info)" opacity="0.12"/>
     <rect width="290" height="44" rx="9" fill="none" stroke="var(--ifm-color-info-dark)" strokeWidth="1.6"/>
     <text x="14" y="28" fontSize="15" fontWeight="700" fontFamily="var(--ifm-font-family-monospace)"
-          fill="var(--ifm-color-info-dark)">&#123; &#125;</text>
+          fill="var(--zeichnung-blau)">&#123; &#125;</text>
     <text x="42" y="28" fontSize="12" fontFamily="var(--ifm-font-family-monospace)"
           fill="var(--ifm-font-color-base)">{'{"firstname":"Anna","id":1, ...}'}</text>
   </g>

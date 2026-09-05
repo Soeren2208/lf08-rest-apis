@@ -1,7 +1,7 @@
 ---
 title: JPA, Hibernate und die Entität
 sidebar_label: JPA und Hibernate
-sidebar_position: 6
+sidebar_position: 8
 ---
 
 # JPA, Hibernate und die Entität
@@ -61,7 +61,7 @@ Ein **objektrelationaler Mapper** (kurz **O/R-Mapper** oder **ORM**) übernimmt 
      fontFamily="var(--ifm-font-family-base)">
 
   {/* ---- linke Welt: Objekte ---- */}
-  <text x="112" y="24" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ifm-color-primary)">Welt der Objekte</text>
+  <text x="112" y="24" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--zeichnung-akzent)">Welt der Objekte</text>
   <g transform="translate(14,38)">
     <rect width="196" height="196" rx="12" fill="var(--ifm-color-primary)" opacity="0.10"/>
     <rect width="196" height="196" rx="12" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="1.8"/>
@@ -132,7 +132,7 @@ Ein **objektrelationaler Mapper** (kurz **O/R-Mapper** oder **ORM**) übernimmt 
   <path d="M355 254 L360 244 L365 254" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2"/>
   <path d="M232 246 C232 286 120 286 120 246" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2" strokeDasharray="6 4"/>
   <path d="M115 254 L120 244 L125 254" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2"/>
-  <text x="360" y="304" textAnchor="middle" fontSize="11.5" fill="var(--ifm-color-primary)">und denselben Weg zurück: aus Zeilen werden wieder Objekte</text>
+  <text x="360" y="304" textAnchor="middle" fontSize="11.5" fill="var(--zeichnung-akzent)">und denselben Weg zurück: aus Zeilen werden wieder Objekte</text>
 
   {/* Fazit */}
   <rect x="14" y="326" width="692" height="60" rx="10" fill="var(--ifm-color-emphasis-100)" stroke="var(--ifm-color-emphasis-300)"/>
@@ -209,9 +209,9 @@ In deinem Projekt tauchen drei Bezeichnungen auf, die scheinbar dasselbe meinen.
     <rect width="692" height="80" rx="11" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2"/>
     <text x="24" y="32" fontSize="15" fontWeight="700" fill="var(--ifm-font-color-base)">Spring Data JPA</text>
     <text x="24" y="54" fontSize="12" fill="var(--ifm-color-emphasis-800)">Der Komfort obendrauf — erzeugt aus deinem Interface ein fertiges Repository</text>
-    <text x="24" y="70" fontSize="11" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-primary)">interface PersonRepository extends JpaRepository</text>
+    <text x="24" y="70" fontSize="11" fontFamily="var(--ifm-font-family-monospace)" fill="var(--zeichnung-akzent)">interface PersonRepository extends JpaRepository</text>
     <rect x="560" y="20" width="108" height="42" rx="8" fill="var(--ifm-background-color)" stroke="var(--ifm-color-primary)"/>
-    <text x="614" y="38" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--ifm-color-primary)">von Spring</text>
+    <text x="614" y="38" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--zeichnung-akzent)">von Spring</text>
     <text x="614" y="53" textAnchor="middle" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">bequem</text>
   </g>
   <path d="M360 118 L360 134" stroke="var(--ifm-color-emphasis-600)" strokeWidth="2"/>
@@ -379,6 +379,16 @@ Bei einer In-Memory-Datenbank ist das unkritisch: Sie ist beim Start ohnehin lee
 
 In echten Projekten verwaltet man das Schema deshalb mit Werkzeugen wie **Flyway** oder **Liquibase**, die jede Änderung als versioniertes SQL-Skript festhalten — nachvollziehbar und wiederholbar.
 :::
+
+## Und wenn Klassen aufeinander zeigen?
+
+Alles bisher Gesagte betraf **eine** Klasse und **eine** Tabelle. Sobald zwei
+Klassen aufeinander verweisen, kommt eine zweite Übersetzungsebene dazu: aus
+einer Referenz wird ein Fremdschlüssel, aus einer Liste wird eine Zwischentabelle
+oder eine Spalte auf der anderen Seite.
+
+Das steht im eigenen Infoblatt [Beziehungen mit JPA abbilden](/infoblaetter/jpa-beziehungen)
+— mit 1:1, 1:n und n:m, ihren Varianten und den üblichen Fallen.
 
 ## Was ein O/R-Mapper *nicht* löst
 

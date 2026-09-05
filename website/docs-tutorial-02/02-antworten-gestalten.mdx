@@ -26,6 +26,8 @@ Nach Bearbeitung dieses Arbeitsblatts kannst du:
 
 ## Das Problem
 
+Was eine gute Fehlerantwort ausmacht und welcher Statuscode wann gilt, steht im Infoblatt [Fehlerantworten](/infoblaetter/fehlerantworten). Hier baust du sie zum ersten Mal.
+
 Dein POST-Endpunkt sieht so aus:
 
 ```java
@@ -70,7 +72,7 @@ Eine HTTP-Antwort besteht aus drei Teilen. `ResponseEntity` fasst alle drei zusa
   <rect x="16" y="34" width="688" height="210" rx="14"
         fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2"/>
   <text x="34" y="24" fontSize="15" fontWeight="800" fontFamily="var(--ifm-font-family-monospace)"
-        fill="var(--ifm-color-primary)">ResponseEntity</text>
+        fill="var(--zeichnung-akzent)">ResponseEntity</text>
 
   {/* ---------- Statuscode ---------- */}
   <g transform="translate(40,54)">
@@ -79,7 +81,7 @@ Eine HTTP-Antwort besteht aus drei Teilen. `ResponseEntity` fasst alle drei zusa
     <text x="16" y="22" fontSize="12" fontWeight="700" fill="var(--ifm-color-emphasis-700)">Statuscode</text>
     <text x="16" y="41" fontSize="14" fontFamily="var(--ifm-font-family-monospace)"
           fill="var(--ifm-font-color-base)">201 Created</text>
-    <text x="624" y="32" textAnchor="end" fontSize="11.5" fill="var(--ifm-color-emphasis-600)">was ist passiert?</text>
+    <text x="624" y="32" textAnchor="end" fontSize="11.5" fill="var(--ifm-color-emphasis-700)">was ist passiert?</text>
   </g>
 
   {/* ---------- Kopfzeilen ---------- */}
@@ -89,7 +91,7 @@ Eine HTTP-Antwort besteht aus drei Teilen. `ResponseEntity` fasst alle drei zusa
     <text x="16" y="22" fontSize="12" fontWeight="700" fill="var(--ifm-color-emphasis-700)">Kopfzeilen</text>
     <text x="16" y="41" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
           fill="var(--ifm-font-color-base)">Location: /api/v1/guestbook-entries/1</text>
-    <text x="624" y="32" textAnchor="end" fontSize="11.5" fill="var(--ifm-color-emphasis-600)">Angaben über die Antwort</text>
+    <text x="624" y="32" textAnchor="end" fontSize="11.5" fill="var(--ifm-color-emphasis-700)">Angaben über die Antwort</text>
   </g>
 
   {/* ---------- Rumpf ---------- */}
@@ -99,7 +101,7 @@ Eine HTTP-Antwort besteht aus drei Teilen. `ResponseEntity` fasst alle drei zusa
     <text x="16" y="22" fontSize="12" fontWeight="700" fill="var(--ifm-color-emphasis-700)">Rumpf</text>
     <text x="16" y="41" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
           fill="var(--ifm-font-color-base)">der Eintrag als JSON</text>
-    <text x="624" y="32" textAnchor="end" fontSize="11.5" fill="var(--ifm-color-emphasis-600)">der Inhalt</text>
+    <text x="624" y="32" textAnchor="end" fontSize="11.5" fill="var(--ifm-color-emphasis-700)">der Inhalt</text>
   </g>
 </svg>
 
@@ -214,13 +216,13 @@ Derselbe Aufruf nimmt deshalb zwei ganz verschiedene Wege:
      fontFamily="var(--ifm-font-family-base)">
 
   {/* ---------- oberer Weg: Eintrag gefunden ---------- */}
-  <text x="16" y="26" fontSize="13" fontWeight="700" fill="var(--ifm-color-success-dark)">Eintrag gefunden</text>
+  <text x="16" y="26" fontSize="13" fontWeight="700" fill="var(--zeichnung-gruen)">Eintrag gefunden</text>
 
   <g transform="translate(16,40)">
     <rect width="150" height="58" rx="9" fill="var(--ifm-color-success)" opacity="0.16"/>
     <rect width="150" height="58" rx="9" fill="none" stroke="var(--ifm-color-success-dark)" strokeWidth="1.6"/>
     <text x="75" y="26" textAnchor="middle" fontSize="12" fill="var(--ifm-color-emphasis-800)">Optional</text>
-    <text x="75" y="45" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ifm-color-success-dark)">der Eintrag</text>
+    <text x="75" y="45" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--zeichnung-gruen)">der Eintrag</text>
   </g>
 
   <path d="M172 69 L246 69" stroke="var(--ifm-color-emphasis-600)" strokeWidth="2"/>
@@ -232,7 +234,7 @@ Derselbe Aufruf nimmt deshalb zwei ganz verschiedene Wege:
     <rect width="170" height="58" rx="9" fill="var(--ifm-color-success)" opacity="0.16"/>
     <rect width="170" height="58" rx="9" fill="none" stroke="var(--ifm-color-success-dark)" strokeWidth="1.6"/>
     <text x="85" y="26" textAnchor="middle" fontSize="12" fill="var(--ifm-color-emphasis-800)">Optional</text>
-    <text x="85" y="45" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ifm-color-success-dark)">200-Antwort</text>
+    <text x="85" y="45" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--zeichnung-gruen)">200-Antwort</text>
   </g>
 
   <path d="M430 69 L524 69" stroke="var(--ifm-color-emphasis-600)" strokeWidth="2"/>
@@ -241,14 +243,14 @@ Derselbe Aufruf nimmt deshalb zwei ganz verschiedene Wege:
         fill="var(--ifm-color-emphasis-800)">orElseThrow</text>
 
   <g transform="translate(532,40)">
-    <rect width="172" height="58" rx="9" fill="var(--ifm-color-success-dark)"/>
+    <rect width="172" height="58" rx="9" fill="var(--ifm-color-success-darkest)"/>
     <text x="86" y="35" textAnchor="middle" fontSize="14" fontWeight="800" fill="#ffffff">200 OK</text>
   </g>
 
   <path d="M16 122 L704 122" stroke="var(--ifm-color-emphasis-300)" strokeWidth="1.4"/>
 
   {/* ---------- unterer Weg: nichts gefunden ---------- */}
-  <text x="16" y="152" fontSize="13" fontWeight="700" fill="var(--ifm-color-danger-dark)">nichts gefunden</text>
+  <text x="16" y="152" fontSize="13" fontWeight="700" fill="var(--zeichnung-rot)">nichts gefunden</text>
 
   <g transform="translate(16,166)">
     <rect width="150" height="58" rx="9" fill="var(--ifm-color-emphasis-200)"/>
@@ -277,7 +279,7 @@ Derselbe Aufruf nimmt deshalb zwei ganz verschiedene Wege:
         fill="var(--ifm-color-emphasis-800)">orElseThrow</text>
 
   <g transform="translate(532,166)">
-    <rect width="172" height="58" rx="9" fill="var(--ifm-color-danger-dark)"/>
+    <rect width="172" height="58" rx="9" fill="var(--ifm-color-danger-darkest)"/>
     <text x="86" y="28" textAnchor="middle" fontSize="14" fontWeight="800" fill="#ffffff">404 Not Found</text>
     <text x="86" y="45" textAnchor="middle" fontSize="11" fill="#ffffff">die Ausnahme wird geworfen</text>
   </g>

@@ -29,3 +29,37 @@
   --ifm-color-primary-lightest: #84cfad;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
+
+/* ===========================================================================
+   Ampelfarben fuer die Zeichnungen
+   ---------------------------------------------------------------------------
+   --ifm-color-danger, --ifm-color-success und --ifm-color-primary sind als
+   FLAECHENfarben gedacht. Als SCHRIFTfarbe auf hellem Grund liegen sie unter
+   4,5:1 und sind damit nicht mehr sicher lesbar - gemessen:
+
+       --ifm-color-danger   auf Weiss   3,68:1
+       --ifm-color-primary  auf Weiss   4,39:1
+
+   Die drei Token hier sind dieselben Farben, aber in der Abstufung, die als
+   Schrift traegt - und sie drehen mit dem Theme mit. Sie gelten NUR fuer
+   Beschriftungen in SVG-Zeichnungen; Linien, Pfeilspitzen und Flaechen
+   behalten den kraeftigen Ton, dort genuegen 3:1.
+   =========================================================================== */
+
+:root {
+  --zeichnung-rot: var(--ifm-color-danger-darkest);
+  --zeichnung-gruen: var(--ifm-color-success-darkest);
+  --zeichnung-gelb: var(--ifm-color-warning-contrast-foreground);
+  --zeichnung-akzent: var(--ifm-color-primary-dark);
+  --zeichnung-blau: var(--ifm-color-info-contrast-foreground);
+  --zeichnung-marke: var(--ifm-color-primary-darkest);
+}
+
+[data-theme='dark'] {
+  --zeichnung-rot: var(--ifm-color-danger-lightest);
+  --zeichnung-gruen: var(--ifm-color-success-lightest);
+  --zeichnung-gelb: var(--ifm-color-warning-lightest);
+  --zeichnung-akzent: var(--ifm-color-primary);
+  --zeichnung-blau: var(--ifm-color-info-contrast-foreground);
+  --zeichnung-marke: var(--ifm-color-primary-darkest);
+}

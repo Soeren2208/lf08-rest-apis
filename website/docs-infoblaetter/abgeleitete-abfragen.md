@@ -1,7 +1,7 @@
 ---
 title: Abgeleitete Abfragen
 sidebar_label: Abgeleitete Abfragen
-sidebar_position: 9
+sidebar_position: 10
 ---
 
 # Abgeleitete Abfragen

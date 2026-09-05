@@ -77,10 +77,10 @@ Beides läuft über dasselbe Protokoll (HTTP) und oft über denselben Server. De
   </g>
 
   {/* ================= rechts: Webservice ================= */}
-  <text x="550" y="22" textAnchor="middle" fontSize="16" fontWeight="700" fill="var(--ifm-color-primary)">Webservice</text>
+  <text x="550" y="22" textAnchor="middle" fontSize="16" fontWeight="700" fill="var(--zeichnung-akzent)">Webservice</text>
   <rect x="394" y="36" width="312" height="382" rx="14" fill="var(--ifm-color-emphasis-100)" stroke="var(--ifm-color-primary)" strokeWidth="1.5"/>
 
-  <text x="550" y="64" textAnchor="middle" fontSize="12.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-primary)">GET /api/v1/persons</text>
+  <text x="550" y="64" textAnchor="middle" fontSize="12.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--zeichnung-akzent)">GET /api/v1/persons</text>
   <path d="M550 74 L550 92" stroke="var(--ifm-color-primary)" strokeWidth="2"/>
   <path d="M545 86 L550 94 L555 86" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2"/>
 
@@ -283,32 +283,32 @@ Ein Webservice-Aufruf besteht immer aus zwei Nachrichten: Anfrage hin, Antwort z
   <path d="M625 58 L625 320" stroke="var(--ifm-color-emphasis-300)" strokeWidth="1.6" strokeDasharray="5 5"/>
 
   {/* Schritt 1 */}
-  <circle cx="95" cy="96" r="12" fill="var(--ifm-color-primary)"/>
+  <circle cx="95" cy="96" r="12" fill="var(--zeichnung-marke)"/>
   <text x="95" y="101" textAnchor="middle" fontSize="12" fontWeight="700" fill="#ffffff">1</text>
   <path d="M110 96 L346 96" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
   <path d="M339 91 L348 96 L339 101" fill="none" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
   <text x="228" y="86" textAnchor="middle" fontSize="12" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">GET /api/v1/persons/1</text>
 
   {/* Schritt 2 */}
-  <circle cx="360" cy="152" r="12" fill="var(--ifm-color-primary)"/>
+  <circle cx="360" cy="152" r="12" fill="var(--zeichnung-marke)"/>
   <text x="360" y="157" textAnchor="middle" fontSize="12" fontWeight="700" fill="#ffffff">2</text>
   <path d="M375 152 L611 152" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
   <path d="M604 147 L613 152 L604 157" fill="none" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
   <text x="493" y="142" textAnchor="middle" fontSize="11.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">{'SELECT ... WHERE id = 1'}</text>
 
   {/* Schritt 3 */}
-  <circle cx="625" cy="212" r="12" fill="var(--ifm-color-emphasis-600)"/>
+  <circle cx="625" cy="212" r="12" fill="var(--zeichnung-marke)"/>
   <text x="625" y="217" textAnchor="middle" fontSize="12" fontWeight="700" fill="#ffffff">3</text>
   <path d="M610 212 L374 212" stroke="var(--ifm-color-emphasis-600)" strokeWidth="2" strokeDasharray="6 4"/>
   <path d="M381 207 L372 212 L381 217" fill="none" stroke="var(--ifm-color-emphasis-600)" strokeWidth="2"/>
   <text x="493" y="202" textAnchor="middle" fontSize="11.5" fill="var(--ifm-color-emphasis-700)">eine Zeile aus der Tabelle</text>
 
   {/* Schritt 4 */}
-  <circle cx="360" cy="278" r="12" fill="var(--ifm-color-primary)"/>
+  <circle cx="360" cy="278" r="12" fill="var(--zeichnung-marke)"/>
   <text x="360" y="283" textAnchor="middle" fontSize="12" fontWeight="700" fill="#ffffff">4</text>
   <path d="M345 278 L109 278" stroke="var(--ifm-color-primary)" strokeWidth="2" strokeDasharray="6 4"/>
   <path d="M116 273 L107 278 L116 283" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2"/>
-  <text x="228" y="268" textAnchor="middle" fontSize="12" fontWeight="700" fill="var(--ifm-color-primary)">200 OK</text>
+  <text x="228" y="268" textAnchor="middle" fontSize="12" fontWeight="700" fill="var(--zeichnung-akzent)">200 OK</text>
   <text x="228" y="298" textAnchor="middle" fontSize="11" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">{'{"id":1,"firstname":"Anna", ...}'}</text>
 </svg>
 

@@ -10,6 +10,12 @@ import TabItem from '@theme/TabItem';
 
 # Das REST-Paradigma
 
+:::info Wozu das im Großen dient
+REST ist die übliche Art, wie verteilte Dienste miteinander sprechen. Warum man
+Systeme überhaupt in Dienste zerlegt — und wann besser nicht —, steht unter
+[Microservices](/infoblaetter/microservices).
+:::
+
 ## Das Problem, bevor es REST gab
 
 Stell dir vor, du sollst drei Webservices anbinden: einen für Kunden, einen für Artikel, einen für Rechnungen. Jeder wurde von einem anderen Team gebaut. Die Endpunkte sehen so aus:
@@ -342,15 +348,15 @@ Leonard Richardson hat eine Leiter mit vier Stufen beschrieben. Dieses Modell is
   <g transform="translate(376,156)">
     <rect width="164" height="224" rx="10" fill="var(--ifm-color-primary)" opacity="0.16"/>
     <rect width="164" height="224" rx="10" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2.4"/>
-    <text x="14" y="26" fontSize="13" fontWeight="700" fill="var(--ifm-color-primary)">Stufe 2</text>
+    <text x="14" y="26" fontSize="13" fontWeight="700" fill="var(--zeichnung-akzent)">Stufe 2</text>
     <text x="14" y="48" fontSize="12" fontWeight="700" fill="var(--ifm-font-color-base)">HTTP-Methoden</text>
     <text x="14" y="65" fontSize="12" fontWeight="700" fill="var(--ifm-font-color-base)">und Statuscodes</text>
     <text x="14" y="90" fontSize="11" fill="var(--ifm-color-emphasis-800)">GET, POST, PUT und</text>
     <text x="14" y="106" fontSize="11" fill="var(--ifm-color-emphasis-800)">DELETE bedeuten das,</text>
     <text x="14" y="122" fontSize="11" fill="var(--ifm-color-emphasis-800)">was sie sagen</text>
     <text x="14" y="148" fontSize="11" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">200 · 201 · 404</text>
-    <text x="14" y="184" fontSize="11.5" fontWeight="700" fill="var(--ifm-color-primary)">Das bauen wir</text>
-    <text x="14" y="201" fontSize="11.5" fontWeight="700" fill="var(--ifm-color-primary)">in diesen Tutorials</text>
+    <text x="14" y="184" fontSize="11.5" fontWeight="700" fill="var(--zeichnung-akzent)">Das bauen wir</text>
+    <text x="14" y="201" fontSize="11.5" fontWeight="700" fill="var(--zeichnung-akzent)">in diesen Tutorials</text>
   </g>
 
   {/* Stufe 3 */}
@@ -361,13 +367,13 @@ Leonard Richardson hat eine Leiter mit vier Stufen beschrieben. Dieses Modell is
     <text x="14" y="72" fontSize="11" fill="var(--ifm-color-emphasis-700)">Antworten enthalten</text>
     <text x="14" y="88" fontSize="11" fill="var(--ifm-color-emphasis-700)">Links zu den nächsten</text>
     <text x="14" y="104" fontSize="11" fill="var(--ifm-color-emphasis-700)">möglichen Schritten</text>
-    <text x="14" y="140" fontSize="11" fontWeight="700" fill="var(--ifm-color-emphasis-600)">In der Praxis</text>
-    <text x="14" y="156" fontSize="11" fontWeight="700" fill="var(--ifm-color-emphasis-600)">kaum verbreitet</text>
+    <text x="14" y="140" fontSize="11" fontWeight="700" fill="var(--ifm-color-emphasis-700)">In der Praxis</text>
+    <text x="14" y="156" fontSize="11" fontWeight="700" fill="var(--ifm-color-emphasis-700)">kaum verbreitet</text>
   </g>
 
   {/* Markierung "hier steht die Praxis" */}
   <g transform="translate(376,104)">
-    <rect width="164" height="34" rx="17" fill="var(--ifm-color-primary)"/>
+    <rect width="164" height="34" rx="17" fill="var(--zeichnung-marke)"/>
     <text x="82" y="22" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="#ffffff">Hier steht die Praxis</text>
   </g>
   <path d="M458 138 L458 152" stroke="var(--ifm-color-primary)" strokeWidth="2.4"/>

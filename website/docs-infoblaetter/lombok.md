@@ -1,10 +1,17 @@
 ---
 title: Lombok
 sidebar_label: Lombok
-sidebar_position: 8
+sidebar_position: 7
 ---
 
 # Lombok
+
+:::warning Vorsicht bei Entitäten mit Beziehungen
+`@Data` erzeugt `toString()`, `equals()` und `hashCode()` über alle Felder. Bei
+Klassen, die aufeinander zeigen, drehen sich diese Methoden im Kreis. Warum das
+so ist und was stattdessen zu tun ist, steht unter
+[Beziehungen mit JPA abbilden](/infoblaetter/jpa-beziehungen).
+:::
 
 ## Das Problem: Code, der nichts aussagt
 
@@ -185,3 +192,9 @@ In deinem Ausbildungsbetrieb wirst du beides antreffen.
 - Bei Entitäten **mit Beziehungen** ist `@Data` gefährlich (Endlosschleifen, wechselnder `hashCode`) — dort nimmt man die einzelnen Annotationen.
 - **Record** für unveränderliche Objekte, **Lombok** für veränderliche.
 :::
+
+## Weiterlesen
+
+- [Werkzeuge in IntelliJ](/infoblaetter/werkzeuge-intellij) — die Anmerkungsverarbeitung einschalten, wenn die Getter fehlen
+- [Beziehungen mit JPA abbilden](/infoblaetter/jpa-beziehungen) — warum die Sammel-Annotation an einer Entität mit Beziehungen gefährlich ist
+- [DTOs und Schichten](/infoblaetter/dto-schichten) — wo ein `record` besser passt als Lombok

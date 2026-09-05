@@ -58,6 +58,13 @@ Zwei davon sind neu:
 
 Bisher lag deine Datenbank als Datei im Projektverzeichnis. Jetzt läuft sie als eigenes Programm in einem **Container** — abgeschottet vom Rest deines Rechners, mit einer eigenen Version, eigenen Einstellungen und eigenem Speicher.
 
+:::info Was ein Container ist, steht nebenan
+Hier brauchst du nur die Befehle. Was ein Container von einer virtuellen Maschine
+unterscheidet, warum `latest` keine Version ist und was `down -v` wirklich löscht,
+steht im Infoblatt [Docker und Container](/infoblaetter/docker) — mit zwei Filmen
+zum Ansehen.
+:::
+
 Das Rezept dafür steht in einer Datei.
 
 <Task id="t4-ab01-a2-compose">Lege im Projekthauptverzeichnis — neben der `pom.xml` — die Datei `docker-compose.yml` an:</Task>
@@ -435,7 +442,7 @@ Sieh dir die Antwort auf den POST genau an: Die Anschrift hat eine eigene `id` b
 
 ### Aufgabe 7 – In die Datenbank sehen
 
-Bei der Maklerdatenbank hast du die Tabellen selbst angelegt. Hier entstehen sie aus deinem Java-Code — und du solltest nachsehen, was daraus geworden ist.
+Bei der Maklerdatenbank hast du die Tabellen selbst angelegt. Hier entstehen sie aus deinem Java-Code — und du solltest nachsehen, was daraus geworden ist. Wie das Datenbank-Werkzeug bedient wird, steht im Infoblatt [Werkzeuge in IntelliJ](/infoblaetter/werkzeuge-intellij).
 
 <Task id="t4-ab01-a7-connect">Öffne in IntelliJ rechts die Leiste **Database** und lege über **+ → Data Source → PostgreSQL** eine Verbindung an:</Task>
 
@@ -466,7 +473,7 @@ Du solltest das hier finden:
           fill="var(--ifm-color-primary)" opacity="0.12"/>
     <text x="38" y="63" fontSize="13.5" fontWeight="800"
           fontFamily="var(--ifm-font-family-monospace)"
-          fill="var(--ifm-color-primary)">supplier</text>
+          fill="var(--zeichnung-akzent)">supplier</text>
 
     <text x="38" y="92" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
           fill="var(--ifm-font-color-base)">id</text>
@@ -479,7 +486,7 @@ Du solltest das hier finden:
     <text x="38" y="140" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
           fill="var(--ifm-font-color-base)">contact_id</text>
     <text x="266" y="140" textAnchor="end" fontSize="10.5" fontWeight="700"
-          fill="var(--ifm-color-primary)">FK · UNIQUE</text>
+          fill="var(--zeichnung-akzent)">FK · UNIQUE</text>
   </g>
 
   {/* ---------- Tabelle contact ---------- */}
@@ -491,7 +498,7 @@ Du solltest das hier finden:
           fill="var(--ifm-color-primary)" opacity="0.12"/>
     <text x="458" y="39" fontSize="13.5" fontWeight="800"
           fontFamily="var(--ifm-font-family-monospace)"
-          fill="var(--ifm-color-primary)">contact</text>
+          fill="var(--zeichnung-akzent)">contact</text>
 
     <text x="458" y="68" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
           fill="var(--ifm-font-color-base)">id</text>
@@ -514,7 +521,7 @@ Du solltest das hier finden:
   <polygon points="444,64 430,58 430,70"
            fill="var(--ifm-color-primary)"/>
   <text x="356" y="100" fontSize="12" fontWeight="700"
-        fill="var(--ifm-color-primary)">zeigt auf</text>
+        fill="var(--zeichnung-akzent)">zeigt auf</text>
 </svg>
 
 Die entscheidende Zeile ist `contact_id`. Sie trägt **zwei** Bedingungen:

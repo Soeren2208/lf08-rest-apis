@@ -2,7 +2,7 @@
 id: testfaelle
 title: Testfälle formulieren
 sidebar_label: Testfälle formulieren
-sidebar_position: 7
+sidebar_position: 13
 ---
 
 # Testfälle formulieren
@@ -87,9 +87,9 @@ Fehler sitzen an den **Rändern** der Klassen, nicht in ihrer Mitte. Wenn ein Ko
   <rect x="166" y="70" width="388" height="44" fill="var(--ifm-color-success)" opacity="0.18"/>
   <rect x="554" y="70" width="150" height="44" fill="var(--ifm-color-danger)" opacity="0.15"/>
 
-  <text x="91" y="98" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ifm-color-danger-dark)">zu kurz</text>
-  <text x="360" y="98" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ifm-color-success-dark)">gültig — 5 bis 500 Zeichen</text>
-  <text x="629" y="98" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ifm-color-danger-dark)">zu lang</text>
+  <text x="91" y="98" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--zeichnung-rot)">zu kurz</text>
+  <text x="360" y="98" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--zeichnung-gruen)">gültig — 5 bis 500 Zeichen</text>
+  <text x="629" y="98" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--zeichnung-rot)">zu lang</text>
 
   {/* Zahlenstrahl */}
   <path d="M16 130 L704 130" stroke="var(--ifm-color-emphasis-600)" strokeWidth="2"/>
@@ -102,22 +102,22 @@ Fehler sitzen an den **Rändern** der Klassen, nicht in ihrer Mitte. Wenn ein Ko
   {/* die vier Pruefwerte */}
   <g transform="translate(140,130)">
     <circle cx="0" cy="0" r="9" fill="var(--ifm-color-danger)"/>
-    <text x="0" y="30" textAnchor="middle" fontSize="15" fontWeight="800" fill="var(--ifm-color-danger-dark)">4</text>
+    <text x="0" y="30" textAnchor="middle" fontSize="15" fontWeight="800" fill="var(--zeichnung-rot)">4</text>
     <text x="0" y="50" textAnchor="middle" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">knapp darunter</text>
   </g>
   <g transform="translate(192,130)">
     <circle cx="0" cy="0" r="9" fill="var(--ifm-color-success-dark)"/>
-    <text x="0" y="30" textAnchor="middle" fontSize="15" fontWeight="800" fill="var(--ifm-color-success-dark)">5</text>
+    <text x="0" y="30" textAnchor="middle" fontSize="15" fontWeight="800" fill="var(--zeichnung-gruen)">5</text>
     <text x="0" y="50" textAnchor="middle" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">auf der Grenze</text>
   </g>
   <g transform="translate(528,130)">
     <circle cx="0" cy="0" r="9" fill="var(--ifm-color-success-dark)"/>
-    <text x="0" y="30" textAnchor="middle" fontSize="15" fontWeight="800" fill="var(--ifm-color-success-dark)">500</text>
+    <text x="0" y="30" textAnchor="middle" fontSize="15" fontWeight="800" fill="var(--zeichnung-gruen)">500</text>
     <text x="0" y="50" textAnchor="middle" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">auf der Grenze</text>
   </g>
   <g transform="translate(580,130)">
     <circle cx="0" cy="0" r="9" fill="var(--ifm-color-danger)"/>
-    <text x="0" y="30" textAnchor="middle" fontSize="15" fontWeight="800" fill="var(--ifm-color-danger-dark)">501</text>
+    <text x="0" y="30" textAnchor="middle" fontSize="15" fontWeight="800" fill="var(--zeichnung-rot)">501</text>
     <text x="0" y="50" textAnchor="middle" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">knapp darüber</text>
   </g>
 
@@ -164,7 +164,7 @@ Bei einem Webservice reicht es nicht, auf den Inhalt zu schauen. Zu jedem Aufruf
   <g transform="translate(430,44)">
     <rect width="276" height="60" rx="9" fill="var(--ifm-color-success)" opacity="0.14"/>
     <rect width="276" height="60" rx="9" fill="none" stroke="var(--ifm-color-success-dark)" strokeWidth="1.6"/>
-    <circle cx="26" cy="30" r="13" fill="var(--ifm-color-success-dark)"/>
+    <circle cx="26" cy="30" r="13" fill="var(--ifm-color-success-darkest)"/>
     <text x="26" y="35" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="#ffffff">1</text>
     <text x="50" y="26" fontSize="13" fontWeight="700" fill="var(--ifm-font-color-base)">Statuscode</text>
     <text x="50" y="45" fontSize="11.5" fill="var(--ifm-color-emphasis-800)">201? 200? 404? Der richtige?</text>
@@ -177,7 +177,7 @@ Bei einem Webservice reicht es nicht, auf den Inhalt zu schauen. Zu jedem Aufruf
     <rect width="276" height="60" rx="9" fill="var(--ifm-color-info)" opacity="0.14"/>
     <rect width="276" height="60" rx="9" fill="none" stroke="var(--ifm-color-info-dark)" strokeWidth="1.6"/>
     <circle cx="26" cy="30" r="13" fill="var(--ifm-color-info-dark)"/>
-    <text x="26" y="35" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="#ffffff">2</text>
+    <text x="26" y="35" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="#10242c">2</text>
     <text x="50" y="26" fontSize="13" fontWeight="700" fill="var(--ifm-font-color-base)">Header</text>
     <text x="50" y="45" fontSize="11.5" fill="var(--ifm-color-emphasis-800)">Format richtig? Location gesetzt?</text>
   </g>
@@ -188,7 +188,7 @@ Bei einem Webservice reicht es nicht, auf den Inhalt zu schauen. Zu jedem Aufruf
   <g transform="translate(430,188)">
     <rect width="276" height="60" rx="9" fill="var(--ifm-color-primary)" opacity="0.14"/>
     <rect width="276" height="60" rx="9" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="1.6"/>
-    <circle cx="26" cy="30" r="13" fill="var(--ifm-color-primary)"/>
+    <circle cx="26" cy="30" r="13" fill="var(--zeichnung-marke)"/>
     <text x="26" y="35" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="#ffffff">3</text>
     <text x="50" y="26" fontSize="13" fontWeight="700" fill="var(--ifm-font-color-base)">Rumpf</text>
     <text x="50" y="45" fontSize="11.5" fill="var(--ifm-color-emphasis-800)">Sind die Felder da? Stimmen die Werte?</text>
@@ -199,7 +199,7 @@ Bei einem Webservice reicht es nicht, auf den Inhalt zu schauen. Zu jedem Aufruf
     <rect width="692" height="76" rx="10" fill="var(--ifm-color-warning)" opacity="0.16"/>
     <rect width="692" height="76" rx="10" fill="none" stroke="var(--ifm-color-warning-dark)" strokeWidth="1.8" strokeDasharray="7 5"/>
     <circle cx="40" cy="38" r="14" fill="var(--ifm-color-warning-dark)"/>
-    <text x="40" y="43" textAnchor="middle" fontSize="13" fontWeight="700" fill="#ffffff">4</text>
+    <text x="40" y="43" textAnchor="middle" fontSize="13" fontWeight="700" fill="#2b2100">4</text>
     <text x="68" y="32" fontSize="13.5" fontWeight="700" fill="var(--ifm-font-color-base)">Der Zustand danach — die Ebene, die am häufigsten vergessen wird</text>
     <text x="68" y="56" fontSize="11.5" fill="var(--ifm-color-emphasis-800)">Ist der Datensatz wirklich in der Datenbank? Eine 201 allein beweist das nicht.</text>
   </g>
@@ -249,3 +249,9 @@ Dieses Muster heißt **Arrange–Act–Assert**. Ein handschriftlicher Testfall 
 - Fehlerfälle sind wichtiger als der Gutfall, weil dort die Fehler sitzen.
 - Ein guter Testfall lässt sich später fast unverändert in einen automatisierten Test übersetzen.
 :::
+
+## Weiterlesen
+
+- [Automatisiert testen](/infoblaetter/automatisiert-testen) — dieselben Testfälle, aber so aufgeschrieben, dass sie von selbst laufen
+- [Fehlerantworten](/infoblaetter/fehlerantworten) — die Fälle, die man am häufigsten zu prüfen vergisst
+- [HTTP kompakt](/infoblaetter/http-kompakt) — die Statuscodes, gegen die geprüft wird

@@ -39,7 +39,7 @@ Also braucht es eine Vereinbarung, wie man ein Objekt aufschreibt und wie der Em
   <g transform="translate(262,44)">
     <rect width="196" height="164" rx="11" fill="var(--ifm-color-info)" opacity="0.12"/>
     <rect width="196" height="164" rx="11" fill="none" stroke="var(--ifm-color-info-dark)" strokeWidth="1.8" strokeDasharray="7 5"/>
-    <text x="98" y="28" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ifm-color-info-dark)">nur noch Text</text>
+    <text x="98" y="28" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--zeichnung-blau)">nur noch Text</text>
     <text x="16" y="66" fontSize="11.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">{'{"id":1,'}</text>
     <text x="16" y="86" fontSize="11.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">{' "firstname":'}</text>
     <text x="16" y="106" fontSize="11.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">{' "Anna"}'}</text>
@@ -268,3 +268,9 @@ Zum Lesen hilft:
 - `[]` heißt „leere Liste", `null` heißt „kein Wert" — das ist nicht dasselbe.
 - Fehlerhaftes JSON beantwortet der Server mit **`400`**.
 :::
+
+## Weiterlesen
+
+- [HTTP kompakt](/infoblaetter/http-kompakt) — der Umschlag, in dem das JSON steckt
+- [DTOs und Schichten](/infoblaetter/dto-schichten) — welche Klasse bestimmt, wie das JSON aussieht
+- [Fehlerantworten](/infoblaetter/fehlerantworten) — das Standardformat für den Fehlerfall

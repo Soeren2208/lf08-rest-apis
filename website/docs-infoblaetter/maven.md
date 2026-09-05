@@ -94,7 +94,7 @@ Maven lädt sie aus einem **Repository** — einem öffentlichen Archiv im Inter
   {/* Schritt 1 */}
   <path d="M176 148 L242 148" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
   <path d="M235 143 L244 148 L235 153" fill="none" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
-  <circle cx="209" cy="130" r="11" fill="var(--ifm-color-primary)"/>
+  <circle cx="209" cy="130" r="11" fill="var(--zeichnung-marke)"/>
   <text x="209" y="134" textAnchor="middle" fontSize="11" fontWeight="700" fill="#ffffff">1</text>
   <text x="209" y="172" textAnchor="middle" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">Was brauche ich?</text>
 
@@ -109,7 +109,7 @@ Maven lädt sie aus einem **Repository** — einem öffentlichen Archiv im Inter
   {/* Schritt 2 */}
   <path d="M366 148 L432 148" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
   <path d="M425 143 L434 148 L425 153" fill="none" stroke="var(--ifm-color-emphasis-700)" strokeWidth="2"/>
-  <circle cx="399" cy="130" r="11" fill="var(--ifm-color-primary)"/>
+  <circle cx="399" cy="130" r="11" fill="var(--zeichnung-marke)"/>
   <text x="399" y="134" textAnchor="middle" fontSize="11" fontWeight="700" fill="#ffffff">2</text>
   <text x="399" y="172" textAnchor="middle" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">Schon da?</text>
 
@@ -129,7 +129,7 @@ Maven lädt sie aus einem **Repository** — einem öffentlichen Archiv im Inter
   {/* Schritt 3: nur falls nicht vorhanden */}
   <path d="M513 106 L513 66" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.8" strokeDasharray="6 4"/>
   <path d="M508 74 L513 64 L518 74" fill="none" stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.8"/>
-  <circle cx="547" cy="88" r="11" fill="var(--ifm-color-emphasis-600)"/>
+  <circle cx="547" cy="88" r="11" fill="var(--zeichnung-marke)"/>
   <text x="547" y="92" textAnchor="middle" fontSize="11" fontWeight="700" fill="#ffffff">3</text>
   <text x="565" y="92" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">nur falls sie fehlt</text>
 
@@ -142,7 +142,7 @@ Maven lädt sie aus einem **Repository** — einem öffentlichen Archiv im Inter
   {/* Schritt 4: zurück ans Projekt */}
   <path d="M512 220 C512 268 92 268 92 222" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2"/>
   <path d="M87 230 L92 220 L97 230" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2"/>
-  <circle cx="302" cy="264" r="11" fill="var(--ifm-color-primary)"/>
+  <circle cx="302" cy="264" r="11" fill="var(--zeichnung-marke)"/>
   <text x="302" y="268" textAnchor="middle" fontSize="11" fontWeight="700" fill="#ffffff">4</text>
   <text x="324" y="268" fontSize="11" fill="var(--ifm-color-emphasis-800)">bereitstellen — ab jetzt ohne Internet</text>
 
@@ -186,7 +186,7 @@ spring-boot-starter-webmvc
   {/* obere Leiste: was du schreibst */}
   <text x="16" y="26" fontSize="12.5" fontWeight="700" fill="var(--ifm-color-emphasis-800)">Das schreibst du in die pom.xml</text>
   <rect x="16" y="38" width="43" height="36" rx="6" fill="var(--ifm-color-primary)"/>
-  <text x="72" y="55" fontSize="19" fontWeight="800" fill="var(--ifm-color-primary)">8</text>
+  <text x="72" y="55" fontSize="19" fontWeight="800" fill="var(--zeichnung-akzent)">8</text>
   <text x="94" y="55" fontSize="13" fill="var(--ifm-color-emphasis-800)">Abhängigkeiten</text>
   <text x="94" y="72" fontSize="11" fill="var(--ifm-color-emphasis-700)">vier Starter, H2 und drei Test-Bausteine</text>
 
@@ -297,3 +297,9 @@ Bibliotheken werden also **nie** ins Projekt kopiert. Weitergegeben wird nur die
 - Der **Wrapper** (`mvnw`) sorgt dafür, dass alle mit derselben Maven-Version bauen.
 - Bibliotheken landen nie im Projektordner — weitergegeben wird die `pom.xml`.
 :::
+
+## Weiterlesen
+
+- [Werkzeuge in IntelliJ](/infoblaetter/werkzeuge-intellij) — dasselbe zum Anklicken, plus das Maven-Fenster
+- [Automatisiert testen](/infoblaetter/automatisiert-testen) — die Test-Abhängigkeiten und ihr Geltungsbereich
+- [Docker und Container](/infoblaetter/docker) — dieselbe Grundfrage eine Ebene höher

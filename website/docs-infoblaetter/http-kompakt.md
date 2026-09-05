@@ -38,13 +38,13 @@ HTTP ist die Sprache, in der Client und Server miteinander reden. Jeder Aufruf e
   <text x="360" y="102" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="var(--ifm-font-color-base)">Request — die Anfrage</text>
   <path d="M611 132 L108 132" stroke="var(--ifm-color-primary)" strokeWidth="2" strokeDasharray="6 4"/>
   <path d="M115 127 L106 132 L115 137" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2"/>
-  <text x="360" y="126" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="var(--ifm-color-primary)">Response — die Antwort</text>
+  <text x="360" y="126" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="var(--zeichnung-akzent)">Response — die Antwort</text>
 
   {/* Trennung */}
   <path d="M70 166 L650 166" stroke="var(--ifm-color-danger)" strokeWidth="1.6" strokeDasharray="7 5"/>
   <g transform="translate(283,152)">
     <rect width="154" height="28" rx="14" fill="var(--ifm-background-color)" stroke="var(--ifm-color-danger)" strokeWidth="1.5"/>
-    <text x="77" y="19" textAnchor="middle" fontSize="11.5" fontWeight="700" fill="var(--ifm-color-danger)">Anfrage abgeschlossen</text>
+    <text x="77" y="19" textAnchor="middle" fontSize="11.5" fontWeight="700" fill="var(--zeichnung-rot)">Anfrage abgeschlossen</text>
   </g>
 
   {/* Zweiter Aufruf */}
@@ -55,7 +55,7 @@ HTTP ist die Sprache, in der Client und Server miteinander reden. Jeder Aufruf e
   <text x="360" y="224" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="var(--ifm-font-color-base)">Request — die Anfrage</text>
   <path d="M611 254 L108 254" stroke="var(--ifm-color-primary)" strokeWidth="2" strokeDasharray="6 4"/>
   <path d="M115 249 L106 254 L115 259" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2"/>
-  <text x="360" y="248" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="var(--ifm-color-primary)">Response — die Antwort</text>
+  <text x="360" y="248" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="var(--zeichnung-akzent)">Response — die Antwort</text>
 
   <text x="360" y="290" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="var(--ifm-color-emphasis-800)">Der Server erinnert sich an den ersten Aufruf nicht — das ist Zustandslosigkeit</text>
 </svg>
@@ -131,13 +131,13 @@ Jede Antwort trägt einen dreistelligen Code. Die **erste Ziffer** sagt schon da
     <text x="65" y="46" textAnchor="middle" fontSize="26" fontWeight="800" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-700)">1xx</text>
     <text x="65" y="76" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ifm-font-color-base)">Information</text>
     <text x="65" y="106" textAnchor="middle" fontSize="11.5" fill="var(--ifm-color-emphasis-700)">Moment noch …</text>
-    <text x="65" y="134" textAnchor="middle" fontSize="10.5" fill="var(--ifm-color-emphasis-600)">selten</text>
+    <text x="65" y="134" textAnchor="middle" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">selten</text>
   </g>
 
   <g transform="translate(154,14)">
     <rect width="130" height="152" rx="11" fill="var(--ifm-color-success)" opacity="0.18"/>
     <rect width="130" height="152" rx="11" fill="none" stroke="var(--ifm-color-success-dark)" strokeWidth="1.8"/>
-    <text x="65" y="46" textAnchor="middle" fontSize="26" fontWeight="800" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-success-dark)">2xx</text>
+    <text x="65" y="46" textAnchor="middle" fontSize="26" fontWeight="800" fontFamily="var(--ifm-font-family-monospace)" fill="var(--zeichnung-gruen)">2xx</text>
     <text x="65" y="76" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ifm-font-color-base)">Erfolg</text>
     <text x="65" y="106" textAnchor="middle" fontSize="11.5" fill="var(--ifm-color-emphasis-800)">Hat geklappt.</text>
     <text x="65" y="134" textAnchor="middle" fontSize="10.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-700)">200 · 201 · 204</text>
@@ -146,7 +146,7 @@ Jede Antwort trägt einen dreistelligen Code. Die **erste Ziffer** sagt schon da
   <g transform="translate(294,14)">
     <rect width="130" height="152" rx="11" fill="var(--ifm-color-info)" opacity="0.18"/>
     <rect width="130" height="152" rx="11" fill="none" stroke="var(--ifm-color-info-dark)" strokeWidth="1.8"/>
-    <text x="65" y="46" textAnchor="middle" fontSize="26" fontWeight="800" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-info-dark)">3xx</text>
+    <text x="65" y="46" textAnchor="middle" fontSize="26" fontWeight="800" fontFamily="var(--ifm-font-family-monospace)" fill="var(--zeichnung-blau)">3xx</text>
     <text x="65" y="76" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ifm-font-color-base)">Umleitung</text>
     <text x="65" y="106" textAnchor="middle" fontSize="11.5" fill="var(--ifm-color-emphasis-800)">Schau woanders</text>
     <text x="65" y="122" textAnchor="middle" fontSize="11.5" fill="var(--ifm-color-emphasis-800)">nach.</text>
@@ -155,7 +155,7 @@ Jede Antwort trägt einen dreistelligen Code. Die **erste Ziffer** sagt schon da
   <g transform="translate(434,14)">
     <rect width="130" height="152" rx="11" fill="var(--ifm-color-warning)" opacity="0.22"/>
     <rect width="130" height="152" rx="11" fill="none" stroke="var(--ifm-color-warning-dark)" strokeWidth="1.8"/>
-    <text x="65" y="46" textAnchor="middle" fontSize="26" fontWeight="800" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-warning-dark)">4xx</text>
+    <text x="65" y="46" textAnchor="middle" fontSize="26" fontWeight="800" fontFamily="var(--ifm-font-family-monospace)" fill="var(--zeichnung-gelb)">4xx</text>
     <text x="65" y="76" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ifm-font-color-base)">Client-Fehler</text>
     <text x="65" y="106" textAnchor="middle" fontSize="11.5" fontWeight="700" fill="var(--ifm-color-emphasis-800)">Du hast Mist gebaut.</text>
     <text x="65" y="134" textAnchor="middle" fontSize="10.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-700)">400 · 404 · 405</text>
@@ -164,10 +164,10 @@ Jede Antwort trägt einen dreistelligen Code. Die **erste Ziffer** sagt schon da
   <g transform="translate(574,14)">
     <rect width="132" height="152" rx="11" fill="var(--ifm-color-danger)" opacity="0.18"/>
     <rect width="132" height="152" rx="11" fill="none" stroke="var(--ifm-color-danger-dark)" strokeWidth="1.8"/>
-    <text x="66" y="46" textAnchor="middle" fontSize="26" fontWeight="800" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-danger-dark)">5xx</text>
+    <text x="66" y="46" textAnchor="middle" fontSize="26" fontWeight="800" fontFamily="var(--ifm-font-family-monospace)" fill="var(--zeichnung-rot)">5xx</text>
     <text x="66" y="76" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--ifm-font-color-base)">Server-Fehler</text>
     <text x="66" y="106" textAnchor="middle" fontSize="11.5" fontWeight="700" fill="var(--ifm-color-emphasis-800)">Ich habe Mist gebaut.</text>
-    <text x="66" y="134" textAnchor="middle" fontSize="10.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-700)">500</text>
+    <text x="66" y="134" textAnchor="middle" fontSize="10.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-emphasis-800)">500</text>
   </g>
 
   {/* Die entscheidende Trennlinie */}
@@ -269,7 +269,7 @@ Solange eine API nur JSON kennt, gibt es nichts zu verhandeln. Interessant wird 
     <rect width="136" height="90" rx="12" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="2.2"/>
     <text x="68" y="30" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="var(--ifm-font-color-base)">ein einziger</text>
     <text x="68" y="48" textAnchor="middle" fontSize="12.5" fontWeight="700" fill="var(--ifm-font-color-base)">Endpunkt</text>
-    <text x="68" y="72" textAnchor="middle" fontSize="10.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-primary)">GET /persons</text>
+    <text x="68" y="72" textAnchor="middle" fontSize="10.5" fontFamily="var(--ifm-font-family-monospace)" fill="var(--zeichnung-akzent)">GET /persons</text>
   </g>
 
   <path d="M432 148 C468 148 470 49 506 49" fill="none" stroke="var(--ifm-color-primary)" strokeWidth="1.8"/>
@@ -282,17 +282,17 @@ Solange eine API nur JSON kennt, gibt es nichts zu verhandeln. Interessant wird 
   {/* Formate rechts */}
   <g transform="translate(512,20)">
     <rect width="194" height="58" rx="10" fill="var(--ifm-background-color)" stroke="var(--ifm-color-primary)" strokeWidth="1.6"/>
-    <text x="18" y="26" fontSize="14" fontWeight="700" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-primary)">JSON</text>
+    <text x="18" y="26" fontSize="14" fontWeight="700" fontFamily="var(--ifm-font-family-monospace)" fill="var(--zeichnung-akzent)">JSON</text>
     <text x="18" y="45" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">für Programme</text>
   </g>
   <g transform="translate(512,134)">
     <rect width="194" height="58" rx="10" fill="var(--ifm-background-color)" stroke="var(--ifm-color-primary)" strokeWidth="1.6"/>
-    <text x="18" y="26" fontSize="14" fontWeight="700" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-primary)">CSV</text>
+    <text x="18" y="26" fontSize="14" fontWeight="700" fontFamily="var(--ifm-font-family-monospace)" fill="var(--zeichnung-akzent)">CSV</text>
     <text x="18" y="45" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">für Tabellenkalkulation</text>
   </g>
   <g transform="translate(512,248)">
     <rect width="194" height="58" rx="10" fill="var(--ifm-background-color)" stroke="var(--ifm-color-primary)" strokeWidth="1.6"/>
-    <text x="18" y="26" fontSize="14" fontWeight="700" fontFamily="var(--ifm-font-family-monospace)" fill="var(--ifm-color-primary)">XML</text>
+    <text x="18" y="26" fontSize="14" fontWeight="700" fontFamily="var(--ifm-font-family-monospace)" fill="var(--zeichnung-akzent)">XML</text>
     <text x="18" y="45" fontSize="10.5" fill="var(--ifm-color-emphasis-700)">für ältere Systeme</text>
   </g>
 </svg>
@@ -399,3 +399,9 @@ curl -X POST http://localhost:8080/api/v1/persons \
 - Über diese beiden Header handeln Client und Server das Format aus (**Content Negotiation**). `415` meint ein unlesbares Format auf der Hinfahrt, `406` ein unmögliches auf der Rückfahrt.
 - Fehler werden standardisiert als **Problem Details** (`application/problem+json`) zurückgegeben.
 :::
+
+## Weiterlesen
+
+- [Fehlerantworten](/infoblaetter/fehlerantworten) — welcher Statuscode wann gilt und was in den Rumpf gehört
+- [JSON](/infoblaetter/json) — das Format, das im Rumpf steckt
+- [Das REST-Paradigma](/infoblaetter/rest-paradigma) — warum die Methoden gerade so heißen

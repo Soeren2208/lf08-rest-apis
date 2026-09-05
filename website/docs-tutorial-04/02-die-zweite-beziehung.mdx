@@ -15,6 +15,13 @@ sidebar_position: 2
 >
 > Klingt nach einer Annotation Arbeit. Ist es auch. Und danach läuft dein Webshop nicht mehr.
 
+:::info Zum Nachschlagen und Vertiefen
+Dieses Arbeitsblatt zeigt 1:n an einem Beispiel. Alle drei Kardinalitäten mit
+ihren Varianten — auch **n:m**, das hier nicht vorkommt, in Projekten aber sehr
+wohl — stehen im Infoblatt
+[Beziehungen mit JPA abbilden](/infoblaetter/jpa-beziehungen).
+:::
+
 ## Lernziele
 
 Nach Bearbeitung dieses Arbeitsblatts kannst du:
@@ -89,7 +96,7 @@ Nach Bearbeitung dieses Arbeitsblatts kannst du:
     <line x1="40" y1="270" x2="280" y2="270"
           stroke="var(--ifm-color-primary)" strokeWidth="2"/>
     <text x="160" y="262" textAnchor="middle" fontSize="15" fontWeight="700"
-          fill="var(--ifm-color-primary)">Article</text>
+          fill="var(--zeichnung-akzent)">Article</text>
     <text x="54" y="292" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
           fill="var(--ifm-font-color-base)">- id: Long</text>
     <text x="54" y="314" fontSize="13" fontFamily="var(--ifm-font-family-monospace)"
@@ -311,6 +318,33 @@ Danach kommt Jackson und wandelt das Ergebnis in JSON um. Es geht Feld für Feld
 
 Dass noch gar keine Artikel existieren, spielt keine Rolle. Der Platzhalter weiß es nicht; um es zu wissen, müsste er nachsehen.
 
+:::warning Und warum geht es in die andere Richtung gut?
+`Article.supplier` ist auch eine Beziehung — trotzdem macht sie keine
+Schwierigkeiten. Der Grund steht nicht in deinem Code, sondern in der Vorgabe
+von JPA:
+
+| Annotation | Vorgabe, wenn nichts dabeisteht |
+|---|---|
+| `@ManyToOne`, `@OneToOne` | **EAGER** — wird sofort mitgeladen |
+| `@OneToMany`, `@ManyToMany` | **LAZY** — wird erst bei Bedarf geholt |
+
+Merksatz: *Eines ist schnell geholt, viele nicht.*
+
+Dein `@ManyToOne` bei `Article.supplier` steht ohne `fetch`-Angabe da — also
+EAGER. Der Lieferant ist deshalb immer schon geladen, sobald ein Artikel
+geladen wurde.
+
+**Das ist eine stille Abhängigkeit, und du solltest sie kennen:** Schreibst du
+dort `fetch = FetchType.LAZY` — was viele Anleitungen im Netz aus guten Gründen
+empfehlen —, dann bricht in Arbeitsblatt 03 die Umwandlung eines Artikels in
+ein DTO mit derselben Ausnahme wie hier. Die Ursache ist dieselbe: Dort
+geschieht die Umwandlung im Controller, ohne offene Session.
+
+Ab Arbeitsblatt 04 ist das kein Thema mehr — dann liegt die Umwandlung im
+Service, und der arbeitet in einer Transaktion. Alles Weitere im Infoblatt
+[Beziehungen mit JPA abbilden](/infoblaetter/jpa-beziehungen).
+:::
+
 :::note Warum ist die Verbindung schon zu?
 Wegen einer Zeile, die du in Arbeitsblatt 01 selbst eingetragen hast (und die schon im Gästebuch stand):
 
@@ -417,14 +451,14 @@ Jackson hat bei Tiefe 500 abgebrochen — mitten im Schreiben. Da der Statuscode
           stroke="var(--ifm-color-danger)" strokeWidth="2"/>
     <polygon points="62,192 50,180 66,178" fill="var(--ifm-color-danger)"/>
     <text x="26" y="156" textAnchor="middle" fontSize="11.5" fontWeight="700"
-          fill="var(--ifm-color-danger)">articles</text>
+          fill="var(--zeichnung-rot)">articles</text>
 
     {/* hoch */}
     <path d="M 148 192 C 170 162, 170 140, 148 110" fill="none"
           stroke="var(--ifm-color-danger)" strokeWidth="2"/>
     <polygon points="148,110 144,124 160,122" fill="var(--ifm-color-danger)"/>
     <text x="196" y="156" textAnchor="middle" fontSize="11.5" fontWeight="700"
-          fill="var(--ifm-color-danger)">supplier</text>
+          fill="var(--zeichnung-rot)">supplier</text>
 
     <text x="105" y="272" textAnchor="middle" fontSize="12"
           fill="var(--ifm-color-emphasis-700)">zwei Felder, ein Kreis</text>
@@ -463,10 +497,10 @@ Jackson hat bei Tiefe 500 abgebrochen — mitten im Schreiben. Da der Statuscode
           fill="var(--ifm-color-emphasis-700)">supplier</text>
 
     <text x="212" y="182" textAnchor="middle" fontSize="22" fontWeight="800"
-          fill="var(--ifm-color-danger)">…</text>
+          fill="var(--zeichnung-rot)">…</text>
 
     <text x="212" y="244" textAnchor="middle" fontSize="12" fontWeight="700"
-          fill="var(--ifm-color-danger)">Abbruch bei Tiefe 500</text>
+          fill="var(--zeichnung-rot)">Abbruch bei Tiefe 500</text>
   </g>
 </svg>
 
