@@ -386,6 +386,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import de.szut.webshop.contact.Contact;
+
 @Entity
 @Table(name = "supplier")
 @Getter
@@ -425,6 +427,35 @@ Zwei Stellen verdienen einen zweiten Blick.
 | `1` an beiden Enden | `@OneToOne` |
 | Linie von `Supplier` zu `Contact` | `@JoinColumn(name = "contact_id")` — der Fremdschlüssel liegt beim Lieferanten |
 
+:::note Der Fremdschlüssel könnte auch im `Contact` liegen
+Bei einer 1:1-Beziehung hast du die Wahl: Die Spalte kann in **einer** der beiden Tabellen stehen — beides bildet dieselbe Beziehung ab, beides ist erlaubt. Die Datenbank sieht am Ende fast dasselbe.
+
+Läge sie im `Contact`, sähe es so aus:
+
+```java
+// im Contact — er besitzt die Beziehung und trägt den Schlüssel
+@OneToOne
+@JoinColumn(name = "supplier_id")
+private Supplier supplier;
+
+// im Supplier — er liest nur mit
+@OneToOne(mappedBy = "supplier", cascade = CascadeType.ALL, orphanRemoval = true)
+private Contact contact;
+```
+
+Hier liegt der Schlüssel beim `Supplier`, und dafür gibt es drei Gründe.
+
+**1. Der `Contact` soll den `Supplier` nicht kennen.** Wer den Schlüssel trägt, braucht ein Feld vom Typ der anderen Klasse — siehe oben: `private Supplier supplier;`. Damit zeigten beide Klassen aufeinander, und genau daraus entsteht der Kreis, an dem in Arbeitsblatt 03 die JSON-Antwort scheitert. So bleibt die Abhängigkeit einseitig: Das Paket `supplier` kennt `contact`, das Paket `contact` kennt niemanden.
+
+**2. Gelesen wird nur in eine Richtung.** Du holst einen Lieferanten und willst seine Anschrift dazu. Umgekehrt fragt niemand: „Zu welchem Lieferanten gehört diese Anschrift?" Der Verweis steht dort, wo er auch benutzt wird.
+
+**3. Das Speichern bleibt ein Handgriff.** `supplier.setContact(contact)` genügt — Hibernate schreibt die Spalte. Läge der Schlüssel beim `Contact`, müsstest du zusätzlich `contact.setSupplier(supplier)` aufrufen. Vergisst du das, bleibt `supplier_id` schlicht `null`, ohne Fehlermeldung: `mappedBy` heißt nämlich *diese Seite liest nur, sie schreibt nicht*.
+
+Die Regel dahinter ist keine Vorschrift, sondern eine Abwägung: **Der Schlüssel gehört auf die Seite, von der aus gelesen wird — und die Gegenseite bleibt am besten ahnungslos.**
+
+Mehr zu den Besitzverhältnissen bei Beziehungen steht im Infoblatt [Beziehungen mit JPA abbilden](/infoblaetter/jpa-beziehungen).
+:::
+
 ### Aufgabe 5 – Repository und Controller
 
 <Task id="t4-ab01-a5-repo">Lege im Package `supplier` das Interface `SupplierRepository` an, das `JpaRepository<Supplier, Long>` erweitert.</Task>
@@ -433,8 +464,6 @@ Zwei Stellen verdienen einen zweiten Blick.
 package de.szut.webshop.supplier;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-
-import de.szut.webshop.supplier.Supplier;
 
 public interface SupplierRepository extends JpaRepository<Supplier, Long> {
 }

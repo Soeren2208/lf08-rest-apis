@@ -18,7 +18,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import de.szut.webshop.common.ApiExceptionHandler;
 import de.szut.webshop.contact.ContactDto;
 
 /**

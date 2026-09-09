@@ -49,8 +49,6 @@ import java.math.BigDecimal;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import de.szut.webshop.article.ArticleDto;
-import de.szut.webshop.article.Article;
 import de.szut.webshop.supplier.Supplier;
 
 @DisplayName("ArticleMapper")
@@ -128,9 +126,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import de.szut.webshop.supplier.Supplier;
 import de.szut.webshop.article.ArticleRepository;
-import de.szut.webshop.supplier.SupplierRepository;
 
 @DisplayName("SupplierService")
 class SupplierServiceTest {
@@ -205,9 +201,6 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
-import de.szut.webshop.supplier.SupplierHasArticlesException;
-import de.szut.webshop.supplier.SupplierService;
 
 @WebMvcTest(SupplierController.class)
 @DisplayName("SupplierController (Web-Schicht)")
@@ -306,7 +299,6 @@ import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabas
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 
 import de.szut.webshop.contact.Contact;
-import de.szut.webshop.supplier.Supplier;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
