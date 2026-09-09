@@ -427,7 +427,9 @@ Zwei Stellen verdienen einen zweiten Blick.
 | `1` an beiden Enden | `@OneToOne` |
 | Linie von `Supplier` zu `Contact` | `@JoinColumn(name = "contact_id")` — der Fremdschlüssel liegt beim Lieferanten |
 
-:::note Der Fremdschlüssel könnte auch im `Contact` liegen
+<details>
+<summary>Exkurs: Der Fremdschlüssel könnte auch im `Contact` liegen</summary>
+
 Bei einer 1:1-Beziehung hast du die Wahl: Die Spalte kann in **einer** der beiden Tabellen stehen — beides bildet dieselbe Beziehung ab, beides ist erlaubt. Die Datenbank sieht am Ende fast dasselbe.
 
 Läge sie im `Contact`, sähe es so aus:
@@ -454,7 +456,8 @@ Hier liegt der Schlüssel beim `Supplier`, und dafür gibt es drei Gründe.
 Die Regel dahinter ist keine Vorschrift, sondern eine Abwägung: **Der Schlüssel gehört auf die Seite, von der aus gelesen wird — und die Gegenseite bleibt am besten ahnungslos.**
 
 Mehr zu den Besitzverhältnissen bei Beziehungen steht im Infoblatt [Beziehungen mit JPA abbilden](/infoblaetter/jpa-beziehungen).
-:::
+
+</details>
 
 ### Aufgabe 5 – Repository und Controller
 
@@ -537,7 +540,7 @@ Das ist genau das, was du im Gästebuch auch gemacht hast — und es funktionier
 
 <Task id="t4-ab01-a6-file">Lege über **File → New → HTTP Request** im Projekthauptverzeichnis (vorher markieren!) die Datei `requests.http` an.</Task>
 
-<Task id="t4-ab01-a6-content">Trage die drei Anfragen ein:</Task>
+<Task id="t4-ab01-a6-content">Kopiere die unten abgebildeten Anfragen und füge sie in `requests.http` ein:</Task>
 
 ```http title="requests.http"
 ### Lieferanten anlegen
@@ -554,17 +557,6 @@ Content-Type: application/json
   }
 }
 
-### Alle Lieferanten
-GET http://localhost:8080/api/v1/suppliers
-
-### Einen Lieferanten
-GET http://localhost:8080/api/v1/suppliers/1
-```
-
-Für die Aufgaben danach brauchst du einen **zweiten** Lieferanten. Ergänze
-deshalb noch diese Anfrage:
-
-```http title="requests.http"
 ### Zweiter Lieferant, ohne Telefonnummer
 POST http://localhost:8080/api/v1/suppliers
 Content-Type: application/json
@@ -577,7 +569,15 @@ Content-Type: application/json
     "city": "Bremen"
   }
 }
+
+### Alle Lieferanten
+GET http://localhost:8080/api/v1/suppliers
+
+### Einen Lieferanten
+GET http://localhost:8080/api/v1/suppliers/1
 ```
+
+Zwei Lieferanten sind Absicht: Die Aufgaben der nächsten Arbeitsblätter brauchen mehr als einen. Beim zweiten fehlt die Telefonnummer — auch das ist gewollt.
 
 <Task id="t4-ab01-a6-run">Starte die Anwendung — der Container muss laufen — und lege zwei Lieferanten an.</Task>
 
