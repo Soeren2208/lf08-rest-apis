@@ -158,7 +158,7 @@ public class Employee {
 }
 ```
 
-Daraus entsteht in der Tabelle `employee` eine Spalte `badge_id` — mit **UNIQUE**-Bedingung. Genau die macht aus einer 1:n eine 1:1: Kein zweiter Mitarbeiter kann denselben Ausweis eintragen.
+Daraus entsteht in der Tabelle `employee` eine Spalte `badge_id` — mit **UNIQUE**-Bedingung. Genau die macht aus einer 1:n-Beziehung eine 1:1-Beziehung: Kein zweiter Mitarbeiter kann denselben Ausweis eintragen.
 
 ```sql
 -- so sieht es in der Datenbank aus
@@ -335,12 +335,12 @@ Beide Fälle erzeugen eine Zwischentabelle mit zwei Spalten. Nachgemessen:
 | `@OneToMany` ohne `@JoinColumn` | `course_lessons (course_id, lessons_id)` | **`UNIQUE (lessons_id)`** |
 | `@ManyToMany` | `student_course (student_id, course_id)` | keine |
 
-Das UNIQUE ist die ganze 1:n: Es verbietet, dass dieselbe Lektion zu zwei Kursen gehört. Fehlt es, ist es eine n:m.
+Das UNIQUE ist die ganze 1:n-Beziehung: Es verbietet, dass dieselbe Lektion zu zwei Kursen gehört. Fehlt es, ist es eine n:m-Beziehung.
 
 Wer die Datenbank lesen kann, sieht die Kardinalität also direkt — an den Bedingungen, nicht an den Spalten.
 :::
 
-## Sobald die Verbindung selbst etwas weiß: keine n:m mehr
+## Sobald die Verbindung selbst etwas weiß: keine n:m-Beziehung mehr
 
 Das ist die praktisch wichtigste Regel dieses Blatts.
 
@@ -389,7 +389,7 @@ Solange die Zuordnung nur „gehört zusammen" bedeutet, reicht `@ManyToMany`. S
   <text x="524" y="88" fontSize="11" fill="var(--ifm-color-emphasis-800)">1</text>
 
   <text x="360" y="176" textAnchor="middle" fontSize="12"
-        fill="var(--ifm-color-emphasis-800)">Aus einer n:m werden zwei 1:n — und die Verbindung bekommt einen Namen.</text>
+        fill="var(--ifm-color-emphasis-800)">Aus n:m werden zwei 1:n — und die Verbindung bekommt einen Namen.</text>
   <text x="360" y="202" textAnchor="middle" fontSize="12"
         fill="var(--ifm-color-emphasis-800)">Sie heißt jetzt „Einschreibung" und ist ein Ding, über das man reden kann.</text>
 </svg>

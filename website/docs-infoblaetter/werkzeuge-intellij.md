@@ -285,7 +285,7 @@ Wenn `spring.jpa.hibernate.ddl-auto=update` steht, entstehen die Tabellen aus de
 
 Hier kannst du es nachsehen. Der Unterschied zwischen einer 1:n- und einer n:m-Beziehung ist im Schema genau **eine** Bedingung; siehe [Beziehungen mit JPA abbilden](/infoblaetter/jpa-beziehungen).
 
-**Wichtig dabei:** Die **Spaltenansicht** zeigt Bedingungen nur zum Teil. Einen Fremdschlüssel markiert sie, eine Unique-Bedingung nicht — Eindeutigkeit ist keine Eigenschaft einer Spalte, sondern ein eigenes Objekt der Tabelle. Sie steht im Reiter **DDL** und im Baum unter `tabelle` → **keys** (und noch einmal unter **indexes**, weil PostgreSQL `UNIQUE` über einen Index umsetzt). Wer nur auf die Spalten sieht, hält eine 1:1-Beziehung leicht für eine n:1.
+**Wichtig dabei:** Die **Spaltenansicht** zeigt Bedingungen nur zum Teil. Einen Fremdschlüssel markiert sie, eine Unique-Bedingung nicht — Eindeutigkeit ist keine Eigenschaft einer Spalte, sondern ein eigenes Objekt der Tabelle. Sie steht im Reiter **DDL** und im Baum unter `tabelle` → **keys** (und noch einmal unter **indexes**, weil PostgreSQL `UNIQUE` über einen Index umsetzt). Wer nur auf die Spalten sieht, hält eine 1:1-Beziehung leicht für eine n:1-Beziehung.
 :::
 
 ## Das Maven-Fenster

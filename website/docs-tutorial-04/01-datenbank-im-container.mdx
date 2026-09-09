@@ -670,7 +670,7 @@ Du solltest das hier finden:
 Die entscheidende Zeile ist `contact_id`. Sie trägt **zwei** Bedingungen:
 
 - **Fremdschlüssel** — der Wert muss eine vorhandene `contact.id` sein.
-- **UNIQUE** — derselbe Wert darf nur einmal vorkommen. Und genau das ist die zweite `1` aus dem Klassendiagramm: Ohne diese Bedingung könnten sich zwei Lieferanten eine Anschrift teilen, und aus der 1:1 wäre eine n:1 geworden.
+- **UNIQUE** — derselbe Wert darf nur einmal vorkommen. Und genau das ist die zweite `1` aus dem Klassendiagramm: Ohne diese Bedingung könnten sich zwei Lieferanten eine Anschrift teilen, und aus der 1:1-Beziehung wäre eine n:1-Beziehung geworden.
 
 Hibernate hat die Bedingung von selbst gesetzt, weil `@OneToOne` dort steht und nicht `@ManyToOne`. Ein Buchstabe im Java-Code, eine Bedingung in der Datenbank.
 
