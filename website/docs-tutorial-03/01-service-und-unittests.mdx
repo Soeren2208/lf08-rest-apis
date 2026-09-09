@@ -55,7 +55,11 @@ Der zweite Grund ist der, um den es in diesem Tutorial geht. Merk ihn dir — er
 
 ### Aufgabe 1 – Die Service-Schicht einziehen
 
-Zwei kleine Klassen zuerst — der Service braucht sie gleich. **Warum** er eigene Ausnahmen wirft statt Statuscodes, klärt Aufgabe 2; hier genügt, dass es sie gibt.
+Die neue Schicht bekommt ein eigenes Paket — neben `controller`, `model` und `repository`.
+
+<Task id="t3-ab01-a1-package">Lege das Package <code>service</code> an: Rechtsklick auf <code>de.szut.gaestebuch</code> → <b>New → Package</b> → <code>service</code>. Es entsteht der Ordner <code>src/main/java/de/szut/gaestebuch/service/</code>.</Task>
+
+Dann zwei kleine Klassen — der Service braucht sie gleich. **Warum** er eigene Ausnahmen wirft statt Statuscodes, klärt Aufgabe 2; hier genügt, dass es sie gibt.
 
 <Task id="t3-ab01-a1-exceptions">Lege im Package `service` diese beiden Klassen an:</Task>
 
@@ -108,6 +112,43 @@ public class GuestbookEntryService {
 ```
 
 <Task id="t3-ab01-a1-rest">Verschiebe auch `update` und `deleteById` aus dem Controller in den Service.</Task>
+
+<details>
+<summary>So sehen die beiden Methoden im Service aus</summary>
+
+```java
+public GuestbookEntry update(Long id, GuestbookEntry entry) {
+    GuestbookEntry existing = findById(id);
+
+    existing.setTitle(entry.getTitle());
+    existing.setComment(entry.getComment());
+    existing.setAuthor(entry.getAuthor());
+
+    return repository.save(existing);
+}
+
+public void deleteById(Long id) {
+    repository.delete(findById(id));
+}
+```
+
+„Verschieben" ist dabei nicht ganz das richtige Wort — an beiden Methoden ändert sich etwas:
+
+| Im Controller stand | Im Service steht | Warum |
+|---|---|---|
+| `repository.findById(id).orElseThrow(() -> new ResponseStatusException(...))` | `findById(id)` | Deine eigene Methode wirft bereits `EntryNotFoundException`. Die Prüfung steht damit **einmal** im Service statt dreimal im Controller |
+| Rückgabetyp `ResponseEntity<GuestbookEntry>` | `GuestbookEntry` | Der Service kennt kein HTTP. Ob daraus 200 oder 204 wird, entscheidet der Controller |
+| `ResponseEntity.noContent().build()` | nichts — `void` | dasselbe: Ein Statuscode ist keine Antwort auf eine fachliche Frage |
+
+`deleteById` schrumpft dadurch auf **eine** Zeile: `findById(id)` beschafft den Eintrag und wirft, wenn es ihn nicht gibt. Beides in einem Aufruf.
+
+:::warning Warum `update` nicht einfach `repository.save(entry)` aufruft
+Das Objekt im Parameter kommt aus dem JSON des Clients. Sein Datum ist leer, seine Id ist leer oder geraten. Wer es direkt speichert, überschreibt das Datum des vorhandenen Eintrags mit `null` — oder legt einen zweiten Eintrag an.
+
+Deshalb wird der **vorhandene** Eintrag geladen, und es werden nur die drei Felder gesetzt, die der Client ändern darf: Titel, Kommentar, Verfasser. Das Datum bleibt, wie es war.
+:::
+
+</details>
 
 :::info `@Service` — was macht die Annotation?
 Dasselbe wie `@RestController` und `@Repository`: Sie sagt Spring „von dieser Klasse brauche ich ein Exemplar". Spring legt es beim Start an und reicht es überall dort hinein, wo ein `GuestbookEntryService` im Konstruktor steht.
@@ -181,9 +222,24 @@ public class GuestbookEntryController {
         return ResponseEntity.created(location).body(saved);
     }
 
+    @GetMapping
+    public ResponseEntity<Page<GuestbookEntry>> findAllEntries(
+            @RequestParam(required = false) Integer year,
+            @PageableDefault(size = 10, sort = "date", direction = Sort.Direction.DESC)
+            @ParameterObject Pageable pageable) {
+
+        return ResponseEntity.ok(service.findAll(year, pageable));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<GuestbookEntry> findEntryById(@PathVariable Long id) {
         return ResponseEntity.ok(service.findById(id));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<GuestbookEntry> updateEntry(@PathVariable Long id,
+                                                      @RequestBody GuestbookEntry entry) {
+        return ResponseEntity.ok(service.update(id, entry));
     }
 
     @DeleteMapping("/{id}")
@@ -194,7 +250,17 @@ public class GuestbookEntryController {
 }
 ```
 
-Die `404`-Behandlung ist aus dem Controller verschwunden — nicht weggefallen, sondern an die zwei Stellen gewandert, an die sie gehört: die Regel in den Service, die Übersetzung in den `ApiExceptionHandler`.
+Alle fünf Endpunkte sind noch da — es geht keiner verloren. Was verschwindet, ist die Arbeit **in** ihnen:
+
+- Die `404`-Behandlung ist weg. Nicht weggefallen, sondern an die zwei Stellen gewandert, an die sie gehört: die Regel in den Service, die Übersetzung in den `ApiExceptionHandler`.
+- In `findAllEntries` ist die Umrechnung des Jahres in einen Zeitraum verschwunden. Sie steht jetzt im Service; der Controller reicht nur noch `year` weiter.
+- In `updateEntry` bleibt eine Zeile übrig. Das Laden, Kopieren und Speichern macht der Service.
+
+Jede Methode ist damit auf das zusammengeschrumpft, was ein Controller tun soll: entgegennehmen, weiterreichen, verpacken.
+
+:::note Die Annotationen für die Dokumentation bleiben
+`@Operation` und `@ApiResponse` aus dem vorigen Tutorial stehen oben aus Platzgründen nicht mit dabei — löschen musst du sie nicht. Sie beschreiben die Schnittstelle nach außen, und die ändert sich bei diesem Umbau ja gerade **nicht**.
+:::
 
 </details>
 
