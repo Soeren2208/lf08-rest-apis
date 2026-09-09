@@ -96,7 +96,7 @@ Dann ist dir die Service-Schicht vertraut — dort ist sie entstanden, weil sich
 
 ### Aufgabe 1 – Der Lieferanten-Service
 
-<Task id="t4-ab04-a1-service">Erstelle im Package `service` die Klasse `SupplierService`. Sie übernimmt aus dem Controller: die beiden Repositories, den Mapper, und alles, was zwischen „Anfrage angekommen" und „Antwort steht fest" passiert.</Task>
+<Task id="t4-ab04-a1-service">Erstelle im Package `supplier` die Klasse `SupplierService`. Sie übernimmt aus dem Controller: die beiden Repositories, den Mapper, und alles, was zwischen „Anfrage angekommen" und „Antwort steht fest" passiert.</Task>
 
 ```java title="src/main/java/de/szut/webshop/supplier/SupplierService.java"
 @Service
@@ -173,9 +173,9 @@ Der Controller ist wieder das, was er sein soll: entgegennehmen, weiterreichen, 
 
 ### Aufgabe 2 – Wenn etwas nicht da ist
 
-Bisher hat der Controller entschieden, was ein unbekannter Lieferant bedeutet — mit `orElse(ResponseEntity.notFound().build())`. Das war die falsche Schicht: *„gibt es nicht"* ist eine fachliche Aussage, `404` ist ihre Übersetzung ins HTTP.
+Bisher hat der Controller entschieden, was ein unbekannter Lieferant bedeutet — mit einer `ResponseStatusException`, die den Statuscode gleich mitbringt. Das war die falsche Schicht: *„gibt es nicht"* ist eine fachliche Aussage, `404` ist erst ihre Entsprechung in HTTP. Wer beides in einer Zeile verbindet, kann die fachliche Aussage nirgendwo sonst mehr benutzen — etwa in einem Auftrag, der nachts läuft und kein HTTP kennt.
 
-<Task id="t4-ab04-a2-exception">Erstelle im Package `service` die Ausnahme `SupplierNotFoundException`:</Task>
+<Task id="t4-ab04-a2-exception">Erstelle im Package `supplier` die Ausnahme `SupplierNotFoundException`:</Task>
 
 ```java title="src/main/java/de/szut/webshop/supplier/SupplierNotFoundException.java"
 public class SupplierNotFoundException extends RuntimeException {
@@ -496,7 +496,7 @@ Dann fehlt `@Order(Ordered.HIGHEST_PRECEDENCE)` an deinem `ApiExceptionHandler`.
 
 Der `ArticleController` hat dieselbe Behandlung verdient — und dabei löst sich der offene Punkt aus Arbeitsblatt 03 auf.
 
-<Task id="t4-ab04-a6-service">Erstelle im Package `service` die Klasse `ArticleService`:</Task>
+<Task id="t4-ab04-a6-service">Erstelle im Package `article` die Klasse `ArticleService`:</Task>
 
 ```java title="src/main/java/de/szut/webshop/article/ArticleService.java"
 @Service

@@ -231,7 +231,7 @@ public class ArticleMapper {
 }
 ```
 
-<Task id="t4-ab03-a3-article">Übernimm den `ArticleMapper` in das Package `service`.</Task>
+<Task id="t4-ab03-a3-article">Übernimm den `ArticleMapper` in das Package `article`.</Task>
 
 <Task id="t4-ab03-a3-supplier">Schreibe nach demselben Muster den `SupplierMapper`. Er braucht vier Methoden: `toDto(Supplier, long articleCount)`, `toDto(Contact)`, `toEntity(CreateSupplierDto)` und `toEntity(CreateContactDto)`.</Task>
 
@@ -393,7 +393,8 @@ public class SupplierController {
                         supplier,
                         articleRepository.countBySupplierId(id)))
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Kein Lieferant mit der Id " + id));
     }
 }
 ```

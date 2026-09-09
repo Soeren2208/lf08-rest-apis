@@ -521,7 +521,8 @@ public class SupplierController {
     public ResponseEntity<Supplier> findSupplierById(@PathVariable Long id) {
         return repository.findById(id)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Kein Lieferant mit der Id " + id));
     }
 }
 ```
@@ -541,6 +542,21 @@ Trotzdem steht auch dort die Hülle. Zwei Gründe:
 - **Wer den Controller liest, muss nicht bei jeder Methode neu hinsehen.** Zwei Stile nebeneinander sehen aus, als steckte eine Absicht dahinter, und man sucht nach der Regel, die es gar nicht gibt.
 
 Die Regel für dieses Tutorial lautet deshalb schlicht: **Jede Controller-Methode gibt ein `ResponseEntity` zurück.** Für den Service gilt das ausdrücklich **nicht** — der kennt kein HTTP.
+:::
+
+:::note `orElseThrow` und nicht `orElse`
+Beim Suchen nach einer `id` endet die Kette mit `orElseThrow` — genauso wie im Gästebuch. Verlockend wäre auch:
+
+```java
+.orElse(ResponseEntity.notFound().build());
+```
+
+Das liest sich kürzer und tut hier dasselbe. Zwei Dinge sprechen trotzdem dagegen:
+
+- **`orElse` wertet sein Argument immer aus.** Auch wenn der Lieferant gefunden wird, baut Java die 404-Antwort — und wirft sie sofort weg. Hier kostet das nichts. Steht dort später etwas Teures, ein Datenbankzugriff etwa, kostet es bei **jedem** Aufruf. Wer die Auswertung erst im Bedarfsfall will, nimmt `orElseGet(() -> …)`.
+- **Eine Ausnahme sagt, dass etwas nicht stimmt.** Ein zurückgegebenes `ResponseEntity` mit Statuscode 404 ist für den Code darüber ein ganz normaler Rückgabewert; die Ausnahme unterbricht.
+
+In Arbeitsblatt 04 fliegt die `ResponseStatusException` wieder heraus — dann wandert die Entscheidung dorthin, wo sie hingehört. Warum das eine Verbesserung ist, steht im Infoblatt [Fehlerantworten](/infoblaetter/fehlerantworten).
 :::
 
 ### Aufgabe 6 – Ausprobieren
