@@ -67,7 +67,7 @@ zum Ansehen.
 
 Das Rezept dafür steht in einer Datei.
 
-<Task id="t4-ab01-a2-compose">Lege im Projekthauptverzeichnis — neben der `pom.xml` — die Datei `docker-compose.yml` an:</Task>
+<Task id="t4-ab01-a2-compose">Lege im Projekthauptverzeichnis — neben der `pom.xml` — die Datei `docker-compose.yml` an und kopiere den abgebildeten Code hinein:</Task>
 
 ```yaml title="docker-compose.yml"
 services:
@@ -101,6 +101,19 @@ volumes:
 | `volumes` | Wo die Daten liegen. Ohne diese Zeile wären sie weg, sobald der Container verschwindet |
 | `healthcheck` | Wie Docker prüft, ob die Datenbank schon bereit ist |
 
+<Task id="t4-ab01-a2-desktop">Starte <b>Docker Desktop</b> und warte, bis es unten links <b>Engine running</b> meldet. Ohne laufendes Docker Desktop gibt es niemanden, der den Container starten könnte.</Task>
+
+:::warning Wenn Docker Desktop nicht läuft
+Der nächste Befehl bricht dann mit einer Meldung ab, der man die Ursache nicht ansieht:
+
+```text
+error during connect: Get "http://%2F%2F.%2Fpipe%2FdockerDesktopLinuxEngine/v1.47/containers/json":
+open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified.
+```
+
+Übersetzt heißt das schlicht: *Ich finde den Docker-Dienst nicht.* Weder mit deiner `docker-compose.yml` noch mit deinem Projekt stimmt etwas nicht — es läuft nur nichts, mit dem sich der Befehl unterhalten könnte.
+:::
+
 <Task id="t4-ab01-a2-up">Öffne ein Terminal im Projektverzeichnis und starte den Container:</Task>
 
 ```bash
@@ -133,7 +146,7 @@ Dann ändere in `docker-compose.yml` die **linke** Zahl, zum Beispiel auf `"5433
 
 ### Aufgabe 3 – Die Anwendung an den Container hängen
 
-<Task id="t4-ab01-a3-props">Trage in `src/main/resources/application.properties` ein:</Task>
+<Task id="t4-ab01-a3-props">Trage in `src/main/resources/application.properties` ein — auch hier kopierst du den abgebildeten Inhalt, statt ihn abzutippen:</Task>
 
 ```properties title="src/main/resources/application.properties"
 spring.application.name=webshop
@@ -220,9 +233,26 @@ Aus der Besprechung ist ein Klassendiagramm geworden. Es beschreibt den ersten T
         fill="var(--ifm-color-emphasis-700)">contact</text>
 </svg>
 
-Zwei Dinge stehen darin, die im Gästebuch nicht vorkamen.
+Zwei Dinge stehen darin, die im Gästebuch nicht vorkamen: eine **gefüllte Raute** und **Multiplizitäten an beiden Enden**.
 
-**Die gefüllte Raute** bedeutet *Komposition*: Der `Contact` gehört zum `Supplier` und hat ohne ihn keinen Sinn. Verschwindet der Lieferant, verschwindet seine Anschrift mit. Wäre die Raute leer (*Aggregation*), hieße das: Die Anschrift lebt weiter, auch wenn dieser Lieferant sie nicht mehr braucht.
+Beides kennst du aus dem ersten Lehrjahr. Hier geht es nicht darum, die Notation noch einmal durchzunehmen, sondern darum, was sie für den Code bedeutet — denn genau daraus wird gleich eine Annotation.
+
+<Task id="t4-ab01-diagramm-komposition">Mache dir die Komposition zwischen <code>Supplier</code> und <code>Contact</code> klar: Was sagt die gefüllte Raute über die beiden Klassen aus? Formuliere es in zwei, drei Sätzen — erst dann aufklappen.</Task>
+
+<details>
+<summary>Was die gefüllte Raute bedeutet</summary>
+
+Der `Contact` ist ein **Teil** des `Supplier` und von ihm **existenzabhängig**. Daraus folgen drei Dinge:
+
+- **Wird der Lieferant gelöscht, wird seine Anschrift mitgelöscht.** Ohne Lieferanten hat sie keinen Sinn — sie bliebe als Datensatz zurück, auf den niemand mehr zeigt.
+- **Eine Anschrift gehört zu genau einem Lieferanten.** Kein zweiter darf dieselbe mitbenutzen. Zieht ein Lieferant um, ändert das an keinem anderen etwas.
+- **Sie entsteht mit ihm zusammen**, nicht getrennt und dann verbunden.
+
+Wäre die Raute **leer** (*Aggregation*), hieße das das Gegenteil: Die Anschrift lebt weiter, auch wenn dieser Lieferant verschwindet — und andere dürften sie ebenfalls verwenden.
+
+Merk dir die drei Punkte bis Aufgabe 4. Dort wird aus ihnen eine einzige Zeile Code.
+
+</details>
 
 **Die Multiplizitäten stehen an beiden Enden.** Links `1`, rechts `1` — jeder Lieferant hat genau eine Anschrift, jede Anschrift gehört zu genau einem Lieferanten. In der Prüfung ist das eine der häufigsten Fehlerquellen: Wer nur eine Seite beschriftet, hat die Beziehung nur halb beschrieben.
 
