@@ -34,6 +34,13 @@ Nach Bearbeitung dieses Arbeitsblatts kannst du:
 
 ## Aufgaben
 
+{/* Hinweis fuer die Pflege: Die Task-Kennungen (t2-ab04-aN-...) liegen seit
+    dem Zusammenlegen der frueheren Aufgaben 3 und 4 eine Nummer hoeher als
+    die Ueberschrift daneben. Das ist Absicht: Unter diesen Kennungen steht
+    der gesetzte Haken im Browser des Schuelers. Wer sie geradezieht,
+    loescht damit den Fortschritt aller, die das Blatt schon bearbeitet
+    haben. */}
+
 ### Aufgabe 1 – Die falsche Reihenfolge
 
 <Task id="t2-ab04-a1-beobachten">Lege vier Einträge nacheinander an und rufe die Sammlung ab. In welcher Reihenfolge kommen sie zurück?</Task>
@@ -134,7 +141,7 @@ Daraus wird `... order by date_of_entry desc` — ein `where` kommt nicht vor, e
 :::note Warum steht da `By`, wenn nichts folgt?
 `By` leitet in Spring Data immer den Bedingungsteil ein. Hier gibt es keine Bedingung, deshalb folgt sofort `OrderBy`. Die Stelle sieht leer aus — und ist es auch.
 
-In Aufgabe 4 füllst du sie: Dort steht hinter `findBy` eine Bedingung — und dann ergibt das `By` auch sichtbar Sinn.
+In Aufgabe 3 füllst du sie: Dort steht hinter `findBy` eine Bedingung — und dann ergibt das `By` auch sichtbar Sinn.
 :::
 
 <Task id="t2-ab04-a2-controller">Rufe die neue Methode im Endpunkt auf, statt selbst zu sortieren. Prüfe im Log, dass im erzeugten SQL ein <code>order by</code> auftaucht.</Task>
@@ -152,7 +159,7 @@ Ein Methodenname legt die Sortierung **fest**. Soll der Aufrufer sie bestimmen, 
 repository.findAll(Sort.by(Sort.Direction.DESC, "date"));
 ```
 
-Hier steht die Sortierung fest, deshalb ist der Methodenname der direktere Weg. In Aufgabe 6 begegnet dir `Sort` trotzdem wieder — dann als Teil des `Pageable`.
+Hier steht die Sortierung fest, deshalb ist der Methodenname der direktere Weg. In Aufgabe 5 begegnet dir `Sort` trotzdem wieder — dann als Teil des `Pageable`.
 :::
 
 ### Aufgabe 3 – Einträge eines Jahres
@@ -172,33 +179,11 @@ Alles nach dem `?` ist ein **Request-Parameter**. Im Unterschied zur Pfadvariabl
 | Bedeutung | *welche* Ressource | *wie* eingeschränkt |
 | Pflicht? | ja, Teil des Pfades | meist optional |
 
-Als Zwischenschritt bekommt der Filter gleich noch eine eigene Adresse — `/guestbook-entries/by-year`. Sie verschwindet in Aufgabe 5 wieder; hier geht es erst einmal darum, dass überhaupt gefiltert wird.
+Wohin der Filter gehört, weißt du seit Aufgabe 1: **in die Datenbank**. Stünde er in der Controller-Methode, holte `findAll()` bei 100.000 Einträgen erst alle 100.000 über die Datenbankverbindung in den Hauptspeicher — um dann vielleicht dreißig zu behalten und den Rest wegzuwerfen. Die Bedingung muss ins SQL, und dorthin kommt sie auf demselben Weg wie die Sortierung: über den **Methodennamen**.
+
+Als Zwischenschritt bekommt der Filter noch eine eigene Adresse — `/guestbook-entries/by-year`. Sie verschwindet in Aufgabe 4 wieder; hier geht es erst einmal darum, dass überhaupt gefiltert wird.
 
 Beachte die Schreibweise: **englisch und mit Bindestrich**. Adressen sind Teil der Schnittstelle — an ihnen liest ein fremder Client ab, was er bekommt. Deutsche Wörter und `camelCase` haben dort so wenig zu suchen wie im Quelltext.
-
-<Task id="t2-ab04-a3-naiv">Implementiere den Filter zunächst so:</Task>
-
-```java
-@GetMapping("/by-year")
-public ResponseEntity<List<GuestbookEntry>> findByYear(@RequestParam Integer year) {
-    List<GuestbookEntry> filtered = repository.findAll().stream()
-            .filter(entry -> entry.getDate().getYear() == year)
-            .toList();
-    return ResponseEntity.ok(filtered);
-}
-```
-
-<Task id="t2-ab04-a3-test">Probiere den Endpunkt aus — er liegt jetzt unter <code>http://localhost:8080/api/v1/guestbook-entries/by-year?year=2026</code>, nicht unter der Adresse von oben. Er liefert das richtige Ergebnis.</Task>
-
-:::warning Dasselbe Problem wie in Aufgabe 1 — nur schlimmer
-`repository.findAll()` holt **jeden einzelnen Eintrag** aus der Datenbank. Anschließend wirft der Filter die meisten davon weg.
-
-Bei 10.000 Einträgen und der Frage nach dem Jahr 2019 werden 10.000 Datensätze übertragen, um vielleicht 30 zu behalten.
-
-Sieh dir das erzeugte SQL im Log an: Dort steht ein schlichtes `select ... from guestbook_entry` — **ohne** `where`. Die Datenbank weiß gar nicht, dass gefiltert werden soll.
-:::
-
-### Aufgabe 4 – Die Abfrage ins Repository verlagern
 
 Dasselbe Verfahren wie in Aufgabe 2 — mit drei Unterschieden: Die leere Stelle
 hinter `By` ist diesmal gefüllt, die Methode nimmt Werte entgegen, und die
@@ -360,20 +345,51 @@ Tippe im Repository `findBy` und warte auf die Vorschlagsliste deiner Entwicklun
 Eine Übersicht steht im Infoblatt [Abgeleitete Abfragen](/infoblaetter/abgeleitete-abfragen).
 :::
 
-<Task id="t2-ab04-a4-controller">Rufe die neue Methode im Controller auf. Ein Jahr beginnt am 1. Januar und endet vor dem 1. Januar des Folgejahres:</Task>
+<Task id="t2-ab04-a4-controller">Lege den Endpunkt an und rufe die neue Methode auf. Ein Jahr beginnt am 1. Januar und endet vor dem 1. Januar des Folgejahres:</Task>
 
 ```java
-LocalDateTime from = LocalDate.of(year, 1, 1).atStartOfDay();
-LocalDateTime to   = from.plusYears(1);
+@GetMapping("/by-year")
+public ResponseEntity<List<GuestbookEntry>> findByYear(@RequestParam Integer year) {
+    LocalDateTime from = LocalDate.of(year, 1, 1).atStartOfDay();
+    LocalDateTime to   = from.plusYears(1);
+    return ResponseEntity.ok(
+            repository.findByDateGreaterThanEqualAndDateLessThanOrderByDateDesc(
+                    from, to));
+}
 ```
 
-<Task id="t2-ab04-a4-sql">Führe den Endpunkt erneut aus und sieh im Log nach. Jetzt muss im SQL ein <code>where</code> stehen.</Task>
+Die Umrechnung steht im Controller und nicht im Repository: Das Repository kennt Zeitpunkte, nicht Jahreszahlen. Aus „das Jahr 2026" einen Zeitraum zu machen, ist die Aufgabe der Schicht darüber.
 
-### Aufgabe 5 – Ein Endpunkt statt zwei
+<Task id="t2-ab04-a4-sql">Rufe <code>http://localhost:8080/api/v1/guestbook-entries/by-year?year=2026</code> auf und sieh im Log nach: Im SQL muss ein <code>where</code> stehen — die Datenbank filtert, nicht deine Methode.</Task>
+
+### Aufgabe 4 – Ein Endpunkt statt zwei
 
 Du hast jetzt zwei Endpunkte: `/guestbook-entries` und `/guestbook-entries/by-year`. Das ist unnötig.
 
 Überleg einmal fachlich: Beide beantworten dieselbe Frage — „gib mir Gästebucheinträge". Der zweite schränkt sie nur ein. Das ist **kein eigener Anwendungsfall** und verdient deshalb keine eigene Adresse.
+
+:::note Merksatz: eine Adresse je Anwendungsfall — nicht je Abfrage
+Ein Endpunkt steht für **einen fachlichen Vorgang**. Nicht für jede Art, ihn einzuschränken.
+
+Die Prüffrage vor jeder neuen Adresse lautet:
+
+> **Ist das eine andere Frage — oder dieselbe Frage mit einer Einschränkung?**
+
+| Dieselbe Frage, nur eingeschränkt | Eine andere Frage |
+|---|---|
+| „Gästebucheinträge, aber nur aus 2026" | „Die Kommentare **zu** Eintrag 7" |
+| „Gästebucheinträge, aber nur von Meyer" | „Ein **neuer** Eintrag" |
+| „Gästebucheinträge, aber nur die ersten zehn" | „Die Einträge als **CSV-Datei**" |
+| → derselbe Endpunkt, ein Parameter mehr | → eigene Adresse |
+
+**Warum das mehr ist als Ordnungsliebe.** Adressen für Einschränkungen vermehren sich nicht einzeln, sondern multipliziert. Nach `/by-year` will jemand `/by-author`, dann beides zusammen. Drei Filter ergeben sieben Kombinationen — mit der ungefilterten Liste acht Adressen. Acht Endpunkte heißen: acht Einträge in der Dokumentation, acht Stellen im Test, acht Gelegenheiten, dass etwas auseinanderläuft. Die eine sortiert absteigend, die andere hat es beim letzten Umbau verloren, und auffallen wird es niemandem.
+
+Mit Parametern wächst dieselbe Schnittstelle anders: Aus drei Filtern werden **drei Parameter an einem Endpunkt**, und der Client kombiniert sie, wie er sie braucht. Aus acht Adressen wird eine.
+
+**Die Gegenprobe.** Wer wissen will, ob eine Adresse berechtigt ist, sagt sie laut als Satz: „Gib mir die Kommentare zu Eintrag 7" ist ein eigener Vorgang. „Gib mir die Gästebucheinträge nach Jahr" ist keiner — das *nach Jahr* ist eine Bedingung, kein Gegenstand. Was sich nur als Nebensatz sagen lässt, gehört hinter das Fragezeichen.
+
+Dass eine Adresse **die Sache** benennt und nicht die Abfrage danach, ist der Kern des REST-Paradigmas — siehe [Das REST-Paradigma](/infoblaetter/rest-paradigma). Wonach man einen Endpunkt zuschneidet, steht in [DTOs und Schichten](/infoblaetter/dto-schichten).
+:::
 
 <Task id="t2-ab04-a5">Lösche den Endpunkt <code>/by-year</code>. Mache den Parameter am vorhandenen Endpunkt <b>optional</b>:</Task>
 
@@ -406,7 +422,7 @@ Beide Methodennamen enden deshalb auf `OrderByDateDesc`. Die Sortierung ist Teil
 der Zusage, nicht Beiwerk eines einzelnen Aufrufs.
 :::
 
-### Aufgabe 6 – Seitenweise ausliefern
+### Aufgabe 5 – Seitenweise ausliefern
 
 Bleibt die Frage der Kollegin: Was bei 10.000 Einträgen?
 
@@ -421,7 +437,7 @@ Page<GuestbookEntry> findByDateGreaterThanEqualAndDateLessThan(
         LocalDateTime from, LocalDateTime to, Pageable pageable);
 ```
 
-Der Teil `OrderByDateDesc` aus Aufgabe 4 fällt dabei weg: Die Sortierung steht
+Der Teil `OrderByDateDesc` aus Aufgabe 3 fällt dabei weg: Die Sortierung steht
 jetzt im `Pageable`. Stünde sie an beiden Stellen, gäbe es zwei Quellen für
 dieselbe Entscheidung — und der Client könnte die im Methodennamen nicht mehr
 übersteuern.
@@ -458,7 +474,7 @@ Ohne `@ParameterObject` weiß springdoc davon nichts und schreibt in die Dokumen
 Der Import lautet `org.springdoc.core.annotations.ParameterObject` — die Annotation gehört zu springdoc, nicht zu Spring.
 :::
 
-Damit erledigt sich die Sortierung aus Aufgabe 2 gleich mit: Du rufst wieder das schlichte `findAll(pageable)` auf, und die Reihenfolge steckt im `Pageable`. Deine Methode `findAllByOrderByDateDesc()` wird nicht mehr gebraucht und kann aus dem Repository verschwinden — genau wie der Endpunkt `/by-year` aus Aufgabe 3.
+Damit erledigt sich die Sortierung aus Aufgabe 2 gleich mit: Du rufst wieder das schlichte `findAll(pageable)` auf, und die Reihenfolge steckt im `Pageable`. Deine Methode `findAllByOrderByDateDesc()` wird nicht mehr gebraucht und kann aus dem Repository verschwinden — genau wie der Endpunkt `/by-year`, den du in Aufgabe 4 schon abgeschafft hast.
 
 Das ist kein vergebliches Arbeiten: Jeder dieser Schritte hat etwas gezeigt, was der nächste voraussetzt. So entsteht Software auch im Betrieb.
 
@@ -523,7 +539,7 @@ Vorher kam ein Array, jetzt ein Objekt mit den Einträgen unter `content`. Ein C
 Genau deshalb überlegt man sich Paginierung **früh** — ein späterer Umbau trifft alle Clients.
 :::
 
-### Aufgabe 7 – Zurück in die Dokumentation
+### Aufgabe 6 – Zurück in die Dokumentation
 
 Im vorigen Arbeitsblatt hast du die Schnittstelle dokumentiert. Seitdem hat sie
 drei Parameter dazubekommen — und du hast dafür keine Dokumentation geschrieben.
@@ -551,7 +567,7 @@ Für dich heißt das: Eine bequeme Oberfläche nimmt dir das Tippen ab, nicht da
 Verstehen. Darunter liegt immer eine gewöhnliche HTTP-Anfrage.
 :::
 
-### Aufgabe 8 – Die Anfragen zum Ausprobieren
+### Aufgabe 7 – Die Anfragen zum Ausprobieren
 
 <Task id="t2-ab04-a8-requests">Ergänze `requests.http` um diese fünf Aufrufe:</Task>
 
@@ -575,7 +591,7 @@ GET http://localhost:8080/api/v1/guestbook-entries?size=2&page=1
 Den Aufruf mit `/by-year` aus Aufgabe 3 kannst du löschen — den Endpunkt gibt es
 nicht mehr.
 
-### Aufgabe 9 – Testfälle
+### Aufgabe 8 – Testfälle
 
 <Task id="t2-ab04-a9">Führe die Testfälle aus.</Task>
 
