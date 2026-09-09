@@ -188,8 +188,10 @@ public class ApiExceptionHandler {
 }
 ```
 
-:::info `@RestControllerAdvice` — ein Übersetzer für die ganze Anwendung
+:::info `@RestControllerAdvice` — die Stelle, an der aus einer Ausnahme eine Antwort wird
 Die Klasse gehört zu keinem einzelnen Controller. Sie gilt für **alle**. Wirft irgendwo eine `EntryNotFoundException`, greift Spring hier zu und macht eine `404`-Antwort daraus.
+
+Sie ist damit die einzige Stelle, an der beide Welten aufeinandertreffen: Der Service kennt nur seine Ausnahmen, der Client nur Statuscodes.
 
 `ProblemDetail` kennst du aus dem ersten Tutorial: das Standardformat für Fehlerantworten nach RFC 9457. Genau dieses Format hat Spring bisher selbst erzeugt — jetzt füllst du es mit deinem eigenen Text.
 :::
@@ -252,7 +254,7 @@ public class GuestbookEntryController {
 
 Alle fünf Endpunkte sind noch da — es geht keiner verloren. Was verschwindet, ist die Arbeit **in** ihnen:
 
-- Die `404`-Behandlung ist weg. Nicht weggefallen, sondern an die zwei Stellen gewandert, an die sie gehört: die Regel in den Service, die Übersetzung in den `ApiExceptionHandler`.
+- Die `404`-Behandlung ist weg — nicht verschwunden, sondern **auf zwei Stellen aufgeteilt**. Der Service stellt fest, **dass** etwas nicht stimmt, und wirft `EntryNotFoundException`. Der `ApiExceptionHandler` entscheidet, **wie** das über HTTP aussieht, und macht daraus die `404`. Der Controller trifft keine dieser beiden Entscheidungen mehr — er reicht nur noch durch.
 - In `findAllEntries` ist die Umrechnung des Jahres in einen Zeitraum verschwunden. Sie steht jetzt im Service; der Controller reicht nur noch `year` weiter.
 - In `updateEntry` bleibt eine Zeile übrig. Das Laden, Kopieren und Speichern macht der Service.
 
