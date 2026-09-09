@@ -41,7 +41,7 @@ const FAELLE = {
     gueltig: false,
     form: 'abbruch',
     meldung:
-      "Cannot lazily initialize collection of role 'de.szut.webshop.model.Supplier.articles' with key '1' (no session)",
+      "Cannot lazily initialize collection of role 'de.szut.webshop.supplier.Supplier.articles' with key '1' (no session)",
     satz: 'Jackson fragt den Platzhalter nach den Artikeln, und die Verbindung zur Datenbank ist schon zu. Ob Artikel existieren, spielt keine Rolle.',
   },
   'entitaet|eager': {

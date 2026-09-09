@@ -1,4 +1,4 @@
-package de.szut.webshop.service;
+package de.szut.webshop.supplier;
 
 /**
  * Der Lieferant hat noch Artikel im Sortiment und darf deshalb nicht

@@ -1,4 +1,4 @@
-package de.szut.webshop.model;
+package de.szut.webshop.contact;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

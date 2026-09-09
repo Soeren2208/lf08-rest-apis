@@ -1,4 +1,4 @@
-package de.szut.webshop.dto;
+package de.szut.webshop.article;
 
 import java.math.BigDecimal;
 

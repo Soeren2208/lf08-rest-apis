@@ -1,4 +1,4 @@
-package de.szut.webshop.service;
+package de.szut.webshop.supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -15,9 +15,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import de.szut.webshop.model.Supplier;
-import de.szut.webshop.repository.ArticleRepository;
-import de.szut.webshop.repository.SupplierRepository;
+import de.szut.webshop.article.ArticleRepository;
 
 /**
  * Die Regel "Lieferant mit Artikeln wird nicht geloescht" laesst sich ohne

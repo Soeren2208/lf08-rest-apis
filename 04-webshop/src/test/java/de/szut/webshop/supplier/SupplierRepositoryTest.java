@@ -1,4 +1,4 @@
-package de.szut.webshop.repository;
+package de.szut.webshop.supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -11,9 +11,9 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 
-import de.szut.webshop.model.Article;
-import de.szut.webshop.model.Contact;
-import de.szut.webshop.model.Supplier;
+import de.szut.webshop.article.Article;
+import de.szut.webshop.article.ArticleRepository;
+import de.szut.webshop.contact.Contact;
 
 /**
  * Die Datenzugriffsschicht gegen die ECHTE Datenbank im Container.

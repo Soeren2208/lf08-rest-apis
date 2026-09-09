@@ -1,4 +1,4 @@
-package de.szut.webshop.model;
+package de.szut.webshop.article;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -16,6 +16,8 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import de.szut.webshop.supplier.Supplier;
 
 /** Ein Artikel im Sortiment eines Lieferanten. */
 @Entity

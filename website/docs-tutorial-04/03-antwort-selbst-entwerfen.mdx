@@ -116,9 +116,9 @@ Drei Dinge gewinnst du damit auf einen Schlag:
 
 Records kennst du aus der Personenverwaltung: eine Zeile, und Konstruktor, Zugriffsmethoden, `equals` und `toString` sind da.
 
-<Task id="t4-ab03-a1-contact">Erstelle im Package `dto` den Record `ContactDto`:</Task>
+<Task id="t4-ab03-a1-contact">Erstelle im Package `contact` den Record `ContactDto`:</Task>
 
-```java title="src/main/java/de/szut/webshop/dto/ContactDto.java"
+```java title="src/main/java/de/szut/webshop/contact/ContactDto.java"
 public record ContactDto(
         String street,
         String postcode,
@@ -127,9 +127,9 @@ public record ContactDto(
 }
 ```
 
-<Task id="t4-ab03-a1-supplier">Erstelle im Package `dto` den Record `SupplierDto`:</Task>
+<Task id="t4-ab03-a1-supplier">Erstelle im Package `supplier` den Record `SupplierDto`:</Task>
 
-```java title="src/main/java/de/szut/webshop/dto/SupplierDto.java"
+```java title="src/main/java/de/szut/webshop/supplier/SupplierDto.java"
 public record SupplierDto(
         Long id,
         String name,
@@ -146,9 +146,9 @@ Zwei Entscheidungen stecken darin, über die man reden muss.
 
 **`ContactDto` hat keine `id`.** Die Anschrift ist nur als Teil des Lieferanten ansprechbar; es gibt keinen Endpunkt `/contacts/3`. Eine Kennung, die niemand benutzen kann, gehört nicht in die Antwort.
 
-<Task id="t4-ab03-a1-article">Erstelle im Package `dto` den Record `ArticleDto`:</Task>
+<Task id="t4-ab03-a1-article">Erstelle im Package `article` den Record `ArticleDto`:</Task>
 
-```java title="src/main/java/de/szut/webshop/dto/ArticleDto.java"
+```java title="src/main/java/de/szut/webshop/article/ArticleDto.java"
 public record ArticleDto(
         Long id,
         String designation,
@@ -168,9 +168,9 @@ Sie stehen in der Entität, aber nicht im DTO. Frage dich bei jedem Feld: *Wer d
 
 Für das Anlegen brauchst du andere Felder als für die Ausgabe. Eine `id` schickt der Client nicht mit — die vergibt die Datenbank. Eine `articleCount` auch nicht.
 
-<Task id="t4-ab03-a2">Erstelle im Package `dto` diese drei Records:</Task>
+<Task id="t4-ab03-a2">Erstelle die drei Eingabe-Records — jeden in dem Paket, in dem auch seine Ausgabe-Fassung liegt:</Task>
 
-```java title="src/main/java/de/szut/webshop/dto/CreateContactDto.java"
+```java title="src/main/java/de/szut/webshop/contact/CreateContactDto.java"
 public record CreateContactDto(
         String street,
         String postcode,
@@ -179,14 +179,14 @@ public record CreateContactDto(
 }
 ```
 
-```java title="src/main/java/de/szut/webshop/dto/CreateSupplierDto.java"
+```java title="src/main/java/de/szut/webshop/supplier/CreateSupplierDto.java"
 public record CreateSupplierDto(
         String name,
         CreateContactDto contact) {
 }
 ```
 
-```java title="src/main/java/de/szut/webshop/dto/CreateArticleDto.java"
+```java title="src/main/java/de/szut/webshop/article/CreateArticleDto.java"
 public record CreateArticleDto(
         String designation,
         BigDecimal price) {
@@ -207,7 +207,7 @@ Irgendwo muss das Übersetzen stattfinden. Nicht im Controller — der hat mit H
 
 Der Artikel-Mapper ist als Vorlage schon fertig:
 
-```java title="src/main/java/de/szut/webshop/service/ArticleMapper.java"
+```java title="src/main/java/de/szut/webshop/article/ArticleMapper.java"
 @Component
 public class ArticleMapper {
 
@@ -243,7 +243,7 @@ Zwei Hinweise, bevor du anfängst:
 <details>
 <summary>Wenn du nicht weiterkommst: der <code>SupplierMapper</code></summary>
 
-```java title="src/main/java/de/szut/webshop/service/SupplierMapper.java"
+```java title="src/main/java/de/szut/webshop/supplier/SupplierMapper.java"
 @Component
 public class SupplierMapper {
 
@@ -286,17 +286,19 @@ public class SupplierMapper {
 
 </details>
 
-:::note Warum liegt der Mapper im Package `service` und nicht in `dto`?
-Weil er etwas *tut*. Im Package `dto` liegen Datenbehälter — Records ohne Verhalten. Der Mapper ist eine Klasse mit Logik, auch wenn die Logik schlicht ist. In Arbeitsblatt 04 bekommt er im selben Package Gesellschaft.
+:::note Der Mapper liegt bei der Sache, die er umwandelt
+`SupplierMapper` liegt im Paket `supplier` — neben der Entität, den beiden DTOs und gleich auch neben dem Service. Wer die Antwort des Lieferanten ändert, findet alles Nötige nebeneinander.
+
+Das ist der Gewinn der fachlichen Aufteilung: Diese fünf Dateien lägen sonst in vier verschiedenen Ordnern.
 :::
 
 ### Aufgabe 4 – Die Abfrage für die Artikelzahl
 
 Der Mapper braucht eine Zahl. Die soll aus der Datenbank kommen, ohne dass ein einziger Artikel geladen wird.
 
-<Task id="t4-ab03-a4-repo">Lege im Package `repository` das Interface `ArticleRepository` an, das `JpaRepository<Article, Long>` erweitert, und ergänze zwei Methoden:</Task>
+<Task id="t4-ab03-a4-repo">Lege im Package `article` das Interface `ArticleRepository` an, das `JpaRepository<Article, Long>` erweitert, und ergänze zwei Methoden:</Task>
 
-```java title="src/main/java/de/szut/webshop/repository/ArticleRepository.java"
+```java title="src/main/java/de/szut/webshop/article/ArticleRepository.java"
 public interface ArticleRepository extends JpaRepository<Article, Long> {
 
     List<Article> findAllBySupplierIdOrderByIdDesc(Long supplierId);
@@ -345,7 +347,7 @@ das Muster **siehst** und weißt, wonach du suchst. Mehr dazu im Infoblatt
 <details>
 <summary>Wenn du nicht weiterkommst: der umgebaute Controller</summary>
 
-```java title="src/main/java/de/szut/webshop/controller/SupplierController.java"
+```java title="src/main/java/de/szut/webshop/supplier/SupplierController.java"
 @RestController
 @RequestMapping("/api/v1/suppliers")
 public class SupplierController {
@@ -427,14 +429,14 @@ POST /api/v1/suppliers/1/articles     einen Artikel bei Lieferant 1 anlegen
 GET  /api/v1/suppliers/1/articles     das Sortiment von Lieferant 1
 ```
 
-<Task id="t4-ab03-a6">Erstelle im Package `controller` die Klasse `ArticleController` mit diesen beiden Endpunkten.</Task>
+<Task id="t4-ab03-a6">Erstelle im Package `article` die Klasse `ArticleController` mit diesen beiden Endpunkten.</Task>
 
 Für den POST brauchst du beides: den Lieferanten aus der Adresse und die Artikeldaten aus dem Rumpf.
 
 <details>
 <summary>Wenn du nicht weiterkommst: der <code>ArticleController</code></summary>
 
-```java title="src/main/java/de/szut/webshop/controller/ArticleController.java"
+```java title="src/main/java/de/szut/webshop/article/ArticleController.java"
 @RestController
 @RequestMapping("/api/v1/suppliers/{supplierId}/articles")
 public class ArticleController {

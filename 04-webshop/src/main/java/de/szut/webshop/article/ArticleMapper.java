@@ -1,11 +1,8 @@
-package de.szut.webshop.service;
+package de.szut.webshop.article;
 
 import org.springframework.stereotype.Component;
 
-import de.szut.webshop.dto.ArticleDto;
-import de.szut.webshop.dto.CreateArticleDto;
-import de.szut.webshop.model.Article;
-import de.szut.webshop.model.Supplier;
+import de.szut.webshop.supplier.Supplier;
 
 /** Uebersetzt zwischen Article und den beiden Artikel-DTOs. */
 @Component

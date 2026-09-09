@@ -1,10 +1,8 @@
-package de.szut.webshop.repository;
+package de.szut.webshop.article;
 
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-
-import de.szut.webshop.model.Article;
 
 public interface ArticleRepository extends JpaRepository<Article, Long> {
 

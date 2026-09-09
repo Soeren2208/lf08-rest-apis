@@ -1,4 +1,4 @@
-package de.szut.webshop.controller;
+package de.szut.webshop.article;
 
 import java.net.URI;
 import java.util.List;
@@ -12,9 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import de.szut.webshop.dto.ArticleDto;
-import de.szut.webshop.dto.CreateArticleDto;
-import de.szut.webshop.service.ArticleService;
 import jakarta.validation.Valid;
 
 /**

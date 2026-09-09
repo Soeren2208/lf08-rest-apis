@@ -264,12 +264,74 @@ Im objektorientierten Modell trägt schon die Klasse diese Auskunft. `supplier.g
 Deshalb heißt der Schlüssel in diesem Tutorial überall `id` — und das Klassendiagramm oben ist entsprechend angepasst. JPA wäre beides recht: Der Feldname ist frei wählbar.
 :::
 
+### Wohin die Klassen kommen
+
+Im Gästebuch lagen die Klassen nach ihrer **Art** beieinander: alle Entitäten in `model`, alle Controller in `controller`, alle Repositories in `repository`. Bei einer einzigen Entität war das übersichtlich.
+
+Der Webshop hat drei. Wer am Lieferanten etwas ändert, fasst dann fünf Dateien an, die alle dasselbe Thema haben — und muss dafür durch fünf Ordner springen. In jedem dieser Ordner liegen daneben die Dateien der beiden anderen Themen.
+
+Deshalb wird hier anders geschnitten: **nach Sachen, nicht nach Bauteilen.**
+
+```text
+de.szut.webshop
+├── WebshopApplication
+├── supplier     ← alles zum Lieferanten
+├── article      ← alles zum Artikel
+├── contact      ← alles zur Anschrift
+└── common       ← was zu keiner der drei Sachen gehört
+```
+
+Am Ende dieses Tutorials steht im Paket `supplier` das hier — die vollständige Bearbeitung **einer** Sache:
+
+```text
+supplier
+├── Supplier                     die Entität
+├── SupplierRepository           der Datenbankzugriff
+├── SupplierService              die fachlichen Regeln
+├── SupplierController           die Endpunkte
+├── SupplierMapper               die Umwandlung nach außen
+├── SupplierDto, CreateSupplierDto
+└── SupplierNotFoundException, SupplierHasArticlesException
+```
+
+:::info Die Schichten sind nicht weg — sie sind nur nicht mehr die Ordner
+Entität, Repository, Service, Controller: Diese Schichten gibt es weiterhin, jede hat weiterhin genau eine Aufgabe, und keine darf die Aufgabe der anderen übernehmen. Was sich ändert, ist allein, **wonach die Ordner benannt sind**.
+
+Woran du die Schicht erkennst, ist ab jetzt der **Name der Klasse**, nicht der Ordner darüber. `SupplierController` ist ein Controller, in welchem Paket er auch liegt.
+
+Der Gewinn zeigt sich beim Arbeiten: Alles, was du für eine Änderung am Lieferanten brauchst, liegt nebeneinander. Der Preis: Wer wissen will, wie viele Controller es insgesamt gibt, muss in drei Ordner sehen statt in einen. Im Alltag stellt sich die erste Frage viel häufiger als die zweite.
+:::
+
+:::tip `common` klein halten
+Dort kommt nur hinein, was wirklich zu keiner einzelnen Sache gehört — in diesem Tutorial genau eine Klasse. Wächst `common`, ist das meist ein Zeichen, dass eine Sache fehlt, die noch keinen Namen hat.
+:::
+
 ### Aufgabe 4 – Die beiden Entitäten
 
-<Task id="t4-ab01-a4-contact">Erstelle im Package `model` die Klasse `Contact`:</Task>
+Die erste Klasse schreibst du selbst. Eine JPA-Entität hast du im Gästebuch schon gebaut — hier ist nichts dabei, was du nicht kennst.
 
-```java title="src/main/java/de/szut/webshop/model/Contact.java"
-package de.szut.webshop.model;
+<Task id="t4-ab01-a4-contact">Erstelle im Package `contact` die Klasse `Contact` und setze das Klassendiagramm um. Sie muss vier Dinge erfüllen:</Task>
+
+| | |
+|---|---|
+| **Entität** | Die Klasse wird auf eine Tabelle abgebildet |
+| **Tabellenname** | `contact` — schreib ihn ausdrücklich hin, verlass dich nicht auf die Vorgabe |
+| **Schlüssel** | ein `id` vom Typ `Long`, den **die Datenbank** hochzählt |
+| **Felder** | die vier aus dem Diagramm, alle `String` |
+
+Getter, Setter und den parameterlosen Konstruktor überlässt du Lombok — genau wie im Gästebuch.
+
+:::note Zwei Entscheidungen, die du treffen musst
+**Welche Strategie zählt den Schlüssel hoch?** Es gibt mehrere. Gefragt ist die, bei der die Datenbank selbst die nächste Zahl vergibt — nicht Hibernate über eine eigene Tabelle oder Sequenz.
+
+**Warum den Tabellennamen hinschreiben,** wenn JPA ihn ohnehin aus dem Klassennamen ableitet? Weil `contact` in manchen Datenbanken ein reserviertes Wort sein kann und weil eine Umbenennung der Klasse sonst still die Tabelle wechselt. Was in der Datenbank steht, gehört sichtbar in den Code.
+:::
+
+<details>
+<summary>Lösung: die Klasse `Contact`</summary>
+
+```java title="src/main/java/de/szut/webshop/contact/Contact.java"
+package de.szut.webshop.contact;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -301,10 +363,16 @@ public class Contact {
 }
 ```
 
-<Task id="t4-ab01-a4-supplier">Erstelle im Package `model` die Klasse `Supplier`:</Task>
+`GenerationType.IDENTITY` ist die gesuchte Strategie: Die Datenbank vergibt die Zahl beim Einfügen. Hibernate fragt sie danach ab, statt sie selbst zu bestimmen.
 
-```java title="src/main/java/de/szut/webshop/model/Supplier.java"
-package de.szut.webshop.model;
+`@NoArgsConstructor` ist keine Kür, sondern Pflicht: Hibernate legt beim Laden aus der Datenbank ein leeres Objekt an und füllt es danach. Ohne parameterlosen Konstruktor geht das nicht.
+
+</details>
+
+<Task id="t4-ab01-a4-supplier">Erstelle im Package `supplier` die Klasse `Supplier`:</Task>
+
+```java title="src/main/java/de/szut/webshop/supplier/Supplier.java"
+package de.szut.webshop.supplier;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -359,25 +427,25 @@ Zwei Stellen verdienen einen zweiten Blick.
 
 ### Aufgabe 5 – Repository und Controller
 
-<Task id="t4-ab01-a5-repo">Lege im Package `repository` das Interface `SupplierRepository` an, das `JpaRepository<Supplier, Long>` erweitert.</Task>
+<Task id="t4-ab01-a5-repo">Lege im Package `supplier` das Interface `SupplierRepository` an, das `JpaRepository<Supplier, Long>` erweitert.</Task>
 
-```java title="src/main/java/de/szut/webshop/repository/SupplierRepository.java"
-package de.szut.webshop.repository;
+```java title="src/main/java/de/szut/webshop/supplier/SupplierRepository.java"
+package de.szut.webshop.supplier;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import de.szut.webshop.model.Supplier;
+import de.szut.webshop.supplier.Supplier;
 
 public interface SupplierRepository extends JpaRepository<Supplier, Long> {
 }
 ```
 
-<Task id="t4-ab01-a5-controller">Erstelle im Package `controller` die Klasse `SupplierController` mit drei Endpunkten unter `/api/v1/suppliers`: einem **POST** zum Anlegen, einem **GET** für alle Lieferanten und einem **GET** für einen einzelnen über seine `id`.</Task>
+<Task id="t4-ab01-a5-controller">Erstelle im Package `supplier` die Klasse `SupplierController` mit drei Endpunkten unter `/api/v1/suppliers`: einem **POST** zum Anlegen, einem **GET** für alle Lieferanten und einem **GET** für einen einzelnen über seine `id`.</Task>
 
 <details>
 <summary>Wenn du nicht weiterkommst: der Controller</summary>
 
-```java title="src/main/java/de/szut/webshop/controller/SupplierController.java"
+```java title="src/main/java/de/szut/webshop/supplier/SupplierController.java"
 @RestController
 @RequestMapping("/api/v1/suppliers")
 public class SupplierController {

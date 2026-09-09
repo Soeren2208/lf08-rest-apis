@@ -1,15 +1,12 @@
-package de.szut.webshop.service;
+package de.szut.webshop.article;
 
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.szut.webshop.dto.ArticleDto;
-import de.szut.webshop.dto.CreateArticleDto;
-import de.szut.webshop.model.Article;
-import de.szut.webshop.model.Supplier;
-import de.szut.webshop.repository.ArticleRepository;
+import de.szut.webshop.supplier.Supplier;
+import de.szut.webshop.supplier.SupplierService;
 
 /** Die Fachlichkeit rund um Artikel. */
 @Service

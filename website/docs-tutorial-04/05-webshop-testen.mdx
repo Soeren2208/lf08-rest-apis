@@ -37,10 +37,10 @@ Die drei Testarten im Überblick — mit den Importpfaden für Spring Boot 4 —
 
 Der `ArticleMapper` ist reines Java: kein Spring, keine Datenbank, kein HTTP. Ein Test dafür läuft in Millisekunden.
 
-<Task id="t4-ab05-a1">Lege unter `src/test/java/de/szut/webshop/service/` die Klasse `ArticleMapperTest` an:</Task>
+<Task id="t4-ab05-a1">Lege unter `src/test/java/de/szut/webshop/article/` die Klasse `ArticleMapperTest` an:</Task>
 
-```java title="src/test/java/de/szut/webshop/service/ArticleMapperTest.java"
-package de.szut.webshop.service;
+```java title="src/test/java/de/szut/webshop/article/ArticleMapperTest.java"
+package de.szut.webshop.article;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -49,9 +49,9 @@ import java.math.BigDecimal;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import de.szut.webshop.dto.ArticleDto;
-import de.szut.webshop.model.Article;
-import de.szut.webshop.model.Supplier;
+import de.szut.webshop.article.ArticleDto;
+import de.szut.webshop.article.Article;
+import de.szut.webshop.supplier.Supplier;
 
 @DisplayName("ArticleMapper")
 class ArticleMapperTest {
@@ -112,8 +112,8 @@ Die Regel „ein Lieferant mit Artikeln wird nicht gelöscht" steht im `Supplier
 
 <Task id="t4-ab05-a2">Lege `SupplierServiceTest` an:</Task>
 
-```java title="src/test/java/de/szut/webshop/service/SupplierServiceTest.java"
-package de.szut.webshop.service;
+```java title="src/test/java/de/szut/webshop/supplier/SupplierServiceTest.java"
+package de.szut.webshop.supplier;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -128,9 +128,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import de.szut.webshop.model.Supplier;
-import de.szut.webshop.repository.ArticleRepository;
-import de.szut.webshop.repository.SupplierRepository;
+import de.szut.webshop.supplier.Supplier;
+import de.szut.webshop.article.ArticleRepository;
+import de.szut.webshop.supplier.SupplierRepository;
 
 @DisplayName("SupplierService")
 class SupplierServiceTest {
@@ -187,10 +187,10 @@ Er weiß nichts davon, ob `countBySupplierId` in der echten Datenbank die richti
 
 Ob aus einer `SupplierHasArticlesException` wirklich eine `409` wird, hat bisher nur dein Auge geprüft.
 
-<Task id="t4-ab05-a3">Lege unter `src/test/java/de/szut/webshop/controller/` die Klasse `SupplierControllerTest` an:</Task>
+<Task id="t4-ab05-a3">Lege unter `src/test/java/de/szut/webshop/supplier/` die Klasse `SupplierControllerTest` an:</Task>
 
-```java title="src/test/java/de/szut/webshop/controller/SupplierControllerTest.java"
-package de.szut.webshop.controller;
+```java title="src/test/java/de/szut/webshop/supplier/SupplierControllerTest.java"
+package de.szut.webshop.supplier;
 
 import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -206,8 +206,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import de.szut.webshop.service.SupplierHasArticlesException;
-import de.szut.webshop.service.SupplierService;
+import de.szut.webshop.supplier.SupplierHasArticlesException;
+import de.szut.webshop.supplier.SupplierService;
 
 @WebMvcTest(SupplierController.class)
 @DisplayName("SupplierController (Web-Schicht)")
@@ -291,10 +291,10 @@ Ebenfalls verschwunden ist `@MockBean`; es heißt jetzt `@MockitoBean`.
 
 Bleibt die Lücke aus Aufgabe 2: Stimmt in der Datenbank, was der Code annimmt? Verschwindet die Anschrift wirklich mit dem Lieferanten?
 
-<Task id="t4-ab05-a4">Lege unter `src/test/java/de/szut/webshop/repository/` die Klasse `SupplierRepositoryTest` an:</Task>
+<Task id="t4-ab05-a4">Lege unter `src/test/java/de/szut/webshop/supplier/` die Klasse `SupplierRepositoryTest` an:</Task>
 
-```java title="src/test/java/de/szut/webshop/repository/SupplierRepositoryTest.java"
-package de.szut.webshop.repository;
+```java title="src/test/java/de/szut/webshop/supplier/SupplierRepositoryTest.java"
+package de.szut.webshop.supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -305,8 +305,8 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 
-import de.szut.webshop.model.Contact;
-import de.szut.webshop.model.Supplier;
+import de.szut.webshop.contact.Contact;
+import de.szut.webshop.supplier.Supplier;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)

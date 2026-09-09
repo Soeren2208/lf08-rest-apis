@@ -1,4 +1,4 @@
-package de.szut.webshop.service;
+package de.szut.webshop.article;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -7,10 +7,7 @@ import java.math.BigDecimal;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import de.szut.webshop.dto.ArticleDto;
-import de.szut.webshop.dto.CreateArticleDto;
-import de.szut.webshop.model.Article;
-import de.szut.webshop.model.Supplier;
+import de.szut.webshop.supplier.Supplier;
 
 /**
  * Der Mapper ist reines Java: kein Spring, keine Datenbank, kein HTTP.

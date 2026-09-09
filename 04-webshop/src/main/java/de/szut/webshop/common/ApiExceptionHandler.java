@@ -1,4 +1,4 @@
-package de.szut.webshop.controller;
+package de.szut.webshop.common;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -11,8 +11,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import de.szut.webshop.service.SupplierHasArticlesException;
-import de.szut.webshop.service.SupplierNotFoundException;
+import de.szut.webshop.supplier.SupplierHasArticlesException;
+import de.szut.webshop.supplier.SupplierNotFoundException;
 
 /**
  * Uebersetzt fachliche Ausnahmen in HTTP-Antworten.

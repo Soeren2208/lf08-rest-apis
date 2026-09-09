@@ -1,8 +1,10 @@
-package de.szut.webshop.dto;
+package de.szut.webshop.supplier;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+
+import de.szut.webshop.contact.CreateContactDto;
 
 /**
  * Ein Lieferant, so wie ein Client ihn anlegt.

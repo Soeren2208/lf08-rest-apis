@@ -98,7 +98,7 @@ Dann ist dir die Service-Schicht vertraut — dort ist sie entstanden, weil sich
 
 <Task id="t4-ab04-a1-service">Erstelle im Package `service` die Klasse `SupplierService`. Sie übernimmt aus dem Controller: die beiden Repositories, den Mapper, und alles, was zwischen „Anfrage angekommen" und „Antwort steht fest" passiert.</Task>
 
-```java title="src/main/java/de/szut/webshop/service/SupplierService.java"
+```java title="src/main/java/de/szut/webshop/supplier/SupplierService.java"
 @Service
 public class SupplierService {
 
@@ -139,7 +139,7 @@ public class SupplierService {
 
 <Task id="t4-ab04-a1-controller">Baue den `SupplierController` so um, dass er nur noch den `SupplierService` kennt. Beide Repositories und der Mapper verschwinden aus ihm.</Task>
 
-```java title="src/main/java/de/szut/webshop/controller/SupplierController.java"
+```java title="src/main/java/de/szut/webshop/supplier/SupplierController.java"
 @RestController
 @RequestMapping("/api/v1/suppliers")
 public class SupplierController {
@@ -177,7 +177,7 @@ Bisher hat der Controller entschieden, was ein unbekannter Lieferant bedeutet �
 
 <Task id="t4-ab04-a2-exception">Erstelle im Package `service` die Ausnahme `SupplierNotFoundException`:</Task>
 
-```java title="src/main/java/de/szut/webshop/service/SupplierNotFoundException.java"
+```java title="src/main/java/de/szut/webshop/supplier/SupplierNotFoundException.java"
 public class SupplierNotFoundException extends RuntimeException {
 
     public SupplierNotFoundException(Long id) {
@@ -270,7 +270,7 @@ Der Löschversuch ist der dritte Fall. Die Anfrage war richtig formuliert, die K
 
 <Task id="t4-ab04-a3-regel">Erstelle die Ausnahme `SupplierHasArticlesException` und **ersetze** `deleteById` durch die Fassung mit Prüfung:</Task>
 
-```java title="src/main/java/de/szut/webshop/service/SupplierHasArticlesException.java"
+```java title="src/main/java/de/szut/webshop/supplier/SupplierHasArticlesException.java"
 public class SupplierHasArticlesException extends RuntimeException {
 
     public SupplierHasArticlesException(Long id, long articleCount) {
@@ -309,10 +309,10 @@ Man baut also nicht das eine *statt* des anderen, sondern das eine *vor* dem and
 
 Der Service wirft jetzt zwei Ausnahmen und kennt weiterhin keinen einzigen Statuscode. Die Übersetzung passiert an einer eigenen Stelle.
 
-<Task id="t4-ab04-a4">Erstelle im Package `controller` die Klasse `ApiExceptionHandler`:</Task>
+<Task id="t4-ab04-a4">Erstelle im Package `common` die Klasse `ApiExceptionHandler`:</Task>
 
-```java title="src/main/java/de/szut/webshop/controller/ApiExceptionHandler.java"
-package de.szut.webshop.controller;
+```java title="src/main/java/de/szut/webshop/common/ApiExceptionHandler.java"
+package de.szut.webshop.common;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -325,8 +325,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import de.szut.webshop.service.SupplierHasArticlesException;
-import de.szut.webshop.service.SupplierNotFoundException;
+import de.szut.webshop.supplier.SupplierHasArticlesException;
+import de.szut.webshop.supplier.SupplierNotFoundException;
 
 @RestControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -377,7 +377,7 @@ Die Regeln stehen als Annotationen an den **Eingabe-DTOs** — dort, wo die Date
 
 <Task id="t4-ab04-a5-dto">Ergänze die drei Create-DTOs:</Task>
 
-```java title="src/main/java/de/szut/webshop/dto/CreateContactDto.java"
+```java title="src/main/java/de/szut/webshop/contact/CreateContactDto.java"
 public record CreateContactDto(
 
         @NotBlank(message = "Die Straße darf nicht leer sein.")
@@ -393,7 +393,7 @@ public record CreateContactDto(
 }
 ```
 
-```java title="src/main/java/de/szut/webshop/dto/CreateSupplierDto.java"
+```java title="src/main/java/de/szut/webshop/supplier/CreateSupplierDto.java"
 public record CreateSupplierDto(
 
         @NotBlank(message = "Der Name darf nicht leer sein.")
@@ -405,7 +405,7 @@ public record CreateSupplierDto(
 }
 ```
 
-```java title="src/main/java/de/szut/webshop/dto/CreateArticleDto.java"
+```java title="src/main/java/de/szut/webshop/article/CreateArticleDto.java"
 public record CreateArticleDto(
 
         @NotBlank(message = "Die Bezeichnung darf nicht leer sein.")
@@ -498,7 +498,7 @@ Der `ArticleController` hat dieselbe Behandlung verdient — und dabei löst sic
 
 <Task id="t4-ab04-a6-service">Erstelle im Package `service` die Klasse `ArticleService`:</Task>
 
-```java title="src/main/java/de/szut/webshop/service/ArticleService.java"
+```java title="src/main/java/de/szut/webshop/article/ArticleService.java"
 @Service
 public class ArticleService {
 

@@ -1,13 +1,10 @@
-package de.szut.webshop.service;
+package de.szut.webshop.supplier;
 
 import org.springframework.stereotype.Component;
 
-import de.szut.webshop.dto.ContactDto;
-import de.szut.webshop.dto.CreateContactDto;
-import de.szut.webshop.dto.CreateSupplierDto;
-import de.szut.webshop.dto.SupplierDto;
-import de.szut.webshop.model.Contact;
-import de.szut.webshop.model.Supplier;
+import de.szut.webshop.contact.Contact;
+import de.szut.webshop.contact.ContactDto;
+import de.szut.webshop.contact.CreateContactDto;
 
 /**
  * Uebersetzt zwischen Entitaet und DTO - in beide Richtungen.

@@ -135,10 +135,10 @@ Die letzte Zeile ist keine Kleinigkeit. Was mit den Artikeln geschehen soll, wen
 
 ### Aufgabe 1 – Die Artikel-Entität
 
-<Task id="t4-ab02-a1-article">Erstelle im Package `model` die Klasse `Article`:</Task>
+<Task id="t4-ab02-a1-article">Erstelle im Package `article` die Klasse `Article`:</Task>
 
-```java title="src/main/java/de/szut/webshop/model/Article.java"
-package de.szut.webshop.model;
+```java title="src/main/java/de/szut/webshop/article/Article.java"
+package de.szut.webshop.article;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -292,7 +292,7 @@ Jetzt steht dort:
 ```text
 Resolved [org.springframework.http.converter.HttpMessageNotWritableException:
   Could not write JSON: Cannot lazily initialize collection of role
-  'de.szut.webshop.model.Supplier.articles' with key '1' (no session)]
+  'de.szut.webshop.supplier.Supplier.articles' with key '1' (no session)]
 ```
 
 <Task id="t4-ab02-a4-lesen">Lies die Meldung Wort für Wort und beantworte: Welche Klasse, welches Feld, und was genau ging nicht?</Task>

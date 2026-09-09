@@ -1,4 +1,4 @@
-package de.szut.webshop.model;
+package de.szut.webshop.supplier;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +16,9 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import de.szut.webshop.article.Article;
+import de.szut.webshop.contact.Contact;
 
 /**
  * Ein Lieferant.

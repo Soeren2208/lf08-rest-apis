@@ -1,4 +1,4 @@
-package de.szut.webshop.controller;
+package de.szut.webshop.supplier;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
@@ -18,11 +18,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import de.szut.webshop.dto.ContactDto;
-import de.szut.webshop.dto.SupplierDto;
-import de.szut.webshop.service.SupplierHasArticlesException;
-import de.szut.webshop.service.SupplierNotFoundException;
-import de.szut.webshop.service.SupplierService;
+import de.szut.webshop.common.ApiExceptionHandler;
+import de.szut.webshop.contact.ContactDto;
 
 /**
  * Die Web-Schicht allein. Kein Server, keine Datenbank - der Service ist

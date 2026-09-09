@@ -1,15 +1,11 @@
-package de.szut.webshop.service;
+package de.szut.webshop.supplier;
 
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.szut.webshop.dto.CreateSupplierDto;
-import de.szut.webshop.dto.SupplierDto;
-import de.szut.webshop.model.Supplier;
-import de.szut.webshop.repository.ArticleRepository;
-import de.szut.webshop.repository.SupplierRepository;
+import de.szut.webshop.article.ArticleRepository;
 
 /**
  * Die Fachlichkeit rund um Lieferanten.

@@ -1,4 +1,6 @@
-package de.szut.webshop.dto;
+package de.szut.webshop.supplier;
+
+import de.szut.webshop.contact.ContactDto;
 
 /**
  * Ein Lieferant, so wie ihn die Schnittstelle herausgibt.

@@ -1,4 +1,4 @@
-package de.szut.webshop.service;
+package de.szut.webshop.supplier;
 
 /** Es gibt keinen Lieferanten mit dieser Kennung. */
 public class SupplierNotFoundException extends RuntimeException {
