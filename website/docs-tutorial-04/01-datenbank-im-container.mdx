@@ -458,7 +458,18 @@ Mehr zu den Besitzverhältnissen bei Beziehungen steht im Infoblatt [Beziehungen
 
 ### Aufgabe 5 – Repository und Controller
 
-<Task id="t4-ab01-a5-repo">Lege im Package `supplier` das Interface `SupplierRepository` an, das `JpaRepository<Supplier, Long>` erweitert.</Task>
+Auch das Repository kennst du — im Gästebuch hast du eines angelegt. Hier ist nur die Entität eine andere.
+
+<Task id="t4-ab01-a5-repo">Lege im Package `supplier` das Interface `SupplierRepository` an. Es erbt von `JpaRepository`, und der Rumpf bleibt leer.</Task>
+
+:::note Welche zwei Typen kommen in die spitzen Klammern?
+Der erste nennt die **Entität**, die verwaltet wird. Der zweite den **Typ ihres Schlüssels** — nicht noch einmal die Entität, sondern den Typ, den das Feld `id` hat.
+
+Beides steht schon in deiner gerade geschriebenen Klasse. Nachsehen genügt.
+:::
+
+<details>
+<summary>Wenn du nicht weiterkommst: das Repository</summary>
 
 ```java title="src/main/java/de/szut/webshop/supplier/SupplierRepository.java"
 package de.szut.webshop.supplier;
@@ -468,6 +479,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface SupplierRepository extends JpaRepository<Supplier, Long> {
 }
 ```
+
+Kein Rumpf, keine Implementierung: `save`, `findAll`, `findById` und `deleteById` bringt `JpaRepository` mit. Ein `interface` genügt — die Klasse dahinter baut Spring Data beim Start.
+
+</details>
 
 <Task id="t4-ab01-a5-controller">Erstelle im Package `supplier` die Klasse `SupplierController` mit drei Endpunkten unter `/api/v1/suppliers`: einem **POST** zum Anlegen, einem **GET** für alle Lieferanten und einem **GET** für einen einzelnen über seine `id`.</Task>
 
