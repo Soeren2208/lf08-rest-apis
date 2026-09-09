@@ -405,19 +405,11 @@ public class Supplier {
 }
 ```
 
-:::tip Die Importe stehen ab jetzt mit im Codeblock
-In den Beispielen dieses Tutorials sind die `import`-Zeilen abgedruckt.
-Das ist nicht überflüssig: `@Valid` und `@NotBlank` liegen in
-**verschiedenen** Paketen, ebenso `@Order` und `Ordered`. IntelliJ schlägt
-mit `Alt`+`Enter` oft mehrere gleich aussehende Möglichkeiten vor — und die
-falsche zu nehmen kostet mehr Zeit als das Abtippen.
-:::
-
 Zwei Stellen verdienen einen zweiten Blick.
 
 **`@Getter @Setter @NoArgsConstructor` statt `@Data`.** Im Gästebuch stand `@Data` an der Entität. Hier nicht — und der Grund ist die Beziehung: `@Data` erzeugt unter anderem `toString()`, `equals()` und `hashCode()`. Sobald zwei Klassen aufeinander zeigen, rufen diese Methoden sich gegenseitig auf und kommen nie zurück. Hier ist es noch harmlos — `Contact` zeigt nicht zurück. Im nächsten Arbeitsblatt schon. Die drei einzelnen Annotationen erzeugen genau das, was gebraucht wird.
 
-**`cascade = CascadeType.ALL` ist die gefüllte Raute.** Sie sagt: Was mit dem Lieferanten geschieht, geschieht mit seiner Anschrift auch. Speichern, Löschen — alles wird weitergereicht. `orphanRemoval = true` ergänzt den Fall, dass die Anschrift nur abgehängt wird, ohne dass der Lieferant verschwindet: Auch dann wird sie gelöscht statt herrenlos liegen zu bleiben.
+**`cascade = CascadeType.ALL` setzt die Komposition um.** Sie sagt: Was mit dem Lieferanten geschieht, geschieht mit seiner Anschrift auch. Speichern, Löschen — alles wird weitergereicht. `orphanRemoval = true` ergänzt den Fall, dass die Anschrift nur abgehängt wird, ohne dass der Lieferant verschwindet: Auch dann wird sie gelöscht statt herrenlos liegen zu bleiben.
 
 | Im Diagramm | Im Code |
 |---|---|
