@@ -599,7 +599,7 @@ Bei der Maklerdatenbank hast du die Tabellen selbst angelegt. Hier entstehen sie
 
 Beim ersten Mal bietet IntelliJ unten an, den Treiber herunterzuladen (**Download missing driver files**) — das ist nötig. Danach prüfst du mit **Test Connection** und bestätigst mit **OK**.
 
-<Task id="t4-ab01-a7-look">Klappe im Baum `webshop → public → tables` auf. Öffne die Tabelle `supplier` per Doppelklick und sieh dir die Spalten an.</Task>
+<Task id="t4-ab01-a7-look">Klappe im Baum `webshop → public → tables` auf, öffne die Tabelle `supplier` per Doppelklick und wechsle unten auf den Reiter <b>DDL</b>. Dort steht der vollständige <code>CREATE TABLE</code>-Befehl — mit allem, was Hibernate an die Spalten gehängt hat.</Task>
 
 Du solltest das hier finden:
 
@@ -673,6 +673,20 @@ Die entscheidende Zeile ist `contact_id`. Sie trägt **zwei** Bedingungen:
 - **UNIQUE** — derselbe Wert darf nur einmal vorkommen. Und genau das ist die zweite `1` aus dem Klassendiagramm: Ohne diese Bedingung könnten sich zwei Lieferanten eine Anschrift teilen, und aus der 1:1 wäre eine n:1 geworden.
 
 Hibernate hat die Bedingung von selbst gesetzt, weil `@OneToOne` dort steht und nicht `@ManyToOne`. Ein Buchstabe im Java-Code, eine Bedingung in der Datenbank.
+
+:::warning In der Spaltenansicht siehst du nur die Hälfte
+Klickst du im Baum auf die Tabelle und siehst dir die **Spalten** an, findest du den Fremdschlüssel — die Unique-Bedingung aber nicht. Das ist kein Fehler des Werkzeugs: Eindeutigkeit ist keine Eigenschaft einer Spalte, sondern ein eigenes Objekt der Tabelle.
+
+Zu sehen ist sie an drei Stellen:
+
+| Wo | Was dort steht |
+|---|---|
+| Reiter **DDL** | der ganze `CREATE TABLE`-Befehl samt aller Bedingungen — der schnellste Weg |
+| Baum: `supplier` → **keys** | der Primärschlüssel und die Unique-Bedingung, mit ihrem erzeugten Namen |
+| Baum: `supplier` → **indexes** | derselbe Eintrag noch einmal: PostgreSQL setzt `UNIQUE` über einen Index um |
+
+Der Name sieht aus wie `ukmlyijxk67davdvmis2t3pd7vl`. Den hat Hibernate erzeugt, weil im Java-Code keiner steht — inhaltlich sagt er nichts.
+:::
 
 <Task id="t4-ab01-a7-select">Sieh dir auch die Tabelle `contact` an: Deine beiden Anschriften stehen darin, jede mit einer eigenen `id`.</Task>
 

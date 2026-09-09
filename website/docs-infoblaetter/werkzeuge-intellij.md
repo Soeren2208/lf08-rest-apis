@@ -276,6 +276,7 @@ Die Leiste **Database** am rechten Rand verbindet sich direkt mit der PostgreSQL
 | **Treiber** | Beim ersten Mal bietet IntelliJ *Download missing driver files* an — bestätigen |
 | **Prüfen** | *Test Connection* muss grün sein, bevor es weitergeht |
 | **Ansehen** | Doppelklick auf eine Tabelle öffnet ihren Inhalt |
+| **Aufbau** | Im selben Fenster der Reiter **DDL** — dort steht der `CREATE TABLE`-Befehl mit allen Bedingungen |
 | **Abfragen** | Rechtsklick auf die Datenbank → *New → Query Console* |
 | **Auffrischen** | Die Ansicht aktualisiert sich **nicht** von selbst — der Kreispfeil oder `Ctrl + F5` |
 
@@ -283,6 +284,8 @@ Die Leiste **Database** am rechten Rand verbindet sich direkt mit der PostgreSQL
 Wenn `spring.jpa.hibernate.ddl-auto=update` steht, entstehen die Tabellen aus deinen Entitäten. Was dabei tatsächlich herauskommt — Spaltentypen, Fremdschlüssel, Verknüpfungstabellen — steht nirgends im Quelltext.
 
 Hier kannst du es nachsehen. Der Unterschied zwischen einer 1:n- und einer n:m-Beziehung ist im Schema genau **eine** Bedingung; siehe [Beziehungen mit JPA abbilden](/infoblaetter/jpa-beziehungen).
+
+**Wichtig dabei:** Die **Spaltenansicht** zeigt Bedingungen nur zum Teil. Einen Fremdschlüssel markiert sie, eine Unique-Bedingung nicht — Eindeutigkeit ist keine Eigenschaft einer Spalte, sondern ein eigenes Objekt der Tabelle. Sie steht im Reiter **DDL** und im Baum unter `tabelle` → **keys** (und noch einmal unter **indexes**, weil PostgreSQL `UNIQUE` über einen Index umsetzt). Wer nur auf die Spalten sieht, hält eine 1:1-Beziehung leicht für eine n:1.
 :::
 
 ## Das Maven-Fenster
