@@ -378,7 +378,7 @@ public class SupplierController {
     }
 
     @GetMapping
-    public List<SupplierDto> findAllSuppliers() {
+    public ResponseEntity<List<SupplierDto>> findAllSuppliers() {
         return supplierRepository.findAll().stream()
                 .map(supplier -> mapper.toDto(
                         supplier,
@@ -469,7 +469,8 @@ public class ArticleController {
     }
 
     @GetMapping
-    public List<ArticleDto> findArticlesOfSupplier(@PathVariable Long supplierId) {
+    public ResponseEntity<List<ArticleDto>> findArticlesOfSupplier(
+            @PathVariable Long supplierId) {
         return articleRepository.findAllBySupplierIdOrderByIdDesc(supplierId).stream()
                 .map(mapper::toDto)
                 .toList();

@@ -513,8 +513,8 @@ public class SupplierController {
     }
 
     @GetMapping
-    public List<Supplier> findAllSuppliers() {
-        return repository.findAll();
+    public ResponseEntity<List<Supplier>> findAllSuppliers() {
+        return ResponseEntity.ok(repository.findAll());
     }
 
     @GetMapping("/{id}")
@@ -530,6 +530,17 @@ public class SupplierController {
 
 :::info Der Controller gibt die Entität direkt heraus
 Das ist genau das, was du im Gästebuch auch gemacht hast — und es funktioniert heute noch. Merke dir diese drei Endpunkte trotzdem gut: In Arbeitsblatt 02 wirst du **keinen einzigen Buchstaben** daran ändern, und zwei von ihnen werden trotzdem aufhören zu funktionieren.
+:::
+
+:::note Jeder Endpunkt liefert ein `ResponseEntity` — auch der, bei dem nichts schiefgehen kann
+Beim Abrufen aller Lieferanten gibt es nur einen Ausgang: eine Liste und `200 OK`. Technisch könnte die Methode dort einfach `List<Supplier>` zurückgeben; Spring baut daraus von selbst eine 200-Antwort.
+
+Trotzdem steht auch dort die Hülle. Zwei Gründe:
+
+- **Die Signatur bleibt stabil.** Kommt später eine Kopfzeile dazu — etwa die Gesamtzahl beim Blättern — oder ein anderer Statuscode, ändert sich nur der Rumpf der Methode, nicht ihr Rückgabetyp.
+- **Wer den Controller liest, muss nicht bei jeder Methode neu hinsehen.** Zwei Stile nebeneinander sehen aus, als steckte eine Absicht dahinter, und man sucht nach der Regel, die es gar nicht gibt.
+
+Die Regel für dieses Tutorial lautet deshalb schlicht: **Jede Controller-Methode gibt ein `ResponseEntity` zurück.** Für den Service gilt das ausdrücklich **nicht** — der kennt kein HTTP.
 :::
 
 ### Aufgabe 6 – Ausprobieren

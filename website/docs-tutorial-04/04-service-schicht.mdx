@@ -163,8 +163,8 @@ public class SupplierController {
     }
 
     @GetMapping
-    public List<SupplierDto> findAllSuppliers() {
-        return service.findAll();
+    public ResponseEntity<List<SupplierDto>> findAllSuppliers() {
+        return ResponseEntity.ok(service.findAll());
     }
 }
 ```
@@ -226,8 +226,8 @@ Jetzt die Frage aus dem Einkauf. Baue den Endpunkt zunächst **ohne** jede Prüf
 
 ```java
     @GetMapping("/{id}")
-    public SupplierDto findSupplierById(@PathVariable Long id) {
-        return service.findById(id);
+    public ResponseEntity<SupplierDto> findSupplierById(@PathVariable Long id) {
+        return ResponseEntity.ok(service.findById(id));
     }
 
     @DeleteMapping("/{id}")
@@ -705,11 +705,11 @@ Im Controller:
 
 ```java
     @GetMapping
-    public Page<ArticleDto> findArticlesOfSupplier(
+    public ResponseEntity<Page<ArticleDto>> findArticlesOfSupplier(
             @PathVariable Long supplierId,
             @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.DESC)
             Pageable pageable) {
-        return service.findAllBySupplier(supplierId, pageable);
+        return ResponseEntity.ok(service.findAllBySupplier(supplierId, pageable));
     }
 ```
 

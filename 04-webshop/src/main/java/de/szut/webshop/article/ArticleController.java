@@ -46,7 +46,8 @@ public class ArticleController {
     }
 
     @GetMapping
-    public List<ArticleDto> findArticlesOfSupplier(@PathVariable Long supplierId) {
-        return service.findAllBySupplier(supplierId);
+    public ResponseEntity<List<ArticleDto>> findArticlesOfSupplier(
+            @PathVariable Long supplierId) {
+        return ResponseEntity.ok(service.findAllBySupplier(supplierId));
     }
 }

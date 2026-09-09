@@ -46,13 +46,13 @@ public class SupplierController {
     }
 
     @GetMapping
-    public List<SupplierDto> findAllSuppliers() {
-        return service.findAll();
+    public ResponseEntity<List<SupplierDto>> findAllSuppliers() {
+        return ResponseEntity.ok(service.findAll());
     }
 
     @GetMapping("/{id}")
-    public SupplierDto findSupplierById(@PathVariable Long id) {
-        return service.findById(id);
+    public ResponseEntity<SupplierDto> findSupplierById(@PathVariable Long id) {
+        return ResponseEntity.ok(service.findById(id));
     }
 
     @DeleteMapping("/{id}")
