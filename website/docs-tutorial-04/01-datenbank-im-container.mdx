@@ -233,9 +233,9 @@ Aus der Besprechung ist ein Klassendiagramm geworden. Es beschreibt den ersten T
         fill="var(--ifm-color-emphasis-700)">contact</text>
 </svg>
 
-Zwei Dinge stehen darin, die im Gästebuch nicht vorkamen: eine **gefüllte Raute** und **Multiplizitäten an beiden Enden**.
+Eines steht darin, das im Gästebuch nicht vorkam: die **gefüllte Raute**.
 
-Beides kennst du aus dem ersten Lehrjahr. Hier geht es nicht darum, die Notation noch einmal durchzunehmen, sondern darum, was sie für den Code bedeutet — denn genau daraus wird gleich eine Annotation.
+Die Notation kennst du aus dem ersten Lehrjahr. Hier geht es nicht darum, sie noch einmal durchzunehmen, sondern darum, was sie für den Code bedeutet — denn genau daraus wird gleich eine Annotation.
 
 <Task id="t4-ab01-diagramm-komposition">Mache dir die Komposition zwischen <code>Supplier</code> und <code>Contact</code> klar: Was sagt die gefüllte Raute über die beiden Klassen aus? Formuliere es in zwei, drei Sätzen — erst dann aufklappen.</Task>
 
@@ -253,8 +253,6 @@ Wäre die Raute **leer** (*Aggregation*), hieße das das Gegenteil: Die Anschrif
 Merk dir die drei Punkte bis Aufgabe 4. Dort wird aus ihnen eine einzige Zeile Code.
 
 </details>
-
-**Die Multiplizitäten stehen an beiden Enden.** Links `1`, rechts `1` — jeder Lieferant hat genau eine Anschrift, jede Anschrift gehört zu genau einem Lieferanten. In der Prüfung ist das eine der häufigsten Fehlerquellen: Wer nur eine Seite beschriftet, hat die Beziehung nur halb beschrieben.
 
 :::note Warum heißt das Feld `id` und nicht `sid`?
 In vielen Datenbankentwürfen — auch in der Vorlage zu diesem Diagramm — heißen die Schlüssel `sid`, `cid`, `aid`: der erste Buchstabe der Tabelle plus `id`. Das stammt aus einer Zeit, in der man SQL-Abfragen ohne Tabellenaliase schrieb; dort half der Präfix, `id` von `id` zu unterscheiden.
