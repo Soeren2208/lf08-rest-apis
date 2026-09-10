@@ -379,7 +379,7 @@ Bei einer 1:n-Beziehung wandert der Primärschlüssel der **1**-Seite als Fremds
 
 #### Was der Code davon bewirkt
 
-**`@ManyToOne` erzeugt in der korrespondierenden Tabelle die Spalte mit dem Fremdschlüssel.** Sobald diese Annotation an einem Feld steht, weiß JPA: In meine Tabelle gehört ein Fremdschlüssel auf die andere. Der Name ist aus der Sicht der Klasse gelesen, in der die Annotation steht — *viele* Artikel zu *einem* Lieferanten. In `Supplier` steht für dieselbe Beziehung deshalb `@OneToMany`.
+**`@ManyToOne` erzeugt in der korrespondierenden Tabelle die Spalte mit dem Fremdschlüssel.** Sobald diese Annotation an einem Feld steht, weiß JPA: In meine Tabelle gehört ein Fremdschlüssel auf die andere — in diesem Fall gehört in die Tabelle `article` der Fremdschlüssel `supplier_id`. Der Name ist aus der Sicht der Klasse gelesen, in der die Annotation steht — *viele* Artikel zu *einem* Lieferanten. In `Supplier` steht für dieselbe Beziehung deshalb `@OneToMany`.
 
 **`@JoinColumn` konfiguriert diese Spalte.** Ohne sie bekäme die Spalte einen Namen nach einer Standardregel; mit ihr legst du ihn ausdrücklich fest. `nullable = false` macht daraus ein `NOT NULL` — und das ist die `1` aus dem Klassendiagramm: Jeder Artikel muss einen Lieferanten haben.
 
