@@ -34,7 +34,7 @@ Nach Bearbeitung dieses Arbeitsblatts kannst du:
 ## Das Klassendiagramm wächst
 
 <svg viewBox="0 0 720 400" width="100%" role="img"
-     aria-label="Klassendiagramm mit drei Klassen: Supplier besitzt genau einen Contact über eine Komposition, und Supplier steht mit null bis beliebig vielen Article über eine einfache Assoziation in Beziehung."
+     aria-label="Klassendiagramm mit drei Klassen: Supplier besitzt genau einen Contact über eine Komposition. Zu Article besteht eine Assoziation mit Pfeilspitzen an beiden Enden - beide Klassen kennen einander -, ein Supplier zu beliebig vielen Article."
      fontFamily="var(--ifm-font-family-base)">
 
   {/* ---------- Supplier ---------- */}
@@ -110,9 +110,13 @@ Nach Bearbeitung dieses Arbeitsblatts kannst du:
   {/* ---------- Assoziation Supplier - Article ---------- */}
   <line x1="160" y1="148" x2="160" y2="240"
         stroke="var(--ifm-color-emphasis-700)" strokeWidth="1.5"/>
-  <text x="170" y="168" fontSize="13" fontWeight="700"
+  <path d="M 154 157 L 160 148 L 166 157" fill="none"
+        stroke="var(--ifm-color-emphasis-700)" strokeWidth="1.5"/>
+  <path d="M 154 231 L 160 240 L 166 231" fill="none"
+        stroke="var(--ifm-color-emphasis-700)" strokeWidth="1.5"/>
+  <text x="174" y="168" fontSize="13" fontWeight="700"
         fill="var(--ifm-font-color-base)">1</text>
-  <text x="170" y="232" fontSize="13" fontWeight="700"
+  <text x="174" y="232" fontSize="13" fontWeight="700"
         fill="var(--ifm-font-color-base)">*</text>
   <text x="150" y="200" textAnchor="end" fontSize="12.5" fontStyle="italic"
         fill="var(--ifm-color-emphasis-700)">articles</text>
@@ -122,8 +126,9 @@ Sieh dir die beiden Linien nebeneinander an. Sie sagen Verschiedenes:
 
 | | zu `Contact` | zu `Article` |
 |---|---|---|
-| Notation | gefüllte Raute | schlichte Linie |
+| Notation | gefüllte Raute | Linie mit Pfeilspitzen an beiden Enden |
 | Name | Komposition | Assoziation |
+| Navigierbarkeit | vom `Supplier` zum `Contact` | **in beide Richtungen** — der Lieferant kennt seine Artikel, jeder Artikel seinen Lieferanten |
 | Multiplizität | `1` — `1` | `1` — `*` |
 | Was passiert beim Löschen des Lieferanten? | Die Anschrift verschwindet mit | **offen** — die Artikel gehören ihm nicht |
 
@@ -148,12 +153,12 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import de.szut.webshop.supplier.Supplier;
 
@@ -173,29 +178,17 @@ public class Article {
     @Column(precision = 10, scale = 2)
     private BigDecimal price;
 
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     @ManyToOne
     @JoinColumn(name = "supplier_id", nullable = false)
     private Supplier supplier;
-
-    @PrePersist
-    void setTimestampsOnInsert() {
-        LocalDateTime now = LocalDateTime.now();
-        if (createdAt == null) {
-            createdAt = now;
-        }
-        updatedAt = now;
-    }
-
-    @PreUpdate
-    void setTimestampOnUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
 }
 ```
 
@@ -203,19 +196,6 @@ public class Article {
 `double` rechnet im Binärsystem und kann `0,10` nicht genau darstellen. Drei mal zehn Cent ergeben damit `0.30000000000000004`. Bei einem Warenkorb summiert sich so etwas — deshalb ist Geld in Java ein `BigDecimal`.
 
 `precision = 10, scale = 2` sagt der Datenbank: zehn Stellen insgesamt, davon zwei hinter dem Komma. In der Tabelle wird daraus `numeric(10,2)`.
-:::
-
-:::info Die beiden Zeitstempel-Methoden
-Im Gästebuch hat `@CreationTimestamp` das Datum gesetzt. Hier stehen zwei eigene Methoden, und beide werden **von JPA aufgerufen**, nicht von dir:
-
-| Annotation | Wann die Methode läuft |
-|---|---|
-| `@PrePersist` | einmal, unmittelbar bevor die Zeile zum ersten Mal in die Datenbank geschrieben wird |
-| `@PreUpdate` | vor jedem weiteren Speichern derselben Zeile |
-
-Die Methoden sind absichtlich `void` und ohne Sichtbarkeitswort (also *package-private*): Sie gehen niemanden außerhalb der Klasse etwas an.
-
-Der Vorteil gegenüber `@CreationTimestamp`: Die Prüfung `if (createdAt == null)` lässt einen bereits gesetzten Wert stehen. Beim Importieren alter Datenbestände ist das der Unterschied zwischen „Preis von 2019" und „alle Preise von heute".
 :::
 
 <Task id="t4-ab02-a1-mappedby">Ergänze in `Supplier` die Gegenrichtung:</Task>

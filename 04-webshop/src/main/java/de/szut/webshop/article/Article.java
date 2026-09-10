@@ -10,12 +10,12 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import de.szut.webshop.supplier.Supplier;
 
@@ -37,9 +37,11 @@ public class Article {
     @Column(precision = 10, scale = 2)
     private BigDecimal price;
 
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
@@ -47,18 +49,4 @@ public class Article {
     @ManyToOne
     @JoinColumn(name = "supplier_id", nullable = false)
     private Supplier supplier;
-
-    @PrePersist
-    void setTimestampsOnInsert() {
-        LocalDateTime now = LocalDateTime.now();
-        if (createdAt == null) {
-            createdAt = now;
-        }
-        updatedAt = now;
-    }
-
-    @PreUpdate
-    void setTimestampOnUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
 }
