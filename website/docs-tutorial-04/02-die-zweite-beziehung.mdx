@@ -530,6 +530,25 @@ Bei einer 1:n-Beziehung wandert der Primärschlüssel der **1**-Seite als Fremds
 
 **Was passiert, wenn man es nicht sagt.** Dann glaubt Hibernate an zwei getrennte Beziehungen und braucht für die zweite einen Speicherort. In der Lieferantentabelle kann sie nicht liegen — dort steht pro Zeile nur ein Wert, aber ein Lieferant hat viele Artikel. Also legt Hibernate eine dritte Tabelle an, `supplier_articles`, mit zwei Fremdschlüsseln. Dieselbe Beziehung wäre damit zweimal gespeichert, an zwei Orten, die auseinanderlaufen können. Genau deshalb ist `mappedBy` da.
 
+**Und wozu dann die Gegenrichtung überhaupt?** Sie bringt den Weg zurück im Java-Code: `supplier.getArticles()` liefert die Artikel dieses Lieferanten.
+
+Diese Liste ist **nirgends gespeichert**. Hibernate stellt sie erst her, wenn du sie anfasst — mit genau der Abfrage, die du sonst selbst schreiben müsstest:
+
+```sql
+select * from article where supplier_id = 1
+```
+
+Das ist dieselbe Spalte, in die die andere Seite schreibt. Beide Richtungen arbeiten mit `article.supplier_id`, nur von verschiedenen Enden her:
+
+| Aufruf in Java | Was in der Spalte passiert |
+|---|---|
+| `article.setSupplier(nordmetall)` | trägt den Wert `1` **ein** |
+| `supplier.getArticles()` | **sucht** alle Zeilen, in denen `1` steht |
+
+Deshalb braucht die Gegenrichtung keine eigene Spalte: `Supplier.articles` ist keine gespeicherte Liste, sondern ein **Suchergebnis**.
+
+Ohne dieses Feld wäre die Beziehung einseitig. Vom Artikel käme man zum Lieferanten, umgekehrt nicht — dann müsste man die Artikel jedes Mal beim `ArticleRepository` erfragen, und das Objekt `supplier` selbst wüsste nichts von ihnen.
+
 ### Aufgabe 2 – Erst schätzen
 
 Du hast am `SupplierController` **nichts** geändert. Die drei Endpunkte aus Arbeitsblatt 01 stehen unverändert da.
