@@ -216,6 +216,19 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.OneToMany;
 ```
 
+:::info Was `fetch` festlegt
+Hibernate holt einen Lieferanten aus der Datenbank. Was ist dann mit seiner Anschrift — kommt die mit? Klingt vernünftig. Und die Artikel, die auch an ihm hängen? Und was an den Artikeln hängt? Wären Artikel noch Warengruppen zugeordnet, ginge es dort weiter. **Wann ist Schluss mit dem Nachladen?**
+
+Diese Frage muss jeder O/R-Mapper beantworten. Lädt er zu jedem Objekt sofort alles Verbundene mit, liegt schnell die halbe Datenbank im Speicher. Deshalb lässt Hibernate dich **für jede Beziehung einzeln** zwischen zwei Verhalten wählen:
+
+| | |
+|---|---|
+| `FetchType.EAGER` | Die verbundenen Objekte werden **sofort** mitgeladen. |
+| `FetchType.LAZY` | Sie werden erst geholt, wenn jemand sie **tatsächlich anfasst**. |
+
+Hier steht `LAZY`: Wer einen Lieferanten holt, bekommt seine Artikel nicht ungefragt dazu.
+:::
+
 #### Vom Klassendiagramm zu den Tabellen
 
 Was hier zu leisten ist, steht in einem Bild:
@@ -689,7 +702,7 @@ Status `200`. Die Antwort sieht sauber aus:
 ]
 ```
 
-Sieht nach einer Lösung aus. Bis ein Artikel dazukommt.
+Sieht nach einer Lösung aus.
 
 <Task id="t4-ab02-a5-insert">Lege im Datenbankfenster von IntelliJ einen Artikel von Hand an. Öffne dazu die Tabelle `article` und trage eine Zeile ein:</Task>
 
@@ -813,21 +826,15 @@ Jackson hat bei Tiefe 500 abgebrochen — mitten im Schreiben. Da der Statuscode
 
 Zwei Felder zeigen aufeinander. In Java ist das harmlos: `supplier.getArticles().get(0).getSupplier()` ist wieder derselbe Lieferant, und der Speicher enthält ihn nur einmal. JSON kann das nicht — es kennt keine Verweise, nur Verschachtelung. Also schreibt Jackson den Lieferanten erneut hin, und darin wieder die Artikel, und darin wieder den Lieferanten.
 
-### Aufgabe 6 – Vier Kombinationen
-
-Du hast zwei davon erlebt. Die anderen beiden gehören dazu, bevor du weitermachst — sie zeigen etwas, das du noch nicht gebaut hast: ein eigenes Antwortobjekt statt der Entität. Es heißt **DTO**, und es ist der Gegenstand des nächsten Arbeitsblatts. Für den Moment genügt: Es ist eine schlichte Klasse, die nur die Felder hat, die in der Antwort stehen sollen — und kein Feld, das zurückzeigt.
-
-<ResponseExplorer storageKey="t4-ab02-antwortform" />
-
 ### Die Erkenntnis
 
-`LAZY` und `EAGER` sind nicht die Frage. Beide sind Antworten auf *wann wird geladen* — und keine von beiden beantwortet, **was in der Antwort stehen soll**.
+`LAZY` und `EAGER` sind nicht die Frage. Beide sind Antworten auf *wann wird geladen* — und keine von beiden ändert etwas daran, **was in der Antwort steht**.
 
-Die Entität ist das Abbild einer Tabellenzeile. Sie enthält alles, was die Datenbank braucht: jeden Fremdschlüssel, jede Gegenrichtung, jeden Zeitstempel. Was ein Client sehen soll, ist eine andere Frage — und niemand hat sie bisher gestellt.
+Der Fehler steckt in den Verweisen selbst. Der Lieferant enthält seine Artikel, jeder Artikel enthält wieder seinen Lieferanten. Solange beide Felder in der Antwort landen, entsteht daraus der Kreis: Mit `LAZY` bricht die Umwandlung davor ab, mit `EAGER` läuft sie hinein.
 
-Genau das machst du im nächsten Arbeitsblatt: Du entwirfst die Antwort selbst.
+Zu lösen ist das nicht am Ladezeitpunkt, sondern an der Antwort: **Was der Client bekommt, darf die Rückverweise nicht enthalten.** Die Entität enthält sie zwangsläufig — sie ist das Abbild einer Tabellenzeile und braucht jeden Fremdschlüssel und jede Gegenrichtung. Was ein Client sehen soll, ist eine andere Frage, und die stellt das nächste Arbeitsblatt.
 
-### Aufgabe 7 – Aufräumen
+### Aufgabe 6 – Aufräumen
 
 <Task id="t4-ab02-a7-lazy">Stelle `Supplier.articles` wieder auf `FetchType.LAZY`.</Task>
 
@@ -839,7 +846,7 @@ Die beiden `GET`-Endpunkte liefern damit wieder `500`. Das ist in Ordnung — si
 `logging.level.org.springframework.web=DEBUG` ist der Griff, mit dem du eine `500` ohne Stacktrace zum Sprechen bringst. Er kostet nichts und dauert eine Minute. Im Betrieb bleibt er aus — dort erzeugt er zu viel Ausgabe.
 :::
 
-### Aufgabe 8 – Testfälle
+### Aufgabe 7 – Testfälle
 
 <Task id="t4-ab02-a8">Führe die Testfälle aus. Sie prüfen diesmal auch das, was **nicht** funktioniert — das gehört ebenso geprüft.</Task>
 
