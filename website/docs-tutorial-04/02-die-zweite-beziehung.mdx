@@ -375,17 +375,17 @@ Was hier zu leisten ist, steht in einem Bild:
         fill="var(--zeichnung-blau)">Fremdschlüssel verweist auf Primärschlüssel</text>
 </svg>
 
-**Die Regel dahinter kennst du aus dem ersten Lehrjahr:** Bei einer 1:n-Beziehung wandert der Primärschlüssel der **1**-Seite als Fremdschlüssel in die Tabelle der **n**-Seite. Das `*` im Klassendiagramm ist diese n-Seite: beliebig viele Artikel je Lieferant.
+Bei einer 1:n-Beziehung wandert der Primärschlüssel der **1**-Seite als Fremdschlüssel in die Tabelle der **n**-Seite. Das `*` im Klassendiagramm ist diese n-Seite: beliebig viele Artikel je Lieferant.
 
 #### Was der Code davon bewirkt
 
-**`@ManyToOne` erzeugt die Spalte.** Sobald diese Annotation an einem Feld steht, weiß JPA: In meine Tabelle gehört ein Fremdschlüssel auf die andere. Der Name ist aus der Sicht der Klasse gelesen, in der die Annotation steht — *viele* Artikel zu *einem* Lieferanten. In `Supplier` steht für dieselbe Beziehung deshalb `@OneToMany`.
+**`@ManyToOne` erzeugt in der korrespondierenden Tabelle die Spalte mit dem Fremdschlüssel.** Sobald diese Annotation an einem Feld steht, weiß JPA: In meine Tabelle gehört ein Fremdschlüssel auf die andere. Der Name ist aus der Sicht der Klasse gelesen, in der die Annotation steht — *viele* Artikel zu *einem* Lieferanten. In `Supplier` steht für dieselbe Beziehung deshalb `@OneToMany`.
 
 **`@JoinColumn` konfiguriert diese Spalte.** Ohne sie bekäme die Spalte einen Namen nach einer Standardregel; mit ihr legst du ihn ausdrücklich fest. `nullable = false` macht daraus ein `NOT NULL` — und das ist die `1` aus dem Klassendiagramm: Jeder Artikel muss einen Lieferanten haben.
 
 #### Und was macht dann `mappedBy`?
 
-**In der Datenbank: nichts.** Kein Feld, keine Spalte, keine Bedingung. Das ist der Punkt, an dem man hängen bleibt, solange man `mappedBy` für ein Gegenstück zu `@JoinColumn` hält. Es ist keins.
+**In der Datenbank: nichts.** Kein Feld, keine Spalte, keine Bedingung.
 
 `mappedBy` ist eine Auskunft an Hibernate über den Java-Code, und sie lautet als Verneinung:
 
@@ -526,15 +526,9 @@ Was hier zu leisten ist, steht in einem Bild:
         fill="var(--zeichnung-gruen)">nennt das Feld</text>
 </svg>
 
-**Warum muss man das überhaupt sagen?** Weil Java es nicht sehen kann. In `Supplier` steht `List<Article> articles`, in `Article` steht `Supplier supplier`. Für den Übersetzer sind das zwei völlig unabhängige Felder. Dass ein Mensch sofort erkennt, dass beide dieselbe Sache aus zwei Richtungen beschreiben, hilft Hibernate nicht. Es muss es gesagt bekommen.
+**Warum muss man das überhaupt sagen?** Weil Java es nicht sehen kann. In `Supplier` steht `List<Article> articles`, in `Article` steht `Supplier supplier`. Für den Compiler sind das zwei völlig unabhängige Felder. Dass ein Mensch sofort erkennt, dass beide dieselbe Sache aus zwei Richtungen beschreiben, hilft Hibernate nicht. Es muss es gesagt bekommen.
 
 **Was passiert, wenn man es nicht sagt.** Dann glaubt Hibernate an zwei getrennte Beziehungen und braucht für die zweite einen Speicherort. In der Lieferantentabelle kann sie nicht liegen — dort steht pro Zeile nur ein Wert, aber ein Lieferant hat viele Artikel. Also legt Hibernate eine dritte Tabelle an, `supplier_articles`, mit zwei Fremdschlüsseln. Dieselbe Beziehung wäre damit zweimal gespeichert, an zwei Orten, die auseinanderlaufen können. Genau deshalb ist `mappedBy` da.
-
-:::tip Der Satz, der die beiden auseinanderhält
-**`@JoinColumn` nennt eine Spalte. `mappedBy` nennt ein Feld.**
-
-Die Probe: Benennst du das **Feld** `supplier` in `Article` um, muss `mappedBy` mit. Benennst du die **Spalte** `supplier_id` um, bleibt `mappedBy` unverändert.
-:::
 
 ### Aufgabe 2 – Erst schätzen
 
