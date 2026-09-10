@@ -12,8 +12,6 @@ sidebar_position: 2
 > Der Katalog braucht Artikel. Die Einkaufsabteilung hat dazu einen weiteren Satz beigesteuert:
 >
 > *„Jeder Artikel kommt von genau einem Lieferanten. Ein Lieferant kann viele Artikel haben — oder noch gar keinen, wenn wir ihn gerade erst aufgenommen haben."*
->
-> Klingt nach einer Annotation Arbeit. Ist es auch. Und danach läuft dein Webshop nicht mehr.
 
 :::info Zum Nachschlagen und Vertiefen
 Dieses Arbeitsblatt zeigt 1:n an einem Beispiel. Alle drei Kardinalitäten mit
@@ -115,7 +113,7 @@ Nach Bearbeitung dieses Arbeitsblatts kannst du:
   <text x="170" y="168" fontSize="13" fontWeight="700"
         fill="var(--ifm-font-color-base)">1</text>
   <text x="170" y="232" fontSize="13" fontWeight="700"
-        fill="var(--ifm-font-color-base)">0..*</text>
+        fill="var(--ifm-font-color-base)">*</text>
   <text x="150" y="200" textAnchor="end" fontSize="12.5" fontStyle="italic"
         fill="var(--ifm-color-emphasis-700)">articles</text>
 </svg>
@@ -126,7 +124,7 @@ Sieh dir die beiden Linien nebeneinander an. Sie sagen Verschiedenes:
 |---|---|---|
 | Notation | gefüllte Raute | schlichte Linie |
 | Name | Komposition | Assoziation |
-| Multiplizität | `1` — `1` | `1` — `0..*` |
+| Multiplizität | `1` — `1` | `1` — `*` |
 | Was passiert beim Löschen des Lieferanten? | Die Anschrift verschwindet mit | **offen** — die Artikel gehören ihm nicht |
 
 Die letzte Zeile ist keine Kleinigkeit. Was mit den Artikeln geschehen soll, wenn ein Lieferant aus dem Katalog fliegt, ist eine fachliche Frage — und das Diagramm beantwortet sie bewusst nicht. Du beantwortest sie in Arbeitsblatt 04.
@@ -135,7 +133,7 @@ Die letzte Zeile ist keine Kleinigkeit. Was mit den Artikeln geschehen soll, wen
 
 ### Aufgabe 1 – Die Artikel-Entität
 
-<Task id="t4-ab02-a1-article">Erstelle im Package `article` die Klasse `Article`:</Task>
+<Task id="t4-ab02-a1-article">Erstelle ein Package mit dem Bezeichner `article` und erstelle darin die Klasse `Article`:</Task>
 
 ```java title="src/main/java/de/szut/webshop/article/Article.java"
 package de.szut.webshop.article;
