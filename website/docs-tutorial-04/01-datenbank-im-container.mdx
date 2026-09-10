@@ -65,7 +65,85 @@ steht im Infoblatt [Docker und Container](/infoblaetter/docker) — mit zwei Fil
 zum Ansehen.
 :::
 
-Das Rezept dafür steht in einer Datei.
+Bevor du eine Datei anlegst, muss Docker auf deinem Rechner sein. Überspringe diesen Teil, wenn `docker --version` im Terminal schon eine Versionsnummer ausgibt.
+
+<Task id="t4-ab01-a2-install">Installiere Docker — such dir unten dein System heraus.</Task>
+
+<details>
+<summary>Windows</summary>
+
+Docker braucht unter Windows den Unterbau **WSL 2** (das Linux-Subsystem). Der Installer bringt ihn mit; fehlt er, richtet ihn ein Befehl in einer PowerShell **als Administrator** ein:
+
+```powershell
+wsl --install
+```
+
+Danach einmal neu starten. Ausführlich beschreibt das Microsoft unter [Installieren von WSL](https://learn.microsoft.com/de-de/windows/wsl/install).
+
+Dann **Docker Desktop** von [docker.com](https://www.docker.com/products/docker-desktop/) herunterladen und installieren — beim Setup die Vorgabe *Use WSL 2 instead of Hyper-V* stehen lassen. Nach dem Neustart erscheint das Wal-Symbol in der Taskleiste.
+
+:::warning Wenn der Start mit „Virtualization is not enabled" abbricht
+Dann ist die Virtualisierung im BIOS/UEFI ausgeschaltet. Sie heißt dort je nach Hersteller **Intel VT-x**, **AMD-V** oder **SVM Mode**. Ohne sie läuft kein Container — Docker ist daran nicht schuld.
+:::
+
+Die vollständige Anleitung: [Install Docker Desktop on Windows](https://docs.docker.com/desktop/setup/install/windows-install/).
+
+</details>
+
+<details>
+<summary>macOS</summary>
+
+Auf [docker.com](https://www.docker.com/products/docker-desktop/) gibt es **zwei** Fassungen. Nimm die richtige, sonst startet nichts:
+
+| Dein Mac | Fassung |
+|---|---|
+| M1, M2, M3, M4 … | **Apple Silicon** |
+| Intel-Prozessor | **Intel Chip** |
+
+Welchen du hast, sagt das Apfel-Menü oben links → *Über diesen Mac*.
+
+Das geladene `.dmg` öffnen, das Docker-Symbol in den Ordner *Programme* ziehen, Docker aus dem Launchpad starten und die Rechteabfrage bestätigen. Läuft es, steht das Wal-Symbol oben in der Menüleiste.
+
+Die vollständige Anleitung: [Install Docker Desktop on Mac](https://docs.docker.com/desktop/setup/install/mac-install/).
+
+</details>
+
+<details>
+<summary>Linux</summary>
+
+Hier brauchst du **kein Docker Desktop**. Der Docker-Dienst läuft unter Linux ohnehin im Hintergrund — die grafische Oberfläche wäre nur zusätzliches Beiwerk.
+
+Für Ubuntu und Debian richtest du die Paketquelle von Docker ein und installierst daraus. Die Befehle dafür stehen Schritt für Schritt unter [Install Docker Engine on Ubuntu](https://docs.docker.com/engine/install/ubuntu/) — nimm den Abschnitt *Install using the apt repository*, nicht das Paket `docker.io` aus den Ubuntu-Quellen. Das ist meist veraltet und bringt `docker compose` nicht mit.
+
+Ein Schritt wird gern vergessen: Ohne ihn brauchst du für jeden Docker-Befehl `sudo`.
+
+```bash
+sudo usermod -aG docker $USER
+```
+
+Danach ab- und wieder anmelden. Nachzulesen unter [Post-installation steps](https://docs.docker.com/engine/install/linux-postinstall/).
+
+**Für dich heißt das:** Wo unten „Starte Docker Desktop" steht, prüfst du stattdessen, ob der Dienst läuft:
+
+```bash
+systemctl status docker
+```
+
+</details>
+
+<Task id="t4-ab01-a2-version">Prüfe im Terminal, dass beides da ist:</Task>
+
+```bash
+docker --version
+```
+
+```bash
+docker compose version
+```
+
+Beide Befehle müssen eine Versionsnummer ausgeben. Meldet der zweite „is not a docker command", hast du eine sehr alte Fassung erwischt — dann hilft nur die Neuinstallation nach der Anleitung oben.
+
+Das Rezept für die Datenbank steht in einer Datei.
 
 <Task id="t4-ab01-a2-compose">Lege im Projekthauptverzeichnis — neben der `pom.xml` — die Datei `docker-compose.yml` an und kopiere den abgebildeten Code hinein:</Task>
 
@@ -101,7 +179,7 @@ volumes:
 | `volumes` | Wo die Daten liegen. Ohne diese Zeile wären sie weg, sobald der Container verschwindet |
 | `healthcheck` | Wie Docker prüft, ob die Datenbank schon bereit ist |
 
-<Task id="t4-ab01-a2-desktop">Starte <b>Docker Desktop</b> und warte, bis es unten links <b>Engine running</b> meldet. Ohne laufendes Docker Desktop gibt es niemanden, der den Container starten könnte.</Task>
+<Task id="t4-ab01-a2-desktop">Starte <b>Docker Desktop</b> und warte, bis es unten links <b>Engine running</b> meldet — unter Linux stattdessen <code>systemctl status docker</code>. Ohne laufenden Docker-Dienst gibt es niemanden, der den Container starten könnte.</Task>
 
 :::warning Wenn Docker Desktop nicht läuft
 Der nächste Befehl bricht dann mit einer Meldung ab, der man die Ursache nicht ansieht:
