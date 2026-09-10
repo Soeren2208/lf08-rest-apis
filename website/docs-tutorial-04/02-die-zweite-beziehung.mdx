@@ -34,7 +34,7 @@ Nach Bearbeitung dieses Arbeitsblatts kannst du:
 ## Das Klassendiagramm wächst
 
 <svg viewBox="0 0 720 400" width="100%" role="img"
-     aria-label="Klassendiagramm mit drei Klassen: Supplier besitzt genau einen Contact über eine Komposition. Zu Article besteht eine Assoziation mit Pfeilspitzen an beiden Enden - beide Klassen kennen einander -, ein Supplier zu beliebig vielen Article."
+     aria-label="Klassendiagramm mit drei Klassen: Supplier besitzt genau einen Contact über eine Komposition, mit einer Pfeilspitze am Contact. Zu Article besteht eine Assoziation mit Pfeilspitzen an beiden Enden - beide Klassen kennen einander -, ein Supplier zu beliebig vielen Article."
      fontFamily="var(--ifm-font-family-base)">
 
   {/* ---------- Supplier ---------- */}
@@ -79,9 +79,11 @@ Nach Bearbeitung dieses Arbeitsblatts kannst du:
            stroke="var(--ifm-color-emphasis-700)" strokeWidth="1.5"/>
   <line x1="320" y1="105" x2="440" y2="105"
         stroke="var(--ifm-color-emphasis-700)" strokeWidth="1.5"/>
+  <path d="M 430 99 L 440 105 L 430 111" fill="none"
+        stroke="var(--ifm-color-emphasis-700)" strokeWidth="1.5"/>
   <text x="328" y="98" fontSize="13" fontWeight="700"
         fill="var(--ifm-font-color-base)">1</text>
-  <text x="432" y="98" textAnchor="end" fontSize="13" fontWeight="700"
+  <text x="426" y="96" textAnchor="end" fontSize="13" fontWeight="700"
         fill="var(--ifm-font-color-base)">1</text>
   <text x="380" y="126" textAnchor="middle" fontSize="12.5" fontStyle="italic"
         fill="var(--ifm-color-emphasis-700)">contact</text>
@@ -128,7 +130,7 @@ Sieh dir die beiden Linien nebeneinander an. Sie sagen Verschiedenes:
 |---|---|---|
 | Notation | gefüllte Raute | Linie mit Pfeilspitzen an beiden Enden |
 | Name | Komposition | Assoziation |
-| Navigierbarkeit | vom `Supplier` zum `Contact` | **in beide Richtungen** — der Lieferant kennt seine Artikel, jeder Artikel seinen Lieferanten |
+| Navigierbarkeit | **nur** vom `Supplier` zum `Contact` — die Anschrift kennt ihren Lieferanten nicht | **in beide Richtungen** — der Lieferant kennt seine Artikel, jeder Artikel seinen Lieferanten |
 | Multiplizität | `1` — `1` | `1` — `*` |
 | Was passiert beim Löschen des Lieferanten? | Die Anschrift verschwindet mit | **offen** — die Artikel gehören ihm nicht |
 
@@ -138,7 +140,7 @@ Die letzte Zeile ist keine Kleinigkeit. Was mit den Artikeln geschehen soll, wen
 
 ### Aufgabe 1 – Die Artikel-Entität
 
-<Task id="t4-ab02-a1-article">Erstelle ein Package mit dem Bezeichner `article` und erstelle darin die Klasse `Article`:</Task>
+<Task id="t4-ab02-a1-article">Erstelle ein Package mit dem Bezeichner `article` und erstelle darin die Klasse `Article`. Bis auf die Umsetzung der Assoziation zum Lieferanten kennst du alles daran — versuche sie deshalb zuerst **ohne einen Blick auf den Quelltext** unten.</Task>
 
 ```java title="src/main/java/de/szut/webshop/article/Article.java"
 package de.szut.webshop.article;
@@ -214,12 +216,113 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.OneToMany;
 ```
 
-:::note Nur **eine** Seite trägt den Fremdschlüssel
-In der Datenbank gibt es für eine 1:n-Beziehung genau eine Spalte: `article.supplier_id`. In Java sieht es dagegen nach zwei Beziehungen aus — `Article.supplier` und `Supplier.articles`.
+#### Zwei Felder, eine Spalte
 
-`mappedBy = "supplier"` klärt das auf. Es heißt: *„Diese Beziehung wird woanders verwaltet, nämlich vom Feld `supplier` in `Article`. Ich bin nur die Gegenrichtung."*
+Jetzt stehen drei Annotationen im Spiel, und hier kommt man am leichtesten durcheinander. Der Ausgangspunkt, aus dem alles Weitere folgt:
 
-Ohne `mappedBy` würde Hibernate zwei getrennte Beziehungen annehmen und dafür eine dritte Tabelle anlegen. Wer im Datenbankfenster plötzlich eine Tabelle `supplier_articles` findet, hat genau das vergessen.
+**In der Datenbank gibt es für die ganze Beziehung genau eine Spalte** — `article.supplier_id`. In Java stehen dafür **zwei Felder**: `Article.supplier` und `Supplier.articles`. Zwei Felder, eine Spalte. Die Annotationen verteilen, wer davon was verwaltet.
+
+<svg viewBox="0 0 720 300" width="100%" role="img"
+     aria-label="Links der Java-Code beider Klassen, rechts die beiden Tabellen. JoinColumn in Article zeigt auf die Spalte supplier_id in der Artikeltabelle. mappedBy in Supplier zeigt zurück auf das Java-Feld supplier in Article. Die Lieferantentabelle hat keine Spalte für die Beziehung."
+     fontFamily="var(--ifm-font-family-base)">
+
+  {/* ---------- Zeile 1: Article, die Besitzerseite ---------- */}
+  <rect x="16" y="26" width="330" height="104" rx="9"
+        fill="var(--ifm-color-info-contrast-background)"/>
+  <rect x="16" y="26" width="330" height="104" rx="9" fill="none"
+        stroke="var(--ifm-color-info-dark)" strokeWidth="1.6"/>
+  <text x="32" y="48" fontSize="12.5" fontWeight="700"
+        fill="var(--zeichnung-blau)">Article — die Besitzerseite</text>
+  <text x="32" y="74" fontSize="12" fontFamily="var(--ifm-font-family-monospace)"
+        fill="var(--ifm-color-emphasis-800)">@ManyToOne</text>
+  <text x="32" y="94" fontSize="12" fontWeight="700"
+        fontFamily="var(--ifm-font-family-monospace)"
+        fill="var(--zeichnung-blau)">@JoinColumn(name = "supplier_id")</text>
+  <text x="32" y="116" fontSize="12" fontFamily="var(--ifm-font-family-monospace)"
+        fill="var(--ifm-color-emphasis-800)">private Supplier supplier;</text>
+
+  <rect x="470" y="26" width="234" height="104" rx="9"
+        fill="var(--ifm-color-emphasis-200)"/>
+  <rect x="470" y="26" width="234" height="104" rx="9" fill="none"
+        stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.6"/>
+  <text x="486" y="48" fontSize="12.5" fontWeight="700"
+        fontFamily="var(--ifm-font-family-monospace)"
+        fill="var(--ifm-font-color-base)">article</text>
+  <text x="486" y="74" fontSize="12" fontFamily="var(--ifm-font-family-monospace)"
+        fill="var(--ifm-color-emphasis-800)">id</text>
+  <text x="486" y="94" fontSize="12" fontFamily="var(--ifm-font-family-monospace)"
+        fill="var(--ifm-color-emphasis-800)">designation</text>
+  <text x="486" y="116" fontSize="12" fontWeight="700"
+        fontFamily="var(--ifm-font-family-monospace)"
+        fill="var(--zeichnung-blau)">supplier_id</text>
+
+  <path d="M 352 92 L 462 112" stroke="var(--zeichnung-blau)" strokeWidth="2"
+        fill="none" markerEnd="url(#pfeil-assoz)"/>
+  <defs>
+    <marker id="pfeil-assoz" markerWidth="9" markerHeight="9" refX="8" refY="4.5"
+            orient="auto">
+      <path d="M 0 0 L 9 4.5 L 0 9 z" fill="var(--zeichnung-blau)"/>
+    </marker>
+  </defs>
+  <text x="407" y="88" textAnchor="middle" fontSize="11.5" fontWeight="700"
+        fill="var(--zeichnung-blau)">nennt die Spalte</text>
+
+  {/* ---------- Zeile 2: Supplier, die Gegenrichtung ---------- */}
+  <rect x="16" y="176" width="330" height="86" rx="9"
+        fill="var(--ifm-color-success-contrast-background)"/>
+  <rect x="16" y="176" width="330" height="86" rx="9" fill="none"
+        stroke="var(--ifm-color-success-dark)" strokeWidth="1.6"/>
+  <text x="32" y="198" fontSize="12.5" fontWeight="700"
+        fill="var(--zeichnung-gruen)">Supplier — die Gegenrichtung</text>
+  <text x="32" y="224" fontSize="12" fontWeight="700"
+        fontFamily="var(--ifm-font-family-monospace)"
+        fill="var(--zeichnung-gruen)">@OneToMany(mappedBy = "supplier")</text>
+  <text x="32" y="246" fontSize="12" fontFamily="var(--ifm-font-family-monospace)"
+        fill="var(--ifm-color-emphasis-800)">private List&lt;Article&gt; articles;</text>
+
+  <rect x="470" y="176" width="234" height="86" rx="9"
+        fill="var(--ifm-color-emphasis-200)"/>
+  <rect x="470" y="176" width="234" height="86" rx="9" fill="none"
+        stroke="var(--ifm-color-emphasis-500)" strokeWidth="1.6"/>
+  <text x="486" y="198" fontSize="12.5" fontWeight="700"
+        fontFamily="var(--ifm-font-family-monospace)"
+        fill="var(--ifm-font-color-base)">supplier</text>
+  <text x="486" y="224" fontSize="12" fontFamily="var(--ifm-font-family-monospace)"
+        fill="var(--ifm-color-emphasis-800)">id, name, contact_id</text>
+  <text x="486" y="246" fontSize="11.5" fontStyle="italic"
+        fill="var(--zeichnung-rot)">keine Spalte für die Artikel</text>
+
+  <path d="M 262 216 L 262 126" stroke="var(--zeichnung-gruen)" strokeWidth="2"
+        fill="none" markerEnd="url(#pfeil-assoz2)"/>
+  <defs>
+    <marker id="pfeil-assoz2" markerWidth="9" markerHeight="9" refX="8" refY="4.5"
+            orient="auto">
+      <path d="M 0 0 L 9 4.5 L 0 9 z" fill="var(--zeichnung-gruen)"/>
+    </marker>
+  </defs>
+  <text x="272" y="166" fontSize="11.5" fontWeight="700"
+        fill="var(--zeichnung-gruen)">nennt das Feld</text>
+</svg>
+
+Beide Pfeile zeigen auf **verschiedene Arten von Dingen** — und genau das ist der Punkt:
+
+| | `@ManyToOne` + `@JoinColumn` | `@OneToMany(mappedBy = …)` |
+|---|---|---|
+| Steht in | `Article` — der Klasse, deren Tabelle die Spalte hat | `Supplier` — der Klasse ohne Spalte |
+| Sagt | „Der Fremdschlüssel steht bei mir, und zwar hier." | „Ich verwalte nichts, ich bin nur die Rückrichtung." |
+| Der Wert ist | ein **Spaltenname** in der Datenbank | ein **Feldname** in der anderen Java-Klasse |
+| Fachbegriff | Besitzerseite (*owning side*) | Gegenrichtung (*inverse side*) |
+
+:::tip Der Satz, der die beiden auseinanderhält
+**`@JoinColumn` nennt eine Spalte. `mappedBy` nennt ein Feld.**
+
+Dass in `mappedBy = "supplier"` fast dasselbe steht wie im Spaltennamen `supplier_id`, ist Zufall der Benennung. Gemeint ist das Java-Feld `private Supplier supplier;` in `Article`. Die Probe: Benennst du dieses **Feld** um, muss `mappedBy` mit. Benennst du die **Spalte** um, bleibt `mappedBy` unverändert.
+:::
+
+Warum ausgerechnet `Article` die Besitzerseite ist, entscheidet nicht der Geschmack, sondern die Tabelle: Ein Lieferant hat viele Artikel, aber in einer Zeile der Lieferantentabelle steht in einer Spalte nur **ein** Wert. Hundert Artikel bekämen dort keinen Platz. In der Artikeltabelle dagegen hat jede Zeile genau einen Lieferanten — das passt. Bei 1:n liegt der Fremdschlüssel deshalb immer auf der **n-Seite**.
+
+:::danger Was passiert, wenn `mappedBy` fehlt
+Dann nimmt Hibernate zwei voneinander unabhängige Beziehungen an und legt für die zweite eine dritte Tabelle an. Wer im Datenbankfenster plötzlich eine Tabelle `supplier_articles` findet, hat genau das vergessen.
 :::
 
 ### Aufgabe 2 – Erst schätzen
