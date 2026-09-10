@@ -655,7 +655,7 @@ Die ganze Beziehung besteht in der Datenbank aus **einer einzigen zusätzlichen 
 
 #### Wohin der Fremdschlüssel kommt
 
-Bei 1:1 hast du die Wahl — die Spalte könnte ebenso gut `contact.supplier_id` heißen und in der anderen Tabelle stehen. Beides bildet dieselbe Beziehung ab.
+Bei einer 1:1-Beziehung hast du die Wahl, in welche Tabelle du den Fremdschlüssel einfügst — der Fremdschlüssel könnte also ebenso gut in der Tabelle `contact` stehen und `contact.supplier_id` heißen. Beide Varianten bilden dieselbe Beziehung korrekt ab.
 
 Hier liegt sie beim Lieferanten, und der Grund steht im Klassendiagramm: Die Pfeilspitze zeigt auf den `Contact`, nicht zurück. Gelesen wird nur in diese eine Richtung — du holst einen Lieferanten und willst seine Anschrift dazu. Umgekehrt fragt niemand: „Zu welchem Lieferanten gehört diese Anschrift?"
 
