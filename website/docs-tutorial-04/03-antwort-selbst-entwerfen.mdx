@@ -142,7 +142,7 @@ public record SupplierDto(
 
 Zwei Entscheidungen stecken darin, über die man reden muss.
 
-**Die Anschrift wandert mit, die Artikel nicht.** Das ist kein Zufall: Der `Contact` gehört zum Lieferanten — ohne ihn wäre die Auskunft unvollständig. Die Artikel dagegen sind eine eigene Liste, die beliebig lang werden kann. Wer sie braucht, ruft ihren eigenen Endpunkt auf. Genau das steht auch im Klassendiagramm: gefüllte Raute gegen schlichte Linie.
+**Die Anschrift wandert mit, die Artikel nicht.** Das ist kein Zufall: Der `Contact` gehört zum Lieferanten — ohne ihn wäre die Auskunft unvollständig. Dazu kommt der Use-Case: Wer den Lieferanten anzeigt, will seine Adresse in der Regel gleich mitsehen — sonst braucht es zwei Aufrufe für eine einzige Anzeige. Die Artikel dagegen sind eine eigene Liste, die beliebig lang werden kann und nicht bei jeder Anzeige gebraucht wird. Wer sie braucht, ruft ihren eigenen Endpunkt auf. Genau das steht auch im Klassendiagramm: gefüllte Raute gegen schlichte Linie.
 
 **`articleCount` statt der Liste.** Eine Zahl beantwortet die häufigste Frage („hat der Lieferant überhaupt Artikel?"), ohne dass die Artikel selbst übertragen werden müssen.
 
