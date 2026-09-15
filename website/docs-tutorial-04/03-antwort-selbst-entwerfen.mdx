@@ -422,13 +422,9 @@ Das Ergebnis für den ersten Lieferanten müsste wie folgt aussehen:
 
 :::warning Es funktioniert — aber sieh dir an, was dabei im Hintergrund passiert
 Der Endpunkt `GET /api/v1/suppliers` ruft `countBySupplierId` **für jeden
-Lieferanten einzeln** auf. Sieh dir das im Log an:
-
-<Task id="t4-ab03-a4-zaehlen">Lege drei Lieferanten an, rufe die Liste ab und zähle im Log die <code>select</code>-Anweisungen.</Task>
-
-Es ist nicht eine Abfrage, sondern eine für die Liste **plus mindestens eine je
-Lieferant**. Das Muster heißt **N+1**: ein Aufruf für die Sammlung, dann noch
-einmal einer pro Element.
+Lieferanten einzeln** auf. Sieh dir das im Log an. Eine `select`-Anweisung für
+die Liste **plus mindestens eine je Lieferant**. Das Muster heißt **N+1**: ein
+Aufruf für die Sammlung, dann noch einmal einer pro Element.
 
 Bei drei Lieferanten fällt das nicht auf. Bei dreihundert schon.
 
