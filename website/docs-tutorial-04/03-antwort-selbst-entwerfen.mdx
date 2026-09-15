@@ -7,14 +7,6 @@ sidebar_position: 3
 
 # AB 03 – Die Antwort selbst entwerfen
 
-## Die Situation
-
-> Aus der letzten Sitzung ist ein Satz hängengeblieben:
->
-> *„Die Antwort ist zwanzigtausend Zeichen lang und der Name des Lieferanten kommt nicht darin vor."*
->
-> Der Absturz dahinter wäre reparabel gewesen — zwei Annotationen, und Jackson hätte den Zirkel klaglos durchbrochen. Geblieben wäre trotzdem, dass die Datenbank die Antwort bestimmt hat, nicht der Client: Bisher hat sie geantwortet, weil sie zufällig die Entität kannte. Die Frage, die niemand gestellt hatte, lautet: **Was soll eigentlich in der Antwort stehen?** Ab heute beantwortest du sie.
-
 ## Lernziele
 
 Nach Bearbeitung dieses Arbeitsblatts kannst du:
@@ -25,6 +17,14 @@ Nach Bearbeitung dieses Arbeitsblatts kannst du:
 - erklären, warum Eingabe und Ausgabe unterschiedliche DTOs brauchen
 - eine **abgeleitete Abfrage** mit zwei Bedingungen im Namen schreiben
 - zwei Endpunkte für eine untergeordnete Ressource bauen
+
+## Die Situation
+
+> Aus der letzten Sitzung ist ein Satz hängengeblieben:
+>
+> *„Die Antwort ist zwanzigtausend Zeichen lang und der Name des Lieferanten kommt nicht darin vor."*
+>
+> Der Absturz dahinter wäre reparabel gewesen — zwei Annotationen, und Jackson hätte den Zirkel klaglos durchbrochen. Das eigentliche Problem, nämlich die enge Kopplung von Datenbank und Schnittstelle, bleibt. Das Objekt, das der Controller herausgibt, ist dieselbe Entität, die auch die Datenbank abbildet — ein und dasselbe Objekt für zwei verschiedene Zwecke. Der Controller reicht einfach die Entität durch, so wie sie aus der Datenbank kommt. Ändert sich die Entität, ändert sich die Antwort mit, und der Clientcode bricht. Diese enge Kopplung zwischen den Schichten ist aufzulösen. Dafür ist festzulegen, welche Daten an den Client ausgeliefert werden sollen. Das geschieht mittels DTOs.
 
 ## Entität und DTO sind zwei verschiedene Dinge
 
