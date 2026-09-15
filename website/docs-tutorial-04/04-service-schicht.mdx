@@ -249,7 +249,14 @@ Jetzt die Frage aus dem Einkauf. Baue den Endpunkt für das Löschen.
 
 <Task id="t4-ab04-a3-vorhersage">Lege dich fest, bevor du es ausprobierst: Was passiert bei `DELETE /api/v1/suppliers/1`, wenn dieser Lieferant noch Artikel hat? Schreibe deine Antwort auf.</Task>
 
-<Task id="t4-ab04-a3-test">Probiere es aus.</Task>
+<Task id="t4-ab04-a3-requests">Ergänze `requests.http` um die Löschanfrage:</Task>
+
+```http title="requests.http"
+### Einen Lieferanten löschen
+DELETE http://localhost:8080/api/v1/suppliers/1
+```
+
+<Task id="t4-ab04-a3-test">Probiere es aus — mit einem Lieferanten, der noch Artikel hat.</Task>
 
 Es kommt eine **500**. In der Konsole steht eine `DataIntegrityViolationException`, und ganz unten in der Ursachenkette die Meldung der Datenbank: Der Fremdschlüssel `article.supplier_id` verbietet es.
 
