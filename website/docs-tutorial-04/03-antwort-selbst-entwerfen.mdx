@@ -337,25 +337,6 @@ Das Verfahren kennst du aus dem Gästebuch: Spring liest den Namen wie einen Sat
 `countBySupplierId` erzeugt genau eine Zahl in der Datenbank. Kein Artikel wird
 geladen, kein Objekt gebaut — bei **einem** Lieferanten ist das kaum messbar.
 
-:::warning Bei einer Liste sieht es anders aus — sieh selbst nach
-Der Endpunkt `GET /api/v1/suppliers` ruft `countBySupplierId` **für jeden
-Lieferanten einzeln** auf. Sieh dir das im Log an:
-
-<Task id="t4-ab03-a4-zaehlen">Lege drei Lieferanten an, rufe die Liste ab und zähle im Log die <code>select</code>-Anweisungen.</Task>
-
-Es ist nicht eine Abfrage, sondern eine für die Liste **plus mindestens eine je
-Lieferant**. Das Muster heißt **N+1**: ein Aufruf für die Sammlung, dann noch
-einmal einer pro Element.
-
-Bei drei Lieferanten fällt das nicht auf. Bei dreihundert schon.
-
-**Warum es hier trotzdem so bleibt:** Die Alternative wäre eine selbst
-geschriebene Abfrage, die Lieferanten und Anzahlen in einem Zug holt. Die ist
-schnell, aber sie ist nicht das Thema dieses Arbeitsblatts. Wichtig ist, dass du
-das Muster **siehst** und weißt, wonach du suchst. Mehr dazu im Infoblatt
-[Beziehungen mit JPA abbilden](/infoblaetter/jpa-beziehungen).
-:::
-
 ### Aufgabe 5 – Den Lieferanten-Controller umbauen
 
 <Task id="t4-ab03-a5">Baue den `SupplierController` so um, dass er `SupplierDto` und `CreateSupplierDto` verwendet statt der Entität. Er braucht dafür beide Repositories und den `SupplierMapper`.</Task>
@@ -436,6 +417,25 @@ public class SupplierController {
 ```
 
 145 Zeichen statt 19 438. Der Name steht drin. Und `LAZY` ist unverändert geblieben — es war nie das Problem.
+
+:::warning Es funktioniert — aber sieh dir an, was dabei im Hintergrund passiert
+Der Endpunkt `GET /api/v1/suppliers` ruft `countBySupplierId` **für jeden
+Lieferanten einzeln** auf. Sieh dir das im Log an:
+
+<Task id="t4-ab03-a4-zaehlen">Lege drei Lieferanten an, rufe die Liste ab und zähle im Log die <code>select</code>-Anweisungen.</Task>
+
+Es ist nicht eine Abfrage, sondern eine für die Liste **plus mindestens eine je
+Lieferant**. Das Muster heißt **N+1**: ein Aufruf für die Sammlung, dann noch
+einmal einer pro Element.
+
+Bei drei Lieferanten fällt das nicht auf. Bei dreihundert schon.
+
+**Warum es hier trotzdem so bleibt:** Die Alternative wäre eine selbst
+geschriebene Abfrage, die Lieferanten und Anzahlen in einem Zug holt. Die ist
+schnell, aber sie ist nicht das Thema dieses Arbeitsblatts. Wichtig ist, dass du
+das Muster **siehst** und weißt, wonach du suchst. Mehr dazu im Infoblatt
+[Beziehungen mit JPA abbilden](/infoblaetter/jpa-beziehungen).
+:::
 
 ### Aufgabe 6 – Die beiden Artikel-Endpunkte
 
