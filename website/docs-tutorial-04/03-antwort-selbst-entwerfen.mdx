@@ -364,14 +364,14 @@ public class SupplierController {
     @PostMapping
     public ResponseEntity<SupplierDto> createSupplier(@RequestBody CreateSupplierDto dto) {
         Supplier saved = supplierRepository.save(mapper.toEntity(dto));
-        SupplierDto antwort = mapper.toDto(saved, 0);
+        SupplierDto response = mapper.toDto(saved, 0);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(antwort.id())
+                .buildAndExpand(response.id())
                 .toUri();
 
-        return ResponseEntity.created(location).body(antwort);
+        return ResponseEntity.created(location).body(response);
     }
 
     @GetMapping
@@ -475,14 +475,14 @@ public class ArticleController {
                                                     @RequestBody CreateArticleDto dto) {
         Supplier supplier = supplierRepository.findById(supplierId).orElseThrow();
         Article saved = articleRepository.save(mapper.toEntity(dto, supplier));
-        ArticleDto antwort = mapper.toDto(saved);
+        ArticleDto response = mapper.toDto(saved);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(antwort.id())
+                .buildAndExpand(response.id())
                 .toUri();
 
-        return ResponseEntity.created(location).body(antwort);
+        return ResponseEntity.created(location).body(response);
     }
 
     @GetMapping
