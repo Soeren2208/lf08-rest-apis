@@ -398,7 +398,9 @@ public class SupplierController {
 
 </details>
 
-<Task id="t4-ab03-a5-test">Starte neu und rufe `GET /api/v1/suppliers` auf — mit dem Artikel, den du in Arbeitsblatt 02 von Hand angelegt hast, und mit `fetch = LAZY`.</Task>
+<Task id="t4-ab03-a5-test">Starte neu und rufe `GET /api/v1/suppliers` auf.</Task>
+
+Das Ergebnis für den ersten Lieferanten müsste wie folgt aussehen:
 
 ```json
 [
@@ -416,7 +418,7 @@ public class SupplierController {
 ]
 ```
 
-145 Zeichen statt 19 438. Der Name steht drin. Und `LAZY` ist unverändert geblieben — es war nie das Problem.
+145 Zeichen statt 19 438. Der Name steht drin.
 
 :::warning Es funktioniert — aber sieh dir an, was dabei im Hintergrund passiert
 Der Endpunkt `GET /api/v1/suppliers` ruft `countBySupplierId` **für jeden
