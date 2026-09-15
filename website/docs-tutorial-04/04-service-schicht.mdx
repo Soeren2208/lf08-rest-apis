@@ -137,6 +137,12 @@ public class SupplierService {
 | `@Transactional` | Alles in der Methode gehört zu einem Vorgang: Entweder geht alles durch, oder nichts |
 | `@Transactional(readOnly = true)` | Dasselbe für Lesevorgänge — die Datenbank darf sich dann Arbeit sparen |
 
+:::note Was ist eine Transaktion eigentlich?
+Eine Transaktion bündelt mehrere Datenbankoperationen zu einer einzigen, unteilbaren Einheit. `create` speichert nicht nur den Lieferanten — durch die Kaskade aus Arbeitsblatt 01 schreibt derselbe Aufruf auch die Anschrift in die Tabelle `contact`. Zwei `INSERT`-Anweisungen für eine fachliche Handlung.
+
+Ohne `@Transactional` liefe jede davon für sich: Schlägt die zweite fehl, bliebe die erste stehen — ein Lieferant ohne Anschrift, ein Zustand, den das Klassendiagramm gar nicht vorsieht. Mit `@Transactional` gilt: Erst wenn die Methode ohne Fehler zu Ende läuft, werden alle Änderungen gemeinsam geschrieben (**Commit**). Wirft irgendetwas dazwischen eine Ausnahme, macht die Datenbank alles bisher Geschriebene wieder rückgängig (**Rollback**) — als wäre nichts passiert.
+:::
+
 <Task id="t4-ab04-a1-controller">Baue den `SupplierController` so um, dass er nur noch den `SupplierService` kennt. Beide Repositories und der Mapper verschwinden aus ihm.</Task>
 
 ```java title="src/main/java/de/szut/webshop/supplier/SupplierController.java"
