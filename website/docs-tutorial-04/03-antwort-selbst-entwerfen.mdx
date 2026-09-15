@@ -194,6 +194,14 @@ public record CreateSupplierDto(
 }
 ```
 
+:::note Warum steckt hier ein `CreateContactDto` statt vier einzelner Felder?
+Naheliegend wäre, `street`, `postcode`, `city` und `phone` direkt auf `CreateSupplierDto` zu packen — eine Ebene weniger für den Client. Zwei Gründe sprechen dagegen.
+
+Der Client bekommt die Anschrift beim Lesen (`GET /suppliers/1`) als verschachteltes `contact`-Objekt zurück. Sähe das Schreiben anders aus, bräuchte er zwei Vorstellungen von „ein Lieferant" — eine zum Senden, eine zum Empfangen. Dieselbe Form für beide Richtungen ist vorhersagbarer. Dazu kommt Arbeitsblatt 04: Mit `@Valid` auf dem `contact`-Feld lassen sich die Prüfregeln für eine Anschrift einmal in `CreateContactDto` definieren, statt sie bei jedem DTO mit Adresse einzeln zu wiederholen.
+
+Das ist auch keine Eigenheit dieses Projekts: Adressen und ähnliche zusammengesetzte Werte stehen in so gut wie jeder öffentlichen API als eigenes verschachteltes Objekt, nicht als Felder mit Präfix.
+:::
+
 ```java title="src/main/java/de/szut/webshop/article/CreateArticleDto.java"
 public record CreateArticleDto(
         String designation,
