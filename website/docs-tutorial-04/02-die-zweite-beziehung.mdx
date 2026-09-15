@@ -837,7 +837,7 @@ Zu lösen ist das nicht am Ladezeitpunkt, sondern an der Antwort: **Was der Clie
 :::info Ließe sich der Zirkel nicht einfach abschalten?
 Doch. Mit `@JsonManagedReference` auf `Supplier.articles` und `@JsonBackReference` auf `Article.supplier` — oder schlichter mit `@JsonIgnore` auf einer der beiden Seiten — bricht Jackson den Zirkel beim Schreiben ab, ohne dass ein einziges Java-Feld verschwindet. Der Absturz aus Aufgabe 5 wäre damit weg. Das ist keine Krücke, sondern der Standardtreffer, wenn man genau diesen Fehler sucht.
 
-Repariert ist damit nur der Absturz. Die Antwort bleibt trotzdem die Tabellenzeile: Jede Spalte, die `article` später bekommt, taucht ungefragt im JSON auf — niemand muss sie freigeben, sie ist einfach da. Und eine Zahl wie `articleCount`, die in keiner Spalte steht, liefert keine Annotation der Welt.
+Repariert ist damit nur der Absturz. Die Antwort bleibt trotzdem die Tabellenzeile: Jede Spalte, die `article` später bekommt, taucht ungefragt im JSON auf — niemand muss sie freigeben, sie ist einfach da.
 
 Das ist dieselbe Art Problem wie **Kopplung** aus der Lernsituation zur Welt von Zuul im ersten Lehrjahr — nur zwischen Schichten statt zwischen Klassen: Datenbanktabelle und Client-Antwort sind ein und dasselbe Objekt. Ändert sich die Tabelle, ändert sich die Antwort mit, ob gewollt oder nicht.
 :::

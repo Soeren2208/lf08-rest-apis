@@ -166,6 +166,12 @@ Hier ist die Stelle, an der der Kreis endet. Vom Lieferanten wandern **zwei Feld
 Sie stehen in der Entität, aber nicht im DTO. Frage dich bei jedem Feld: *Wer draußen braucht das?* Für den Katalog niemand — sie sind Buchhaltung der Anwendung. Sollte die Einkaufsabteilung später fragen, wann ein Preis zuletzt geändert wurde, kommt `updatedAt` dazu. Dann aber bewusst.
 :::
 
+:::tip Die Faustregel für jeden Endpunkt
+Vier Entscheidungen, ein Muster: Nicht fragen, was die Datenbank hat — fragen, was der Client braucht. **Erst der Use-Case.** Was will der Client mit der Antwort tun — eine Liste anzeigen, ein Formular vorbefüllen, eine Entscheidung treffen? **Dann der Datenbedarf.** Welche Felder braucht er dafür wirklich? **Erst daraus die Form des DTOs.** Genau diese Felder, nicht die, die die Entität zufällig mitbringt.
+
+Bei `SupplierDto` sah das so aus: Der Client will wissen, mit wem er es zu tun hat — `name`, `contact` — und ob es sich lohnt, nach Artikeln zu fragen — `articleCount`. Nicht, was die Tabelle `supplier` an Spalten hat. Dieselbe Frage stellst du dir bei jedem Endpunkt, den du ab jetzt baust.
+:::
+
 ### Aufgabe 2 – Die Eingabe-DTOs
 
 Für das Anlegen brauchst du andere Felder als für die Ausgabe. Eine `id` schickt der Client nicht mit — die vergibt die Datenbank. Eine `articleCount` auch nicht.
