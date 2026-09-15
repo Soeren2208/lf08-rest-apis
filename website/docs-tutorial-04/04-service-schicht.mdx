@@ -175,7 +175,7 @@ public class SupplierController {
 }
 ```
 
-Der Controller ist wieder das, was er sein soll: entgegennehmen, weiterreichen, antworten. Die beiden übrigen Endpunkte fehlen noch — sie kommen in Aufgabe 3 dazu, wenn es die passenden Ausnahmen gibt.
+Der Controller ist wieder das, was er sein soll: entgegennehmen, weiterreichen, antworten. Die beiden übrigen Endpunkte fehlen noch — sie kommen in den nächsten beiden Aufgaben dazu, sobald es die passenden Ausnahmen gibt.
 
 ### Aufgabe 2 – Wenn etwas nicht da ist
 
@@ -213,9 +213,18 @@ public class SupplierNotFoundException extends RuntimeException {
     }
 ```
 
-### Aufgabe 3 – Erst scheitern lassen: das Löschen
+<Task id="t4-ab04-a2-controller">Ergänze im `SupplierController` den fehlenden Endpunkt:</Task>
 
-Jetzt die Frage aus dem Einkauf. Baue den Endpunkt zunächst **ohne** jede Prüfung — genau so, wie man es zuerst schreiben würde.
+```java
+    @GetMapping("/{id}")
+    public ResponseEntity<SupplierDto> findSupplierById(@PathVariable Long id) {
+        return ResponseEntity.ok(service.findById(id));
+    }
+```
+
+### Aufgabe 3 – Das Löschen
+
+Jetzt die Frage aus dem Einkauf. Baue den Endpunkt für das Löschen.
 
 <Task id="t4-ab04-a3-naiv">Ergänze im `SupplierService`:</Task>
 
@@ -228,14 +237,9 @@ Jetzt die Frage aus dem Einkauf. Baue den Endpunkt zunächst **ohne** jede Prüf
     }
 ```
 
-<Task id="t4-ab04-a3-controller">Ergänze im `SupplierController` die beiden fehlenden Endpunkte:</Task>
+<Task id="t4-ab04-a3-controller">Ergänze im `SupplierController` den fehlenden Endpunkt:</Task>
 
 ```java
-    @GetMapping("/{id}")
-    public ResponseEntity<SupplierDto> findSupplierById(@PathVariable Long id) {
-        return ResponseEntity.ok(service.findById(id));
-    }
-
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSupplier(@PathVariable Long id) {
         service.deleteById(id);
