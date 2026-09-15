@@ -160,6 +160,8 @@ public record ArticleDto(
 
 Hier ist die Stelle, an der der Kreis endet. Vom Lieferanten wandern **zwei Felder** mit, nicht der Lieferant. Ein `ArticleDto` enthält keinen `SupplierDto`, der wieder Artikel enthielte.
 
+**Auch das ist eine Use-Case-Entscheidung.** Wer eine Artikelliste anzeigt, will in der Regel wissen, von wem der Artikel stammt — als Name, nicht als bloße Zahl. Ohne `supplierName` bräuchte der Client einen zweiten Aufruf pro Artikel, nur um den Namen nachzuschlagen. `supplierId` bleibt trotzdem dabei: Wer mehr braucht als den Namen — Kontakt, Artikelzahl —, ruft `/suppliers/{id}` auf.
+
 :::note Was ist mit `createdAt` und `updatedAt`?
 Sie stehen in der Entität, aber nicht im DTO. Frage dich bei jedem Feld: *Wer draußen braucht das?* Für den Katalog niemand — sie sind Buchhaltung der Anwendung. Sollte die Einkaufsabteilung später fragen, wann ein Preis zuletzt geändert wurde, kommt `updatedAt` dazu. Dann aber bewusst.
 :::
