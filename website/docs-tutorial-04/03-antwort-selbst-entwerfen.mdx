@@ -13,7 +13,7 @@ sidebar_position: 3
 >
 > *„Die Antwort ist zwanzigtausend Zeichen lang und der Name des Lieferanten kommt nicht darin vor."*
 >
-> Die Frage, die niemand gestellt hatte, lautet: **Was soll eigentlich in der Antwort stehen?** Bisher hat sie die Datenbank beantwortet — sie kannte ja die Entität. Ab heute beantwortest du sie.
+> Der Absturz dahinter wäre reparabel gewesen — zwei Annotationen, und Jackson hätte den Zirkel klaglos durchbrochen. Geblieben wäre trotzdem, dass die Datenbank die Antwort bestimmt hat, nicht der Client: Bisher hat sie geantwortet, weil sie zufällig die Entität kannte. Die Frage, die niemand gestellt hatte, lautet: **Was soll eigentlich in der Antwort stehen?** Ab heute beantwortest du sie.
 
 ## Lernziele
 
@@ -106,9 +106,11 @@ Drei Dinge gewinnst du damit auf einen Schlag:
 
 | | |
 |---|---|
+| **Datenbank und Schnittstelle sind entkoppelt** | Ein zusätzliches Feld in der Entität ändert die Antwort nicht mehr von selbst — und umgekehrt |
 | **Die Antwort endet** | Kein Feld zeigt zurück, also gibt es keinen Kreis |
 | **Du entscheidest, was sichtbar ist** | Ein Feld, das nicht im DTO steht, verlässt den Server nicht — auch nicht versehentlich |
-| **Die Schnittstelle bleibt stabil** | Ein zusätzliches Feld in der Entität ändert die Antwort nicht mehr von selbst |
+
+Der erste Punkt ist die **Kopplung** aus Arbeitsblatt 02, nur diesmal aufgelöst statt nur repariert: Mit `@JsonBackReference` wäre der Absturz weg gewesen, Datenbank und Schnittstelle blieben aber dasselbe Objekt. Jetzt sind es zwei.
 
 ## Aufgaben
 
@@ -198,7 +200,7 @@ public record CreateArticleDto(
 
 Beim `CreateArticleDto` ist es schon jetzt sichtbar: Es hat keinen Lieferanten, weil der in der Adresse steht — `POST /api/v1/suppliers/7/articles`. In Arbeitsblatt 04 kommen an den Eingabe-DTOs außerdem Prüfregeln dazu, die in einer Antwort nichts zu suchen haben.
 
-Wer beides in eine Klasse legt, muss später bei jedem Feld entscheiden, für welche Richtung es gilt. Das ist die teurere Variante.
+Wer beides in eine Klasse legt, muss später bei jedem Feld entscheiden, für welche Richtung es gilt. Das ist die teurere Variante. Ganz ohne eigene Klasse — die Prüfregeln direkt auf der Entity — wäre es die teuerste: Dieselbe Klasse trüge dann `@Column`, `@JoinColumn` und die Prüfregeln aus Arbeitsblatt 04 nebeneinander, für zwei verschiedene Anliegen.
 :::
 
 ### Aufgabe 3 – Der Mapper
