@@ -593,7 +593,7 @@ Er ist es nicht: Der Client hat nach etwas gefragt, das es nicht gibt. Das ist e
 
 ## Wo du jetzt stehst
 
-Sechs Endpunkte, saubere Antworten. Aber sieh dir den `SupplierController` noch einmal an: Er holt aus zwei Repositories, ruft den Mapper, zählt Artikel und baut Adressen. Vom „entgegennehmen, weiterreichen, antworten" ist wenig übrig.
+Sechs Endpunkte, saubere Antworten. Aber sieh dir den `SupplierController` noch einmal an: Er holt aus zwei Repositories, ruft den Mapper auf, zählt Artikel und baut Adressen. Vom „entgegennehmen, weiterreichen, antworten" — der eigentlichen Aufgabe eines REST-Controllers — ist wenig übrig: lauter Fachlichkeit, ein klarer Kohäsionsverstoß.
 
 Und einige Fragen sind gar nicht beantwortet: Was, wenn ein Name leer ist? Wenn ein Preis negativ ist? Wenn jemand einen Lieferanten löscht, der noch Artikel hat?
 
