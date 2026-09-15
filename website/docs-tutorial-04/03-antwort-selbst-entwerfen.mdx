@@ -446,7 +446,11 @@ GET  /api/v1/suppliers/1/articles     das Sortiment von Lieferant 1
 
 <Task id="t4-ab03-a6">Erstelle im Package `article` die Klasse `ArticleController` mit diesen beiden Endpunkten.</Task>
 
-Für den POST brauchst du beides: den Lieferanten aus der Adresse und die Artikeldaten aus dem Rumpf.
+Drei Hinweise, bevor du anfängst:
+
+- Orientiere dich am Aufbau von `SupplierController` aus Aufgabe 5 — Konstruktor-Injection der Repositories und des Mappers, `ResponseEntity.created(location)...` beim Anlegen, `ResponseEntity.ok(...)` beim Abrufen. Der Aufbau ist derselbe, nur mit anderen Typen.
+- Für den POST eines Artikels brauchst du neben den Artikeldaten aus dem Rumpf des Requests den Lieferanten, den du anhand seiner als Pfadvariable mitgegebenen ID aus der Datenbank bekommst.
+- Die Pfadvariable `{supplierId}` steht diesmal in der `@RequestMapping` der ganzen Klasse, nicht nur bei einer einzelnen Methode wie bisher. Jede Methode, die sie braucht, nimmt sie trotzdem ganz normal über `@PathVariable Long supplierId` entgegen.
 
 <details>
 <summary>Wenn du nicht weiterkommst: der <code>ArticleController</code></summary>
