@@ -271,7 +271,7 @@ public class SupplierMapper {
                 articleCount);
     }
 
-    public ContactDto toDto(Contact contact) {
+    private ContactDto toDto(Contact contact) {
         if (contact == null) {
             return null;
         }
@@ -289,7 +289,7 @@ public class SupplierMapper {
         return supplier;
     }
 
-    public Contact toEntity(CreateContactDto dto) {
+    private Contact toEntity(CreateContactDto dto) {
         Contact contact = new Contact();
         contact.setStreet(dto.street());
         contact.setPostcode(dto.postcode());
