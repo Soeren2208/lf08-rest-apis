@@ -367,7 +367,11 @@ public class ApiExceptionHandler {
 }
 ```
 
-`@RestControllerAdvice` gilt für **alle** Controller: Was dort geworfen wird und hier eine passende Methode findet, wird hier beantwortet. `ProblemDetail` ist das Standardformat für Fehlerantworten nach RFC 9457 — dasselbe, das Spring von sich aus liefert.
+`@RestControllerAdvice` gilt für **alle** Controller der Anwendung — nicht nur für `SupplierController`. Egal, in welcher Schicht eine Ausnahme geworfen wird — Service, Repository, irgendein verschachtelter Methodenaufruf —, sie wird am Ende hier aufgefangen, bevor die Antwort den Client erreicht.
+
+`@ExceptionHandler(SupplierNotFoundException.class)` ist die Zuordnung dahinter: Fliegt irgendwo eine `SupplierNotFoundException`, ruft Spring genau diese Methode auf — `handleNotFound` — und verwendet ihren Rückgabewert als Antwort. Für `SupplierHasArticlesException` gilt dasselbe mit `handleConflict`. Eine Methode je Ausnahmetyp, zentral für die ganze Anwendung.
+
+`ProblemDetail` ist das Standardformat für Fehlerantworten nach RFC 9457 — dasselbe, das Spring von sich aus liefert.
 
 :::warning `@Order` ist hier keine Verzierung
 In deiner `application.properties` steht seit Arbeitsblatt 01 `spring.mvc.problemdetails.enabled=true`. Damit bringt Spring **einen eigenen Ausnahmebehandler** mit, und der hat Vorrang.
