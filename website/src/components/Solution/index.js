@@ -1,4 +1,5 @@
 import React from 'react';
+import Details from '@theme/Details';
 import CodeBlock from '@theme/CodeBlock';
 
 /**
@@ -20,13 +21,12 @@ export default function Solution({daten, titel = 'Musterlösung'}) {
   }
 
   return (
-    <details>
-      <summary>{titel}</summary>
+    <Details summary={<summary>{titel}</summary>}>
       {daten.dateien.map((datei) => (
         <CodeBlock key={datei.pfad} language={datei.sprache} title={datei.pfad}>
           {datei.inhalt}
         </CodeBlock>
       ))}
-    </details>
+    </Details>
   );
 }
