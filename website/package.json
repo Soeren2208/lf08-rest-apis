@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
-    "loesung": "node scripts/loesung-verschluesseln.mjs",
+    "loesung": "node scripts/loesung-generieren.mjs",
     "prestart": "npm run loesung",
     "start": "docusaurus start",
     "prebuild": "npm run loesung",

@@ -19,6 +19,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Verschluesselte Musterloesungen - werden vor jedem Build aus den
-# Referenzprojekten neu erzeugt (scripts/loesung-verschluesseln.mjs).
+# Musterloesungen - werden vor jedem Build aus den Referenzprojekten
+# neu erzeugt (scripts/loesung-generieren.mjs).
 /src/data/loesung-*.json

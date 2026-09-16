@@ -1,24 +1,14 @@
 /**
- * Erzeugt die verschlüsselte Musterlösung für ein Arbeitsblatt.
+ * Erzeugt die Musterlösung für ein Arbeitsblatt.
  *
  * Der Quelltext wird NICHT von Hand in die Arbeitsblätter kopiert, sondern
  * direkt aus dem Referenzprojekt gelesen. Damit kann die Lösung gar nicht
  * mehr vom lauffähigen Projekt abweichen — man muss nur dieses Skript
  * erneut laufen lassen:
  *
- *     node scripts/loesung-verschluesseln.mjs
- *
- * Warum verschlüsselt und nicht nur ausgeblendet?
- * Eine Abfrage, die den Text nur versteckt, ist keine: Er stünde weiterhin
- * im Seitenquelltext und wäre mit Strg+U zu finden. Hier landet nur der
- * Geheimtext in der Seite; ohne das Passwort ist daraus nichts zu machen.
- *
- * Verfahren: PBKDF2 (SHA-256, 250 000 Runden) leitet aus dem Passwort einen
- * Schlüssel ab, AES-GCM verschlüsselt damit. Beides steckt in der Web-Crypto-
- * Schnittstelle, die jeder Browser mitbringt — keine zusätzliche Bibliothek.
+ *     node scripts/loesung-generieren.mjs
  */
 
-import {webcrypto} from 'node:crypto';
 import {readFileSync, writeFileSync, mkdirSync} from 'node:fs';
 import {dirname, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -26,13 +16,10 @@ import {fileURLToPath} from 'node:url';
 const hier = dirname(fileURLToPath(import.meta.url));
 const wurzel = resolve(hier, '..', '..');
 
-const RUNDEN = 250000;
-
-/** Was für welches Arbeitsblatt verschlüsselt wird. */
+/** Was für welches Arbeitsblatt zusammengestellt wird. */
 const aufgaben = [
   {
     ziel: 'src/data/loesung-tutorial-01.json',
-    passwort: 'solution',
     projekt: '01-personenverwaltung',
     dateien: [
       'src/main/java/de/szut/personenverwaltung/model/Person.java',
@@ -46,7 +33,6 @@ const aufgaben = [
   },
   {
     ziel: 'src/data/loesung-tutorial-02.json',
-    passwort: 'solution',
     projekt: '02-gaestebuch',
     dateien: [
       'src/main/java/de/szut/gaestebuch/model/GuestbookEntry.java',
@@ -59,7 +45,6 @@ const aufgaben = [
   },
   {
     ziel: 'src/data/loesung-tutorial-03.json',
-    passwort: 'solution',
     projekt: '03-gaestebuch-tests',
     dateien: [
       // Anwendung
@@ -80,7 +65,6 @@ const aufgaben = [
   },
   {
     ziel: 'src/data/loesung-tutorial-04.json',
-    passwort: 'solution',
     projekt: '04-webshop',
     dateien: [
       // Modell
@@ -116,7 +100,6 @@ const aufgaben = [
   },
   {
     ziel: 'src/data/loesung-tutorial-04-tests.json',
-    passwort: 'solution',
     projekt: '04-webshop',
     dateien: [
       'src/test/java/de/szut/webshop/article/ArticleMapperTest.java',
@@ -141,23 +124,6 @@ function spracheZu(pfad) {
   return sprachen[endung] ?? 'text';
 }
 
-async function schluesselAus(passwort, salz) {
-  const roh = await webcrypto.subtle.importKey(
-    'raw',
-    new TextEncoder().encode(passwort),
-    'PBKDF2',
-    false,
-    ['deriveKey'],
-  );
-  return webcrypto.subtle.deriveKey(
-    {name: 'PBKDF2', salt: salz, iterations: RUNDEN, hash: 'SHA-256'},
-    roh,
-    {name: 'AES-GCM', length: 256},
-    false,
-    ['encrypt'],
-  );
-}
-
 for (const aufgabe of aufgaben) {
   const dateien = aufgabe.dateien.map((pfad) => ({
     pfad,
@@ -168,31 +134,14 @@ for (const aufgabe of aufgaben) {
       .trimEnd(),
   }));
 
-  const klartext = new TextEncoder().encode(JSON.stringify({dateien}));
-  const salz = webcrypto.getRandomValues(new Uint8Array(16));
-  const iv = webcrypto.getRandomValues(new Uint8Array(12));
-  const schluessel = await schluesselAus(aufgabe.passwort, salz);
-
-  const geheim = new Uint8Array(
-    await webcrypto.subtle.encrypt({name: 'AES-GCM', iv}, schluessel, klartext),
-  );
-
-  const b64 = (bytes) => Buffer.from(bytes).toString('base64');
   const ergebnis = {
-    hinweis:
-      'Erzeugt von scripts/loesung-verschluesseln.mjs — nicht von Hand ändern.',
-    runden: RUNDEN,
-    salz: b64(salz),
-    iv: b64(iv),
-    geheimtext: b64(geheim),
+    hinweis: 'Erzeugt von scripts/loesung-generieren.mjs — nicht von Hand ändern.',
+    dateien,
   };
 
   const zielpfad = resolve(hier, '..', aufgabe.ziel);
   mkdirSync(dirname(zielpfad), {recursive: true});
   writeFileSync(zielpfad, JSON.stringify(ergebnis, null, 2) + '\n', 'utf8');
 
-  console.log(
-    `${aufgabe.ziel}: ${dateien.length} Dateien, ` +
-      `${klartext.length} Zeichen -> ${geheim.length} Byte Geheimtext`,
-  );
+  console.log(`${aufgabe.ziel}: ${dateien.length} Dateien`);
 }

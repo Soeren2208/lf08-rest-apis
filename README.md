@@ -78,14 +78,10 @@ Nachschlagen ist etwas anderes, als die Arbeitsblätter vorab zu bekommen.
 ## Musterlösungen
 
 Jedes Tutorial endet auf seinem letzten Arbeitsblatt mit der vollständigen
-Lösung. Sie ist mit dem Passwort **`solution`** freizuschalten; bei Tutorial 3
-gehören die vier Testklassen dazu.
+Lösung — als ausklappbarer Block, kein Passwort nötig; bei Tutorial 3 gehören
+die vier Testklassen dazu.
 
-Die Lösung liegt **verschlüsselt** in der Seite (AES-GCM, Schlüssel per PBKDF2
-aus dem Passwort). Eine bloß ausgeblendete Lösung wäre keine: Sie stünde im
-Seitenquelltext und wäre mit Strg+U zu finden.
-
-Erzeugt wird sie von `website/scripts/loesung-verschluesseln.mjs` — **direkt aus
+Erzeugt wird sie von `website/scripts/loesung-generieren.mjs` — **direkt aus
 dem Referenzprojekt**, nicht aus abgeschriebenem Quelltext. Das Skript läuft
 automatisch vor jedem `npm run build` und `npm start`; die erzeugte Datei unter
 `website/src/data/` ist deshalb nicht eingecheckt. Ändert sich das
@@ -93,7 +89,7 @@ Referenzprojekt, ändert sich die Lösung beim nächsten Build von selbst — si
 kann gar nicht veralten.
 
 Eine weitere Lösung hinzufügen: im Skript einen Eintrag in `aufgaben` ergänzen
-(Zielpfad, Passwort, Projekt, Dateiliste), dann im Arbeitsblatt oben importieren
+(Zielpfad, Projekt, Dateiliste), dann im Arbeitsblatt oben importieren
 und die Komponente einsetzen:
 
 ```mdx
@@ -101,10 +97,6 @@ import loesung from '@site/src/data/loesung-tutorial-02.json';
 
 <Solution daten={loesung} />
 ```
-
-**Was das nicht leistet:** Wer das Passwort hat, kann es weitergeben. Die
-Verschlüsselung verhindert das zufällige Stolpern über die Lösung und den Blick
-in den Seitenquelltext — mehr nicht, und mehr ist auch nicht beabsichtigt.
 
 ---
 
