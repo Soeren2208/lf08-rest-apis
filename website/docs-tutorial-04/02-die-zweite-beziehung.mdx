@@ -150,9 +150,9 @@ Zwei Hinweise, bevor du anfängst:
 `precision = 10, scale = 2` sagt der Datenbank: zehn Stellen insgesamt, davon zwei hinter dem Komma. In der Tabelle wird daraus `numeric(10,2)`.
 :::
 
-Die Beziehung zum Lieferanten ist ein `@ManyToOne` mit `@JoinColumn(name = "supplier_id", nullable = false)` — ähnlich wie `@OneToOne` bei Supplier→Contact aus Arbeitsblatt 01, nur ohne `cascade`: Ein Artikel besitzt seinen Lieferanten nicht.
+Ein Artikel kennt seinen Lieferanten und bekommt dafür eine Referenz vom Typ `Supplier`. Auf Datenbank-Ebene gilt: Ein Lieferant hat viele Artikel, aber ein Artikel wird von genau einem Lieferanten geliefert — der Fremdschlüssel gehört deshalb in die Tabelle `article`.
 
-Diese Beziehung hast du noch nie gebaut — ergänze das Feld:
+Setze das Klassendiagramm um und ergänze das Feld:
 
 ```java
     @ManyToOne
