@@ -450,12 +450,37 @@ public class Contact {
 
 </details>
 
-<Task id="t4-ab01-a4-supplier">Erstelle ein Package mit dem Bezeichner `supplier` und erstelle darin die Klasse `Supplier`. Versuche es zuerst selbst — `id`, `name` sowie Getter, Setter und Konstruktor kennst du schon von `Contact`, neu ist nur die Beziehung.</Task>
+<Task id="t4-ab01-a4-supplier">Erstelle ein Package mit dem Bezeichner `supplier` und erstelle darin die Klasse `Supplier`. Wie bei `Contact` gilt:</Task>
 
-Ein Hinweis vorweg: Verwende `@Getter @Setter @NoArgsConstructor` einzeln, nicht `@Data` wie im Gästebuch. `@Data` erzeugt unter anderem `toString()`, `equals()` und `hashCode()` — sobald zwei Klassen aufeinander zeigen, rufen diese Methoden sich gegenseitig auf und kommen nie zurück. Hier wäre es noch harmlos, `Contact` zeigt nicht zurück — im nächsten Arbeitsblatt nicht mehr. Die drei einzelnen Annotationen erzeugen genau das, was gebraucht wird.
+| | |
+|---|---|
+| **Entität** | Die Klasse wird auf eine Tabelle abgebildet |
+| **Tabellenname** | `supplier` — schreib ihn ausdrücklich hin |
+| **Schlüssel** | ein `id` vom Typ `Long`, den **die Datenbank** hochzählt |
+| **Feld** | `name`, vom Typ `String` |
+
+Ein Hinweis dazu: Verwende `@Getter @Setter @NoArgsConstructor` einzeln, nicht `@Data` wie im Gästebuch. `@Data` erzeugt unter anderem `toString()`, `equals()` und `hashCode()` — sobald zwei Klassen aufeinander zeigen, rufen diese Methoden sich gegenseitig auf und kommen nie zurück. Hier wäre es noch harmlos, `Contact` zeigt nicht zurück — im nächsten Arbeitsblatt nicht mehr.
+
+Neu ist die Beziehung zu `Contact` — die hast du noch nie gebaut. Die drei Punkte von eben werden hier zu einer einzigen Zeile Code:
+
+```java
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "contact_id")
+    private Contact contact;
+```
+
+Dazu die passenden Importe:
+
+```java
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+
+import de.szut.webshop.contact.Contact;
+```
 
 <details>
-<summary>Wenn du nicht weiterkommst: die Klasse <code>Supplier</code></summary>
+<summary>Wenn du nicht weiterkommst: die vollständige Klasse <code>Supplier</code></summary>
 
 ```java title="src/main/java/de/szut/webshop/supplier/Supplier.java"
 package de.szut.webshop.supplier;
