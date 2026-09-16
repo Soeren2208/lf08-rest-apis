@@ -447,7 +447,12 @@ public class Contact {
 
 </details>
 
-<Task id="t4-ab01-a4-supplier">Erstelle ein Package mit dem Bezeichner `supplier` und erstelle darin die Klasse `Supplier`:</Task>
+<Task id="t4-ab01-a4-supplier">Erstelle ein Package mit dem Bezeichner `supplier` und erstelle darin die Klasse `Supplier`. Versuche es zuerst selbst — `id`, `name` sowie Getter, Setter und Konstruktor kennst du schon von `Contact`, neu ist nur die Beziehung.</Task>
+
+Ein Hinweis vorweg: Verwende `@Getter @Setter @NoArgsConstructor` einzeln, nicht `@Data` wie im Gästebuch. `@Data` erzeugt unter anderem `toString()`, `equals()` und `hashCode()` — sobald zwei Klassen aufeinander zeigen, rufen diese Methoden sich gegenseitig auf und kommen nie zurück. Hier wäre es noch harmlos, `Contact` zeigt nicht zurück — im nächsten Arbeitsblatt nicht mehr. Die drei einzelnen Annotationen erzeugen genau das, was gebraucht wird.
+
+<details>
+<summary>Wenn du nicht weiterkommst: die Klasse <code>Supplier</code></summary>
 
 ```java title="src/main/java/de/szut/webshop/supplier/Supplier.java"
 package de.szut.webshop.supplier;
@@ -485,9 +490,7 @@ public class Supplier {
 }
 ```
 
-Eine Stelle verdient einen zweiten Blick, bevor es an die Beziehung geht.
-
-**`@Getter @Setter @NoArgsConstructor` statt `@Data`.** Im Gästebuch stand `@Data` an der Entität. Hier nicht — und der Grund ist die Beziehung: `@Data` erzeugt unter anderem `toString()`, `equals()` und `hashCode()`. Sobald zwei Klassen aufeinander zeigen, rufen diese Methoden sich gegenseitig auf und kommen nie zurück. Hier ist es noch harmlos — `Contact` zeigt nicht zurück. Im nächsten Arbeitsblatt schon. Die drei einzelnen Annotationen erzeugen genau das, was gebraucht wird.
+</details>
 
 #### Vom Klassendiagramm zu den Tabellen
 
@@ -767,7 +770,7 @@ public class SupplierController {
 </details>
 
 :::info Der Controller gibt die Entität direkt heraus
-Das ist genau das, was du im Gästebuch auch gemacht hast — und es funktioniert heute noch. Merke dir diese drei Endpunkte trotzdem gut: In Arbeitsblatt 02 wirst du **keinen einzigen Buchstaben** daran ändern, und zwei von ihnen werden trotzdem aufhören zu funktionieren.
+Das ist genau das, was du im Gästebuch auch gemacht hast — und es funktioniert heute noch.
 :::
 
 ### Aufgabe 6 – Ausprobieren

@@ -140,7 +140,20 @@ Die letzte Zeile ist keine Kleinigkeit. Was mit den Artikeln geschehen soll, wen
 
 ### Aufgabe 1 – Die Artikel-Entität
 
-<Task id="t4-ab02-a1-article">Erstelle ein Package mit dem Bezeichner `article` und erstelle darin die Klasse `Article`. Bis auf die Umsetzung der Assoziation zum Lieferanten kennst du alles daran — versuche sie deshalb zuerst **ohne einen Blick auf den Quelltext** unten.</Task>
+<Task id="t4-ab02-a1-article">Erstelle ein Package mit dem Bezeichner `article` und erstelle darin die Klasse `Article`. Bis auf die Umsetzung der Assoziation zum Lieferanten kennst du alles daran — versuche sie deshalb zuerst selbst.</Task>
+
+Zwei Hinweise, bevor du anfängst:
+
+:::info `BigDecimal` statt `double`
+`double` rechnet im Binärsystem und kann `0,10` nicht genau darstellen. Drei mal zehn Cent ergeben damit `0.30000000000000004`. Bei einem Warenkorb summiert sich so etwas — deshalb ist Geld in Java ein `BigDecimal`.
+
+`precision = 10, scale = 2` sagt der Datenbank: zehn Stellen insgesamt, davon zwei hinter dem Komma. In der Tabelle wird daraus `numeric(10,2)`.
+:::
+
+Die Beziehung zum Lieferanten ist ein `@ManyToOne` mit `@JoinColumn(name = "supplier_id", nullable = false)` — ähnlich wie `@OneToOne` bei Supplier→Contact aus Arbeitsblatt 01, nur ohne `cascade`: Ein Artikel besitzt seinen Lieferanten nicht.
+
+<details>
+<summary>Wenn du nicht weiterkommst: die Klasse <code>Article</code></summary>
 
 ```java title="src/main/java/de/szut/webshop/article/Article.java"
 package de.szut.webshop.article;
@@ -194,11 +207,7 @@ public class Article {
 }
 ```
 
-:::info `BigDecimal` statt `double`
-`double` rechnet im Binärsystem und kann `0,10` nicht genau darstellen. Drei mal zehn Cent ergeben damit `0.30000000000000004`. Bei einem Warenkorb summiert sich so etwas — deshalb ist Geld in Java ein `BigDecimal`.
-
-`precision = 10, scale = 2` sagt der Datenbank: zehn Stellen insgesamt, davon zwei hinter dem Komma. In der Tabelle wird daraus `numeric(10,2)`.
-:::
+</details>
 
 <Task id="t4-ab02-a1-mappedby">Ergänze in `Supplier` die Gegenrichtung:</Task>
 
