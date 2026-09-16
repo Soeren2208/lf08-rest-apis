@@ -9,11 +9,14 @@ sidebar_position: 1
 
 ## Die Situation
 
-> Erstes Treffen zum Webshop. Die Einkaufsabteilung bringt einen Zettel mit: *„Lieferant, dazu die Anschrift. Ohne Anschrift kein Lieferant — und die Anschrift gehört zu genau einem."*
->
-> Der Kollege aus der IT ergänzt: *„Die Datenbank läuft nicht mehr als Datei neben dem Projekt. Wir nehmen PostgreSQL in einem Container — dieselbe Datenbank, die auch im Betrieb läuft."*
->
-> Heute baust du die Grundlage: das Projekt, den Container, und die erste Beziehung zwischen zwei Tabellen.
+Der Webshop der HiTec GmbH verwaltet Lieferanten und ihre Artikel. Die Anforderungen aus dem Einkauf:
+
+- Jeder Lieferant hat eine Anschrift. Ohne Anschrift kein Lieferant, und eine Anschrift gehört zu genau einem Lieferanten.
+- Jeder Artikel wird von genau einem Lieferanten geliefert.
+
+Die Daten liegen in einer PostgreSQL-Datenbank, die in einem Docker-Container läuft — so wie später im Betrieb auch.
+
+Heute baust du die Grundlage: das Projekt, den Container, und die erste Beziehung zwischen zwei Tabellen.
 
 ## Lernziele
 
@@ -23,7 +26,7 @@ Nach Bearbeitung dieses Arbeitsblatts kannst du:
 - eine Spring-Boot-Anwendung an eine PostgreSQL statt an eine H2 anbinden
 - mit dem **Datenbankwerkzeug von IntelliJ** in laufende Tabellen sehen
 - ein **Klassendiagramm** mit einer 1:1-Beziehung in JPA-Entitäten übersetzen
-- erklären, was `@OneToOne` mit `cascade = ALL` mit der gefüllten Raute im Diagramm zu tun hat
+- erklären, was `@OneToOne` mit `cascade = ALL` mit der Komposition im Diagramm zu tun hat
 - an der erzeugten Tabelle ablesen, wie Hibernate eine 1:1-Beziehung abbildet
 
 :::info Was du schon kannst
@@ -313,14 +316,14 @@ Aus der Besprechung ist ein Klassendiagramm geworden. Es beschreibt den ersten T
         fill="var(--ifm-color-emphasis-700)">contact</text>
 </svg>
 
-Eines steht darin, das im Gästebuch nicht vorkam: die **gefüllte Raute**.
+Eines steht darin, das im Gästebuch nicht vorkam: eine **Komposition** — im Diagramm die gefüllte Raute.
 
 Die Notation kennst du aus dem ersten Lehrjahr. Hier geht es nicht darum, sie noch einmal durchzunehmen, sondern darum, was sie für den Code bedeutet — denn genau daraus wird gleich eine Annotation.
 
-<Task id="t4-ab01-diagramm-komposition">Mache dir die Komposition zwischen <code>Supplier</code> und <code>Contact</code> klar: Was sagt die gefüllte Raute über die beiden Klassen aus? Formuliere es in zwei, drei Sätzen — erst dann aufklappen.</Task>
+<Task id="t4-ab01-diagramm-komposition">Mache dir die Komposition zwischen <code>Supplier</code> und <code>Contact</code> klar: Was sagt sie über die beiden Klassen aus? Formuliere es in zwei, drei Sätzen — erst dann aufklappen.</Task>
 
 <details>
-<summary>Was die gefüllte Raute bedeutet</summary>
+<summary>Was die Komposition bedeutet</summary>
 
 Der `Contact` ist ein **Teil** des `Supplier` und von ihm **existenzabhängig**. Daraus folgen drei Dinge:
 
@@ -335,7 +338,7 @@ Merk dir die drei Punkte bis Aufgabe 4. Dort wird aus ihnen eine einzige Zeile C
 </details>
 
 :::note Warum heißt das Feld `id` und nicht `sid`?
-In vielen Datenbankentwürfen — auch in der Vorlage zu diesem Diagramm — heißen die Schlüssel `sid`, `cid`, `aid`: der erste Buchstabe der Tabelle plus `id`. Das stammt aus einer Zeit, in der man SQL-Abfragen ohne Tabellenaliase schrieb; dort half der Präfix, `id` von `id` zu unterscheiden.
+In vielen Datenbankentwürfen heißen die Schlüssel `sid`, `cid`, `aid`: der erste Buchstabe der Tabelle plus `id`. Das stammt aus einer Zeit, in der man SQL-Abfragen ohne Tabellenaliase schrieb; dort half der Präfix, `id` von `id` zu unterscheiden.
 
 Im objektorientierten Modell trägt schon die Klasse diese Auskunft. `supplier.getId()` sagt alles; `supplier.getSid()` sagt dasselbe zweimal. Dazu kommt: Wenn in jeder Klasse ein anderes Wort für dieselbe Sache steht, muss man es sich für jede Klasse einzeln merken.
 
