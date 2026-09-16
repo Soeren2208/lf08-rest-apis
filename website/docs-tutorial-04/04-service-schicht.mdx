@@ -260,12 +260,17 @@ DELETE http://localhost:8080/api/v1/suppliers/1
 
 <Task id="t4-ab04-a3-test">Probiere es aus — mit einem Lieferanten, der noch Artikel hat.</Task>
 
-Es kommt eine **500**. In der Konsole steht eine `DataIntegrityViolationException`, und ganz unten in der Ursachenkette die Meldung der Datenbank: Der Fremdschlüssel `article.supplier_id` verbietet es. Das ist **referentielle Integrität**: Die Datenbank stellt sicher, dass jeder Fremdschlüssel auf eine tatsächlich existierende Zeile zeigt. Würde der Lieferant verschwinden, während seine Artikel noch über `supplier_id` auf ihn zeigen, blieben sie herrenlos zurück — genau das verhindert die Datenbank, indem sie das Löschen ablehnt.
+<details>
+<summary>Klappe aus, wenn du den Lösch-Request ausgeführt hast und dir das Ergebnis angeschaut hast</summary>
+
+Es kommt eine **500**. In der Konsole steht eine `DataIntegrityViolationException`, und ganz unten in der Ursachenkette die Meldung der Datenbank: Der Fremdschlüssel `article.supplier_id` verbietet es. Das ist **referentielle Integrität** in Aktion.
 
 Das ist einerseits beruhigend — die Daten bleiben heil, der Fremdschlüssel aus der Maklerdatenbank tut genau seine Arbeit. Andererseits ist die Antwort unbrauchbar:
 
-- **500** heißt „Serverfehler". Der Client hat aber nichts falsch gemacht — er hat nur etwas verlangt, das im Moment nicht geht.
+- **500** heißt „Serverfehler". Der Client hat nichts falsch gemacht und einen richtigen Request abgesetzt — er hat nur etwas verlangt, das im Moment nicht geht.
 - Die Meldung nennt eine Fremdschlüsselbedingung. Damit kann im Einkauf niemand etwas anfangen.
+
+</details>
 
 ### Was hier der richtige Statuscode ist
 
