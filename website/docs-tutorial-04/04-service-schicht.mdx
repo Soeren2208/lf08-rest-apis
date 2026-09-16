@@ -392,7 +392,31 @@ Das ließe sich alles von Hand abfragen. Für so etwas gibt es aber eine fertige
 
 Die Regeln stehen als Annotationen an den **Eingabe-DTOs** — dort, wo die Daten hereinkommen.
 
-<Task id="t4-ab04-a5-dto">Ergänze die drei Create-DTOs:</Task>
+<Task id="t4-ab04-a5-dto">Ergänze die drei Create-DTOs. Nach diesem Muster:</Task>
+
+```java
+        @NotBlank(message = "Die Straße darf nicht leer sein.")
+        String street,
+```
+
+| Annotation | Prüft |
+|---|---|
+| `@NotNull` | Das Feld ist überhaupt da |
+| `@NotBlank` | Nicht `null`, nicht leer, nicht nur Leerzeichen |
+| `@Positive` | Größer als null |
+| `@Valid` | Prüfe auch **im** verschachtelten Objekt weiter |
+
+Achte auf die Pakete — sie sehen sich zum Verwechseln ähnlich:
+
+```java
+import jakarta.validation.Valid;                    // nur @Valid
+import jakarta.validation.constraints.NotBlank;     // alle Prüfregeln
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+```
+
+<details>
+<summary>Wenn du nicht weiterkommst: die drei DTOs</summary>
 
 ```java title="src/main/java/de/szut/webshop/contact/CreateContactDto.java"
 public record CreateContactDto(
@@ -434,21 +458,7 @@ public record CreateArticleDto(
 }
 ```
 
-| Annotation | Prüft |
-|---|---|
-| `@NotNull` | Das Feld ist überhaupt da |
-| `@NotBlank` | Nicht `null`, nicht leer, nicht nur Leerzeichen |
-| `@Positive` | Größer als null |
-| `@Valid` | Prüfe auch **im** verschachtelten Objekt weiter |
-
-Achte auf die Pakete — sie sehen sich zum Verwechseln ähnlich:
-
-```java
-import jakarta.validation.Valid;                    // nur @Valid
-import jakarta.validation.constraints.NotBlank;     // alle Prüfregeln
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-```
+</details>
 
 `@Valid` an `contact` ist leicht zu übersehen und leicht falsch zu verstehen. `@NotNull` allein prüft nur, dass überhaupt eine Anschrift mitgeschickt wurde — ob deren Felder gefüllt sind, interessiert es nicht. Erst `@Valid` steigt eine Ebene tiefer.
 
