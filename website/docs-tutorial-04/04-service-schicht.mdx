@@ -321,16 +321,6 @@ public class SupplierHasArticlesException extends RuntimeException {
     }
 ```
 
-:::note Die Datenbank hätte es doch auch verhindert — wozu die Prüfung?
-Beide sind nötig, und sie haben verschiedene Aufgaben.
-
-Der **Fremdschlüssel** ist die letzte Verteidigungslinie. Er gilt für jeden Zugriff, auch für den aus einem anderen Programm oder von Hand über das Datenbankfenster. Er darf nie weg.
-
-Die **Prüfung im Service** ist die erste. Sie kennt den fachlichen Grund und kann ihn sagen. Der Fremdschlüssel kennt nur Spalten.
-
-Man baut also nicht das eine *statt* des anderen, sondern das eine *vor* dem anderen.
-:::
-
 ### Aufgabe 4 – Ausnahmen in Statuscodes übersetzen
 
 Der Service wirft jetzt zwei Ausnahmen und kennt weiterhin keinen einzigen Statuscode. Die Übersetzung in Statuscode und Fehlermeldung passiert zentral, an einer eigenen Stelle.
