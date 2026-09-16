@@ -440,9 +440,9 @@ Was die drei Annotationen bedeuten:
 ![Die Antwort des Welcome-Endpunkts im Browser](/img/02-welcome.png)
 
 :::tip Beachte, was hier gerade passiert ist
-Du hast ein Java-Objekt zurückgegeben — und im Browser steht JSON. Diese Umwandlung nennt man **Serialisierung**. Spring erledigt sie automatisch. Aus den Record-Komponenten `message` und `time` werden die JSON-Felder gleichen Namens.
+Du hast ein Java-Objekt zurückgegeben — und im Browser steht JSON. Diese Umwandlung nennt man **Serialisierung**. Dafür ist eine Bibliothek namens **Jackson** zuständig, die bei jedem Spring-Boot-Projekt automatisch mitläuft — du bindest sie nie selbst ein. Aus den Record-Komponenten `message` und `time` werden die JSON-Felder gleichen Namens.
 
-Wie JSON aufgebaut ist und wie Java-Typen darauf abgebildet werden, steht im Infoblatt [JSON](/infoblaetter/json).
+Wie JSON aufgebaut ist, wie Java-Typen darauf abgebildet werden und was Jackson dabei genau macht, steht im Infoblatt [JSON](/infoblaetter/json).
 :::
 
 ### Aufgabe 5 – Testfälle ausführen

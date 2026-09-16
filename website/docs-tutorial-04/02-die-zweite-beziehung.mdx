@@ -634,7 +634,7 @@ Suchbegriff — er ist einer der bekanntesten Fehler im Umgang mit JPA.
 
 Das ist eine gute Idee — solange jemand da ist, der zur Datenbank gehen kann. Diese Verbindung heißt *Session*, und sie wird geschlossen, sobald deine Methode im Controller fertig ist.
 
-Danach kommt Jackson und wandelt das Ergebnis in JSON um. Es geht Feld für Feld durch den Lieferanten, kommt bei `articles` an, fragt den Platzhalter nach seinem Inhalt — und der hat niemanden mehr, den er fragen könnte. **Genau das steht in der Meldung: `(no session)`.**
+Danach übernimmt **Jackson** — dieselbe Bibliothek, die schon in Tutorial 1 automatisch JSON aus deinen Java-Objekten gemacht hat — und wandelt das Ergebnis in JSON um. Es geht Feld für Feld durch den Lieferanten, kommt bei `articles` an, fragt den Platzhalter nach seinem Inhalt — und der hat niemanden mehr, den er fragen könnte. **Genau das steht in der Meldung: `(no session)`.**
 
 Dass noch gar keine Artikel existieren, spielt keine Rolle. Der Platzhalter weiß es nicht; um es zu wissen, müsste er nachsehen.
 
