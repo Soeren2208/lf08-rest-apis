@@ -341,8 +341,6 @@ package de.szut.webshop.common;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -353,7 +351,6 @@ import de.szut.webshop.supplier.SupplierHasArticlesException;
 import de.szut.webshop.supplier.SupplierNotFoundException;
 
 @RestControllerAdvice
-@Order(Ordered.HIGHEST_PRECEDENCE)
 public class ApiExceptionHandler {
 
     @ExceptionHandler(SupplierNotFoundException.class)
@@ -379,12 +376,6 @@ public class ApiExceptionHandler {
 `@ExceptionHandler(SupplierNotFoundException.class)` ist die Zuordnung dahinter: Fliegt irgendwo eine `SupplierNotFoundException`, ruft Spring genau diese Methode auf — `handleNotFound` — und verwendet ihren Rückgabewert als Antwort. Für `SupplierHasArticlesException` gilt dasselbe mit `handleConflict`. Eine Methode je Ausnahmetyp, zentral für die ganze Anwendung.
 
 `ProblemDetail` ist das Standardformat für Fehlerantworten nach RFC 9457 — dasselbe, das Spring von sich aus liefert.
-
-:::warning `@Order` ist hier keine Verzierung
-In deiner `application.properties` steht seit Arbeitsblatt 01 `spring.mvc.problemdetails.enabled=true`. Damit bringt Spring **einen eigenen Ausnahmebehandler** mit, und der hat Vorrang.
-
-Für die beiden Ausnahmen oben ist das gleichgültig — Spring kennt sie nicht. In Aufgabe 5 kommt aber eine Methode dazu, für die Spring sich zuständig fühlt. Ohne `@Order(Ordered.HIGHEST_PRECEDENCE)` käme deine Methode dann nie an die Reihe, und du würdest lange suchen, warum deine Fehlermeldung nicht erscheint.
-:::
 
 <Task id="t4-ab04-a4-test">Probiere beide Fälle aus: `GET /api/v1/suppliers/999` und `DELETE` eines Lieferanten mit Artikeln.</Task>
 
@@ -503,6 +494,31 @@ Immerhin eine `400`. Aber welches Feld war es? Die Antwort verrät es nicht — 
 
 ```json
 {
+  "detail": "Invalid request content.",
+  "status": 400,
+  "title": "Bad Request"
+}
+```
+
+Genau dieselbe Antwort wie vorhin — obwohl gerade eine passende Methode dafür ergänzt wurde. In deiner `application.properties` steht seit Arbeitsblatt 01 `spring.mvc.problemdetails.enabled=true`. Damit bringt Spring **einen eigenen Ausnahmebehandler** mit, der sich für `MethodArgumentNotValidException` ebenfalls zuständig fühlt — und er war zuerst da. Deine `handleValidation`-Methode existiert zwar, kommt aber nie an die Reihe.
+
+<Task id="t4-ab04-a5-order">Ergänze an `ApiExceptionHandler` die Annotation `@Order(Ordered.HIGHEST_PRECEDENCE)`:</Task>
+
+```java
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+
+@RestControllerAdvice
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public class ApiExceptionHandler {
+```
+
+Das erzwingt Vorrang vor Springs eigenem Behandler — jetzt kommt deine Methode zuerst zum Zug.
+
+<Task id="t4-ab04-a5-retry">Schicke dieselbe Anfrage noch ein drittes Mal.</Task>
+
+```json
+{
   "detail": "Die Anfrage enthält ungültige Felder.",
   "instance": "/api/v1/suppliers",
   "status": 400,
@@ -515,10 +531,6 @@ Immerhin eine `400`. Aber welches Feld war es? Die Antwort verrät es nicht — 
 ```
 
 Der Pfad `contact.city` zeigt genau auf das Feld im verschachtelten Objekt — das ist die Arbeit von `@Valid`.
-
-:::danger Wenn die Antwort weiterhin „Invalid request content." lautet
-Dann fehlt `@Order(Ordered.HIGHEST_PRECEDENCE)` an deinem `ApiExceptionHandler`. Springs eigener Behandler war schneller.
-:::
 
 ### Aufgabe 6 – Der Artikel-Service
 
