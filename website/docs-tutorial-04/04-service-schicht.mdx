@@ -473,6 +473,22 @@ public record CreateArticleDto(
 
 <Task id="t4-ab04-a5-probe">Schicke einen Lieferanten mit leerem Namen und leerem Ort. Sieh dir die Antwort an.</Task>
 
+```http title="requests.http"
+### Lieferant mit leerem Namen und leerem Ort
+POST http://localhost:8080/api/v1/suppliers
+Content-Type: application/json
+
+{
+  "name": "",
+  "contact": {
+    "street": "Hafenstr. 12",
+    "postcode": "28217",
+    "city": "",
+    "phone": "0421 123456"
+  }
+}
+```
+
 ```json
 {
   "detail": "Invalid request content.",
