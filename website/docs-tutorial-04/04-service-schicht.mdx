@@ -566,11 +566,12 @@ Der Pfad `contact.city` zeigt genau auf das Feld im verschachtelten Objekt — d
 
 Auch der `ArticleController` bekommt jetzt eine Service-Schicht — nach demselben Muster wie eben beim Lieferanten.
 
-<Task id="t4-ab04-a6-service">Erstelle im Package `article` die Klasse `ArticleService`:</Task>
+<Task id="t4-ab04-a6-service">Erstelle im Package `article` die Klasse `ArticleService`. Sie braucht zwei Methoden: `create` und `findAllBySupplier`.</Task>
 
-Zwei Hinweise, bevor du anfängst:
+Drei Hinweise, bevor du anfängst:
 
 - Der Konstruktor braucht `ArticleRepository`, `SupplierService` (nicht `SupplierRepository` direkt!) und `ArticleMapper`.
+- `create` holt sich den benötigten Lieferanten über `supplierService.getEntity(supplierId)`, nicht direkt aus dem Repository.
 - Auch `findAllBySupplier` muss den Lieferanten über `supplierService.getEntity(supplierId)` holen, obwohl das Ergebnis gar nicht gebraucht wird — sonst würde eine unbekannte Lieferanten-Id stillschweigend eine leere Liste liefern statt einer `404`.
 
 <details>
