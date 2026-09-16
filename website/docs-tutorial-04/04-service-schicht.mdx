@@ -343,7 +343,6 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -476,6 +475,8 @@ Immerhin eine `400`. Aber welches Feld war es? Die Antwort verrät es nicht — 
 <Task id="t4-ab04-a5-handler">Ergänze im `ApiExceptionHandler` eine dritte Methode:</Task>
 
 ```java
+import org.springframework.web.bind.MethodArgumentNotValidException;
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleValidation(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new LinkedHashMap<>();
