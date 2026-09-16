@@ -38,9 +38,8 @@ Es geht in diesem Tutorial **nicht** darum, möglichst viele Endpunkte zu bauen.
 | **02** | [Die zweite Beziehung](02-die-zweite-beziehung) | 1:n — und ein Endpunkt, der ohne eigenes Zutun bricht |
 | **03** | [Die Antwort selbst entwerfen](03-antwort-selbst-entwerfen) | DTOs, Mapper, zwei neue Endpunkte |
 | **04** | [Die Service-Schicht](04-service-schicht) | Fachlichkeit trennen, Bean Validation, 404 · 409 · 400 |
-| **05** | [Den Webshop testen](05-webshop-testen) | **Zusatz** — Unit-Tests, Slice-Tests, Tests gegen die echte Datenbank |
 
-Arbeitsblatt 05 ist ein Angebot, kein Pflichtteil. Wer das Test-Tutorial zum Gästebuch gemacht hat, findet dort alles wieder — an einem schwierigeren Gegenstand.
+Schnell fertig? Dann weiter in [Tutorial 03 – Das Gästebuch testen](/tutorial-03/) — dieselbe Testthematik (Unit-Tests, Slice-Tests, Tests gegen die echte Datenbank), an einem anderen Gegenstand.
 
 ## Was du am Ende kannst
 
