@@ -700,7 +700,7 @@ Damit bleibt auch die Abhängigkeit einseitig: Das Paket `supplier` kennt `conta
 
 **`cascade = CascadeType.ALL` setzt die Komposition um.** Hier werden zwei der drei Punkte von vorhin zu Code: Die Anschrift entsteht mit dem Lieferanten zusammen und verschwindet mit ihm zusammen. Was mit ihm geschieht, geschieht mit ihr auch — Speichern, Löschen, alles wird weitergereicht. `orphanRemoval = true` ergänzt den Fall, dass die Anschrift nur abgehängt wird, ohne dass der Lieferant verschwindet: Auch dann wird sie gelöscht statt herrenlos liegen zu bleiben.
 
-Ein Punkt von vorhin steht in keiner dieser Zeilen: Eine Anschrift gehört zu **genau einem** Lieferanten. Wo der landet, siehst du in Aufgabe 7.
+Für sich stellt dieser Code nicht sicher, dass ein `Contact`-Objekt immer nur zu genau einem `Supplier`-Objekt gehört. Das passiert auf Datenbank-Ebene: Die Mapping-Anweisung `@OneToOne` bewirkt, dass Hibernate den Fremdschlüssel `contact_id` in der Tabelle `supplier` als `UNIQUE` anlegt. Das kannst du in Aufgabe 7 beobachten.
 
 <details>
 <summary>Exkurs: Der Fremdschlüssel könnte auch im `Contact` liegen</summary>
