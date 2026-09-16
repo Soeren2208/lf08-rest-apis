@@ -152,8 +152,25 @@ Zwei Hinweise, bevor du anfängst:
 
 Die Beziehung zum Lieferanten ist ein `@ManyToOne` mit `@JoinColumn(name = "supplier_id", nullable = false)` — ähnlich wie `@OneToOne` bei Supplier→Contact aus Arbeitsblatt 01, nur ohne `cascade`: Ein Artikel besitzt seinen Lieferanten nicht.
 
+Diese Beziehung hast du noch nie gebaut — ergänze das Feld:
+
+```java
+    @ManyToOne
+    @JoinColumn(name = "supplier_id", nullable = false)
+    private Supplier supplier;
+```
+
+Dazu die passenden Importe:
+
+```java
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+
+import de.szut.webshop.supplier.Supplier;
+```
+
 <details>
-<summary>Wenn du nicht weiterkommst: die Klasse <code>Article</code></summary>
+<summary>Wenn du nicht weiterkommst: die vollständige Klasse <code>Article</code></summary>
 
 ```java title="src/main/java/de/szut/webshop/article/Article.java"
 package de.szut.webshop.article;
