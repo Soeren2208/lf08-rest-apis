@@ -564,9 +564,17 @@ Der Pfad `contact.city` zeigt genau auf das Feld im verschachtelten Objekt — d
 
 ### Aufgabe 6 – Der Artikel-Service
 
-Der `ArticleController` hat dieselbe Behandlung verdient — und dabei löst sich der offene Punkt aus Arbeitsblatt 03 auf.
+Auch der `ArticleController` bekommt jetzt eine Service-Schicht — nach demselben Muster wie eben beim Lieferanten.
 
 <Task id="t4-ab04-a6-service">Erstelle im Package `article` die Klasse `ArticleService`:</Task>
+
+Zwei Hinweise, bevor du anfängst:
+
+- Der Konstruktor braucht `ArticleRepository`, `SupplierService` (nicht `SupplierRepository` direkt!) und `ArticleMapper`.
+- Auch `findAllBySupplier` muss den Lieferanten über `supplierService.getEntity(supplierId)` holen, obwohl das Ergebnis gar nicht gebraucht wird — sonst würde eine unbekannte Lieferanten-Id stillschweigend eine leere Liste liefern statt einer `404`.
+
+<details>
+<summary>Wenn du nicht weiterkommst: der <code>ArticleService</code></summary>
 
 ```java title="src/main/java/de/szut/webshop/article/ArticleService.java"
 @Service
@@ -604,9 +612,50 @@ public class ArticleService {
 }
 ```
 
+</details>
+
 Der `ArticleService` fragt nicht selbst im `SupplierRepository` nach, sondern beim `SupplierService`. Damit gilt die Regel „unbekannter Lieferant → `SupplierNotFoundException`" an genau **einer** Stelle. Aus dem `500` von Arbeitsblatt 03 ist ohne weiteres Zutun eine `404` geworden.
 
 <Task id="t4-ab04-a6-controller">Baue den `ArticleController` so um, dass er nur noch den `ArticleService` kennt — und setze auch dort `@Valid` vor den `@RequestBody`.</Task>
+
+Genau wie beim `SupplierController`: Der Konstruktor bekommt nur noch den `ArticleService`, beide Methoden rufen nur noch ihn auf.
+
+<details>
+<summary>Wenn du nicht weiterkommst: der <code>ArticleController</code></summary>
+
+```java title="src/main/java/de/szut/webshop/article/ArticleController.java"
+@RestController
+@RequestMapping("/api/v1/suppliers/{supplierId}/articles")
+public class ArticleController {
+
+    private final ArticleService service;
+
+    public ArticleController(ArticleService service) {
+        this.service = service;
+    }
+
+    @PostMapping
+    public ResponseEntity<ArticleDto> createArticle(@PathVariable Long supplierId,
+                                                    @Valid @RequestBody CreateArticleDto dto) {
+        ArticleDto created = service.create(supplierId, dto);
+
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(created.id())
+                .toUri();
+
+        return ResponseEntity.created(location).body(created);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<ArticleDto>> findArticlesOfSupplier(
+            @PathVariable Long supplierId) {
+        return ResponseEntity.ok(service.findAllBySupplier(supplierId));
+    }
+}
+```
+
+</details>
 
 <Task id="t4-ab04-a6-test">Probiere `POST /api/v1/suppliers/999/articles` und `GET /api/v1/suppliers/999/articles`.</Task>
 
