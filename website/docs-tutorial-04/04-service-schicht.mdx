@@ -32,9 +32,9 @@ Nach Bearbeitung dieses Arbeitsblatts kannst du:
 
 ## Warum eine dritte Schicht?
 
-Sieh dir an, was dein `SupplierController` inzwischen tut: aus zwei Repositories holen, den Mapper rufen, Artikel zählen, Adressen bauen, Statuscodes setzen. Das ist eine Menge — und das meiste davon hat mit HTTP nichts zu tun.
+Sieh dir an, was dein `SupplierController` inzwischen tut: aus zwei Repositories holen, den Mapper rufen, Artikel zählen, Adressen bauen, Statuscodes setzen. Das ist eine Menge — und das meiste davon hat mit der Aufgabe eines Controllers — dem HTTP-Handling — nichts zu tun.
 
-Welche Aufgabe in welche Schicht gehört, steht im Infoblatt [DTOs und Schichten](/infoblaetter/dto-schichten).
+Die Lösung liegt in der Einführung einer **Service-Schicht**, sodass jede Schicht wieder ihre wohldefinierte Aufgabe hat.
 
 <svg viewBox="0 0 720 330" width="100%" role="img"
      aria-label="Drei Schichten übereinander: Controller, Service und Repository. Die Anfrage läuft von oben nach unten, die Antwort zurück nach oben. Jede Schicht weiß nichts von der übernächsten."
@@ -87,6 +87,8 @@ Die dritte Zeile jeder Schicht ist die wichtigste: Sie sagt, was die Schicht **n
 
 - Der Service kennt keinen Statuscode. Deshalb lässt er sich prüfen, ohne dass ein Server läuft — und deshalb ließe sich dieselbe Fachlichkeit später auch von einer Kommandozeile aus benutzen.
 - Der Controller kennt kein SQL. Deshalb ändert sich an ihm nichts, wenn eine Abfrage umgebaut wird.
+
+Vertiefendes dazu, welche Aufgabe in welche Schicht gehört, kann im Infoblatt [DTOs und Schichten](/infoblaetter/dto-schichten) nachgelesen werden.
 
 :::info Wenn du Tutorial 03 gemacht hast
 Dann ist dir die Service-Schicht vertraut — dort ist sie entstanden, weil sich der Controller nicht testen ließ. Hier entsteht sie aus einem anderen Grund: weil es eine fachliche Regel gibt, für die es keinen Ort gibt. Zwei Wege, dasselbe Ziel.
