@@ -389,7 +389,14 @@ public class ApiExceptionHandler {
 
 ### Aufgabe 5 – Eingaben prüfen lassen
 
-Bleiben die Felder im Rumpf. Ein leerer Name, ein negativer Preis, eine fehlende Anschrift — das ließe sich alles von Hand abfragen. Für so etwas gibt es aber eine fertige Lösung: **Bean Validation**. Die Abhängigkeit hast du in Arbeitsblatt 01 schon mitgewählt.
+Beim Anlegen von Lieferanten und Artikeln sind im Test diverse Fehler aufgefallen: Eingehende JSON-Objekte können fehlerhaft sein, und das wird nirgends abgefangen. Daraus ergeben sich folgende Anforderungen:
+
+- Der Name eines Lieferanten darf nicht leer sein.
+- Ein Lieferant braucht eine vollständige Anschrift — Straße, Postleitzahl und Ort dürfen nicht leer sein.
+- Die Bezeichnung eines Artikels darf nicht leer sein.
+- Der Preis eines Artikels muss vorhanden und größer als null sein.
+
+Das ließe sich alles von Hand abfragen. Für so etwas gibt es aber eine fertige Lösung: **Bean Validation**. Die Abhängigkeit hast du in Arbeitsblatt 01 schon mitgewählt.
 
 Die Regeln stehen als Annotationen an den **Eingabe-DTOs** — dort, wo die Daten hereinkommen.
 
