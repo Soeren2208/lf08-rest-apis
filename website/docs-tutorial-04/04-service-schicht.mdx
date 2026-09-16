@@ -11,9 +11,9 @@ import loesung from '@site/src/data/loesung-tutorial-04.json';
 
 ## Die Situation
 
-> Der Katalog läuft. Dann kommt eine Rückmeldung aus dem Einkauf:
+> Der Katalog läuft. Dann kommt eine Anfrage aus dem Einkauf:
 >
-> *„Wir haben aus Versehen einen Lieferanten gelöscht, der noch achtzig Artikel im Sortiment hatte. Was passiert da eigentlich?"*
+> *„Wir wollen Lieferanten löschen können, die wir nicht mehr führen. Was passiert eigentlich, wenn so ein Lieferant noch Artikel im Sortiment hat?"*
 >
 > Gute Frage. Und daneben stehen die anderen, die bisher niemand gestellt hat: Was, wenn ein Name leer ist? Wenn ein Preis negativ ist? Wenn jemand einen Artikel bei einem Lieferanten anlegt, den es gar nicht gibt?
 >
@@ -226,7 +226,7 @@ public class SupplierNotFoundException extends RuntimeException {
 
 ### Aufgabe 3 – Das Löschen
 
-Jetzt die Frage aus dem Einkauf. Baue den Endpunkt für das Löschen.
+Der Einkauf wollte wissen, was passiert, wenn ein Lieferant gelöscht wird, der noch Artikel im Sortiment hat. Baue den Endpunkt für das Löschen.
 
 <Task id="t4-ab04-a3-naiv">Ergänze im `SupplierService`:</Task>
 
