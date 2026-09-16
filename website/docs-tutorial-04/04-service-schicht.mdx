@@ -390,14 +390,14 @@ Beim Anlegen von Lieferanten und Artikeln sind im Test diverse Fehler aufgefalle
 
 Das ließe sich alles von Hand abfragen. Für so etwas gibt es aber eine fertige Lösung: **Bean Validation**. Die Abhängigkeit hast du in Arbeitsblatt 01 schon mitgewählt.
 
-Die Regeln stehen als Annotationen an den **Eingabe-DTOs** — dort, wo die Daten hereinkommen.
-
-<Task id="t4-ab04-a5-dto">Ergänze die drei Create-DTOs. Nach diesem Muster:</Task>
+Die Validierungs-Regeln werden als Annotationen an die Felder in den Eingabe-DTOs geschrieben, also dort, wo die Daten hereinkommen.
 
 ```java
         @NotBlank(message = "Die Straße darf nicht leer sein.")
         String street,
 ```
+
+<Task id="t4-ab04-a5-dto">Ergänze die drei Create-DTOs. Dafür benötigst du die folgenden Annotationen:</Task>
 
 | Annotation | Prüft |
 |---|---|
