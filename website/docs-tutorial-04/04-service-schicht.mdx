@@ -469,6 +469,8 @@ public record CreateArticleDto(
             @Valid @RequestBody CreateSupplierDto dto) {
 ```
 
+`@Valid` löst die Prüfung erst aus. Die Annotationen an `CreateSupplierDto` legen nur fest, was geprüft werden soll — ohne `@Valid` am Parameter passiert das nie. Spring prüft `dto`, bevor der Methodenrumpf überhaupt läuft: Scheitert die Prüfung, wird `createSupplier` gar nicht erst aufgerufen, sondern eine `MethodArgumentNotValidException` geworfen — genau die, die gleich im `ApiExceptionHandler` behandelt wird.
+
 <Task id="t4-ab04-a5-probe">Schicke einen Lieferanten mit leerem Namen und leerem Ort. Sieh dir die Antwort an.</Task>
 
 ```json
