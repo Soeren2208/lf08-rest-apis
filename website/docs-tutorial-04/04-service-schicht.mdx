@@ -498,7 +498,9 @@ Content-Type: application/json
 }
 ```
 
-Immerhin eine `400`. Aber welches Feld war es? Die Antwort verrät es nicht — bei zwei Feldern ärgerlich, bei einem Formular mit fünfzehn unbrauchbar.
+Statuscode 400 — „Bad Request". Aber was an dem Request ist verkehrt? Welches Feld ist fehlerhaft? Die Antwort verrät es nicht — bei zwei Feldern ärgerlich, bei einem Formular mit fünfzehn unbrauchbar. Das liegt daran, dass hier Springs eigener Standard-Handler antwortet: Er weiß nur, dass etwas ungültig war, nicht was genau.
+
+Abhilfe schafft das Abfangen der Ausnahme, die `@Valid` im Hintergrund auslöst: `MethodArgumentNotValidException`. Die fängst du mit einer weiteren Methode im `ApiExceptionHandler` ab und baust daraus eine Antwort mit den Details, die tatsächlich weiterhelfen.
 
 <Task id="t4-ab04-a5-handler">Ergänze im `ApiExceptionHandler` eine dritte Methode:</Task>
 
@@ -519,18 +521,16 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
     }
 ```
 
+`ex.getBindingResult().getFieldErrors()` liefert die Liste der fehlgeschlagenen Feldprüfungen. Für jeden Fehler wird der Feldname (`getField()`) mit genau der Meldung verknüpft, die in der Annotation als `message` hinterlegt ist (`getDefaultMessage()`) — daher landen hier exakt die Texte, die vorhin an den DTOs geschrieben wurden. `setProperty("errors", errors)` hängt diese Map als zusätzliches Feld an das `ProblemDetail`; RFC 9457 erlaubt solche Erweiterungen neben den festen Feldern wie `detail` und `status`. Genau das taucht gleich als `errors`-Objekt in der Antwort auf.
+
 <Task id="t4-ab04-a5-again">Schicke dieselbe Anfrage noch einmal.</Task>
 
-```json
-{
-  "detail": "Invalid request content.",
-  "instance": "/api/v1/suppliers",
-  "status": 400,
-  "title": "Bad Request"
-}
-```
+<details>
+<summary>Klappe aus, wenn du die Anfrage noch einmal geschickt und dir das Ergebnis angeschaut hast</summary>
 
 Genau dieselbe Antwort wie vorhin — obwohl gerade eine passende Methode dafür ergänzt wurde. In deiner `application.properties` steht seit Arbeitsblatt 01 `spring.mvc.problemdetails.enabled=true`. Damit bringt Spring **einen eigenen Ausnahmebehandler** mit, der sich für `MethodArgumentNotValidException` ebenfalls zuständig fühlt — und er war zuerst da. Deine `handleValidation`-Methode existiert zwar, kommt aber nie an die Reihe.
+
+</details>
 
 <Task id="t4-ab04-a5-order">Ergänze an `ApiExceptionHandler` die Annotation `@Order(Ordered.HIGHEST_PRECEDENCE)`:</Task>
 
