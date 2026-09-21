@@ -1,0 +1,63 @@
+package de.szut.webshop.article;
+
+import java.net.URI;
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import jakarta.validation.Valid;
+
+/**
+ * Die Web-Schicht fuer Artikel.
+ *
+ * Die Adresse sagt, zu wem der Artikel gehoert:
+ * /api/v1/suppliers/7/articles ist das Sortiment von Lieferant 7.
+ */
+@RestController
+@RequestMapping("/api/v1/suppliers/{supplierId}/articles")
+public class ArticleController {
+
+    private final ArticleService service;
+
+    public ArticleController(ArticleService service) {
+        this.service = service;
+    }
+
+    @PostMapping
+    public ResponseEntity<ArticleDto> createArticle(
+            @PathVariable Long supplierId,
+            @Valid @RequestBody CreateArticleDto dto) {
+
+        ArticleDto created = service.create(supplierId, dto);
+
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(created.id())
+                .toUri();
+
+        return ResponseEntity.created(location).body(created);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<ArticleDto>> findArticlesOfSupplier(
+            @PathVariable Long supplierId,
+            @RequestParam(defaultValue = "EUR") String currency) {
+        return ResponseEntity.ok(service.findAllBySupplier(supplierId, currency));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ArticleDto> findArticleById(
+            @PathVariable Long supplierId,
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "EUR") String currency) {
+        return ResponseEntity.ok(service.findById(supplierId, id, currency));
+    }
+}

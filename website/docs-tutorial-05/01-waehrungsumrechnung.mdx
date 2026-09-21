@@ -1,0 +1,526 @@
+---
+title: "AB 01 – Währungsumrechnung"
+sidebar_label: "01 – Währungsumrechnung"
+slug: 01-waehrungsumrechnung
+sidebar_position: 1
+---
+
+import loesung from '@site/src/data/loesung-tutorial-05.json';
+
+# AB 01 – Währungsumrechnung
+
+## Lernziele
+
+Nach Bearbeitung dieses Arbeitsblatts kannst du:
+
+- eine Anforderung als **User Story mit Akzeptanzkriterien** lesen
+- mit `RestClient` einen fremden HTTP-Dienst aufrufen
+- die Antwort einer fremden API mit `@JsonIgnoreProperties(ignoreUnknown = true)` an ein eigenes DTO binden
+- einen Fehler einer fremden API in eine eigene fachliche Ausnahme übersetzen
+- begründen, warum dieser Aufruf in den Service gehört und nicht in den Controller
+
+## Aufgaben
+
+### Aufgabe 1 – Die Frankfurter-API kennenlernen
+
+Für die aktuellen Wechselkurse wird der Dienst [frankfurter.dev](https://frankfurter.dev) angefragt — kostenlos, ohne Anmeldung, ohne Schlüssel.
+
+<Task id="t5-ab01-a1-docs">Öffne [frankfurter.dev](https://frankfurter.dev) und sieh dir die Dokumentation des Endpunkts „Einzelkurs" (`/v2/rate/{base}/{quote}`) an.</Task>
+
+<Task id="t5-ab01-a1-try">Rufe im Browser oder über `requests.http` `https://api.frankfurter.dev/v2/rate/eur/usd` auf. Sieh dir die Antwort genau an.</Task>
+
+```json
+{
+  "date": "2026-09-21",
+  "base": "EUR",
+  "quote": "USD",
+  "rate": 1.1485
+}
+```
+
+<Task id="t5-ab01-a1-umrechnen">Lies im Abschnitt „Umrechnung" der Dokumentation nach, wie dort selbst umgerechnet wird.</Task>
+
+<details>
+<summary>Wenn du nachsehen willst, statt es selbst nachzulesen</summary>
+
+Es gibt **keinen** Endpunkt, der schon einen umgerechneten Betrag liefert — anders als bei mancher älteren API. Die Dokumentation holt sich den Kurs und rechnet selbst: `betrag * kurs`. Genau das wirst du in Aufgabe 4 auch tun, nur in Java statt JavaScript.
+
+</details>
+
+<Task id="t5-ab01-a1-bad">Rufe denselben Endpunkt mit einem erfundenen Code auf, `/v2/rate/eur/xxx`. Sieh dir Statuscode und Antwortkörper an.</Task>
+
+<details>
+<summary>Wenn du nachsehen willst, statt es selbst auszuprobieren</summary>
+
+Mit einem erfundenen Code antwortet die API mit Statuscode `422` und `{"status":422,"message":"invalid currency: XXX"}`. Das ist wichtig für später: Diese API meldet einen unbekannten Währungscode als echten Fehler, nicht als stillen Rechenfehler.
+
+</details>
+
+Zwei Dinge fallen an der Antwort auf, die für den Rest dieses Arbeitsblatts wichtig sind:
+
+- Sie liefert nur den **Kurs** — `rate` — nicht schon einen umgerechneten Betrag. Umrechnen musst du selbst.
+- `date`, `base` und `quote` werden dafür nicht gebraucht.
+
+### Aufgabe 2 – Ein Artikel für sich allein
+
+Bisher gibt es keinen Endpunkt, der genau **einen** Artikel liefert — nur die Liste eines Lieferanten. Den brauchst du jetzt: Ein Kunde fragt nach dem Preis eines bestimmten Artikels, nicht nach dem ganzen Sortiment.
+
+<Task id="t5-ab01-a2-exception">Erstelle im Package `article` die Ausnahme `ArticleNotFoundException` — nach demselben Muster wie `SupplierNotFoundException` aus Tutorial 04.</Task>
+
+<Task id="t5-ab01-a2-service">Ergänze im `ArticleService` die Methode `findById(Long supplierId, Long id)`. Zwei Dinge muss sie prüfen: Gibt es den Lieferanten? Gehört der gefundene Artikel wirklich zu ihm?</Task>
+
+Ausnahme nach bekanntem Muster, `findById` mit `orElseThrow`, ein `@GetMapping("/{id}")` — das hast du in Tutorial 04 an `SupplierController`/`SupplierService` schon genauso gebaut. Ein Gedanke daran ist trotzdem neu:
+
+```java
+Article article = articleRepository.findById(id)
+        .filter(a -> a.getSupplier().getId().equals(supplierId))
+        .orElseThrow(() -> new ArticleNotFoundException(id));
+```
+
+Der `filter`-Aufruf ist neu, der Rest bekannt: Der Artikel mit dieser `id` könnte existieren, aber zu einem **anderen** Lieferanten gehören. Auch dann ist die richtige Antwort eine `404` — nicht der falsche Artikel.
+
+<Task id="t5-ab01-a2-controller">Ergänze im `ArticleController` den passenden `GET`-Endpunkt.</Task>
+
+<Task id="t5-ab01-a2-handler">Ergänze im `ApiExceptionHandler` einen Handler für `ArticleNotFoundException` — nach demselben Muster wie `handleNotFound` für `SupplierNotFoundException`. Ohne ihn landet eine unbekannte Artikel-Kennung als `500`, nicht als `404`.</Task>
+
+<details>
+<summary>Wenn du nicht weiterkommst: alle vier Bausteine</summary>
+
+```java title="src/main/java/de/szut/webshop/article/ArticleNotFoundException.java"
+public class ArticleNotFoundException extends RuntimeException {
+
+    public ArticleNotFoundException(Long id) {
+        super("Es gibt keinen Artikel mit der Kennung " + id + ".");
+    }
+}
+```
+
+```java title="in ArticleService"
+    @Transactional(readOnly = true)
+    public ArticleDto findById(Long supplierId, Long id) {
+        supplierService.getEntity(supplierId);
+
+        Article article = articleRepository.findById(id)
+                .filter(a -> a.getSupplier().getId().equals(supplierId))
+                .orElseThrow(() -> new ArticleNotFoundException(id));
+
+        return mapper.toDto(article);
+    }
+```
+
+```java title="in ArticleController"
+    @GetMapping("/{id}")
+    public ResponseEntity<ArticleDto> findArticleById(
+            @PathVariable Long supplierId,
+            @PathVariable Long id) {
+        return ResponseEntity.ok(service.findById(supplierId, id));
+    }
+```
+
+```java title="in ApiExceptionHandler"
+    @ExceptionHandler(ArticleNotFoundException.class)
+    public ProblemDetail handleNotFound(ArticleNotFoundException ex) {
+        ProblemDetail problem =
+                ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problem.setTitle("Nicht gefunden");
+        return problem;
+    }
+```
+
+```java
+import de.szut.webshop.article.ArticleNotFoundException;
+```
+
+</details>
+
+<Task id="t5-ab01-a2-test">Lege einen Lieferanten mit einem Artikel an und rufe den neuen Endpunkt auf. Rufe ihn auch mit einer erfundenen Artikel-Kennung auf — das muss jetzt schon `404` liefern, nicht `500`.</Task>
+
+### Aufgabe 3 – Die Antwort der fremden API abbilden
+
+Genau wie bei einer eigenen Antwort gilt: Nicht im JSON-Text herumsuchen, sondern an ein DTO binden.
+
+<Task id="t5-ab01-a3">Erstelle ein Package mit dem Bezeichner `exchangerate` und darin die Klasse `RateDto`:</Task>
+
+```java title="src/main/java/de/szut/webshop/exchangerate/RateDto.java"
+@JsonIgnoreProperties(ignoreUnknown = true)
+public record RateDto(BigDecimal rate) {
+}
+```
+
+```java
+import java.math.BigDecimal;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+```
+
+`rate` ist als `BigDecimal` deklariert, nicht als `double` — aus demselben Grund, aus dem `Article.price` schon in Tutorial 04 ein `BigDecimal` war: Geld verträgt keine Rundungsfehler durch das Binärsystem. `@JsonIgnoreProperties(ignoreUnknown = true)` sorgt dafür, dass `date`, `base` und `quote` einfach ignoriert werden, statt eine Ausnahme auszulösen.
+
+### Aufgabe 4 – Der Umrechnungsdienst
+
+<Task id="t5-ab01-a4-properties">Ergänze in `application.properties`:</Task>
+
+```properties title="src/main/resources/application.properties"
+exchangerate.api.url=https://api.frankfurter.dev/v2/rate
+```
+
+<Task id="t5-ab01-a4-service">Erstelle im Package `exchangerate` die Klasse `ExchangerateService` mit der Methode `public BigDecimal convert(BigDecimal amount, String currency)`.</Task>
+
+```java title="src/main/java/de/szut/webshop/exchangerate/ExchangerateService.java"
+@Service
+public class ExchangerateService {
+
+    private final RestClient restClient = RestClient.create();
+
+    @Value("${exchangerate.api.url}")
+    private String apiUrl;
+
+    public BigDecimal convert(BigDecimal amount, String currency) {
+        RateDto rate = restClient.get()
+                .uri(apiUrl + "/EUR/{currency}", currency)
+                .retrieve()
+                .body(RateDto.class);
+        return amount.multiply(rate.rate()).setScale(2, RoundingMode.HALF_UP);
+    }
+}
+```
+
+```java
+import java.math.RoundingMode;
+```
+
+`@Value("${exchangerate.api.url}")` holt die Adresse aus der `application.properties`, statt sie im Code fest zu verdrahten. `RestClient.create()` baut einen einsatzbereiten Client ohne weitere Konfiguration. Mehr zu den vier Schritten `get()` · `uri()` · `retrieve()` · `body()` steht im Infoblatt [Fremde APIs aufrufen](/infoblaetter/fremde-apis-aufrufen).
+
+Der Platzhalter `{currency}` in der URI wird durch das Methodenargument ersetzt. `EUR` steht fest im Pfad — in der Datenbank stehen ausschließlich Europreise, umgerechnet wird immer **von** Euro aus. Die API liefert nur den Kurs zurück (Aufgabe 1) — die eigentliche Multiplikation `amount.multiply(rate.rate())` steht deshalb hier im Code, nicht in der Antwort der fremden API. `.setScale(2, RoundingMode.HALF_UP)` rundet auf zwei Nachkommastellen; ohne diese Zeile stünden im Ergebnis so viele Nachkommastellen, wie Multiplikation und Kurs zufällig ergeben.
+
+<Task id="t5-ab01-a4-test">Schreibe einen kurzen JUnit-Test, der `convert(new BigDecimal("100.00"), "USD")` aufruft und prüft, dass das Ergebnis größer als `BigDecimal.ZERO` ist. Führe ihn aus.</Task>
+
+```java title="src/test/java/de/szut/webshop/exchangerate/ExchangerateServiceTest.java"
+class ExchangerateServiceTest {
+
+    private final ExchangerateService service = new ExchangerateService();
+
+    ExchangerateServiceTest() {
+        ReflectionTestUtils.setField(service, "apiUrl", "https://api.frankfurter.dev/v2/rate");
+    }
+
+    @Test
+    void convertsToKnownCurrency() {
+        BigDecimal result = service.convert(new BigDecimal("100.00"), "USD");
+
+        assertThat(result).isGreaterThan(BigDecimal.ZERO);
+    }
+}
+```
+
+Dieser Test läuft ohne Spring-Kontext und ohne Datenbank — nur `ReflectionTestUtils.setField` setzt die mit `@Value` annotierte Eigenschaft, die sonst erst beim Starten der ganzen Anwendung gesetzt würde. Er braucht dafür eine echte Internetverbindung, dafür bekommst du sofort Gewissheit, dass der Aufruf funktioniert, bevor du ihn in Aufgabe 6 in die restliche Anwendung einbaust.
+
+### Aufgabe 5 – Wenn die Währung nicht existiert
+
+Aufgabe 1 hat es gezeigt: Ein unbekannter Code liefert `422`. `RestClient` behandelt jede Antwort ab Statuscode 400 als Ausnahme — die musst du auffangen und in eine eigene, fachliche Ausnahme übersetzen.
+
+<Task id="t5-ab01-a5-exception">Erstelle im Package `exchangerate` die Ausnahme `CurrencyNotFoundException`:</Task>
+
+```java title="src/main/java/de/szut/webshop/exchangerate/CurrencyNotFoundException.java"
+public class CurrencyNotFoundException extends RuntimeException {
+
+    public CurrencyNotFoundException(String currency) {
+        super("Es gibt keine Währung mit dem Code " + currency + ".");
+    }
+}
+```
+
+<Task id="t5-ab01-a5-catch">Umschließe den Aufruf in `ExchangerateService.convert()` mit einem `try`/`catch`:</Task>
+
+```java
+    public BigDecimal convert(BigDecimal amount, String currency) {
+        try {
+            RateDto rate = restClient.get()
+                    .uri(apiUrl + "/EUR/{currency}", currency)
+                    .retrieve()
+                    .body(RateDto.class);
+            return amount.multiply(rate.rate()).setScale(2, RoundingMode.HALF_UP);
+        } catch (HttpClientErrorException.UnprocessableContent e) {
+            throw new CurrencyNotFoundException(currency);
+        }
+    }
+```
+
+```java
+import org.springframework.web.client.HttpClientErrorException;
+```
+
+`HttpClientErrorException.UnprocessableContent` ist die Unterklasse speziell für 422-Antworten. Die Ausnahme der fremden Bibliothek verlässt die Methode nicht — an ihrer Stelle entsteht eine Ausnahme, die nichts mehr davon verrät, dass dahinter gerade eine andere Firma mit ihrer eigenen API steckt.
+
+<Task id="t5-ab01-a5-handler">Ergänze im `ApiExceptionHandler` einen Handler für `CurrencyNotFoundException` — nach demselben Muster wie `handleNotFound` für `SupplierNotFoundException`.</Task>
+
+<details>
+<summary>Wenn du nicht weiterkommst</summary>
+
+```java
+    @ExceptionHandler(CurrencyNotFoundException.class)
+    public ProblemDetail handleNotFound(CurrencyNotFoundException ex) {
+        ProblemDetail problem =
+                ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problem.setTitle("Nicht gefunden");
+        return problem;
+    }
+```
+
+Java erlaubt mehrere Methoden mit demselben Namen, solange sich die Parametertypen unterscheiden — `handleNotFound` gibt es damit gleich zweimal im `ApiExceptionHandler`, einmal für `SupplierNotFoundException`, einmal für `CurrencyNotFoundException`. Spring wählt anhand des Ausnahmetyps die richtige aus.
+
+</details>
+
+### Aufgabe 6 – Der Artikel bekommt eine Währung
+
+Jetzt wird beides zusammengeführt. Die Antwort eines Artikels soll erkennen lassen, in welcher Währung der Preis steht — auch dann, wenn es Euro ist.
+
+<Task id="t5-ab01-a6-dto">Ergänze `ArticleDto` um das Attribut `currency`:</Task>
+
+```java title="src/main/java/de/szut/webshop/article/ArticleDto.java"
+public record ArticleDto(
+        Long id,
+        String designation,
+        BigDecimal price,
+        String currency,
+        Long supplierId,
+        String supplierName) {
+}
+```
+
+<Task id="t5-ab01-a6-mapper">Der `ArticleMapper` braucht jetzt zwei Wege, ein `ArticleDto` zu bauen: den bisherigen — unverändert in Euro — und einen neuen für einen bereits umgerechneten Preis. Ergänze `toDto` um eine zweite, überladene Fassung und baue die bestehende `toDto(Article)` daraus:</Task>
+
+```java title="in ArticleMapper"
+    public ArticleDto toDto(Article article) {
+        return toDto(article, "EUR", article.getPrice());
+    }
+
+    public ArticleDto toDto(Article article, String currency, BigDecimal price) {
+        Supplier supplier = article.getSupplier();
+        return new ArticleDto(
+                article.getId(),
+                article.getDesignation(),
+                price,
+                currency,
+                supplier.getId(),
+                supplier.getName());
+    }
+```
+
+```java
+import java.math.BigDecimal;
+```
+
+`BigDecimal` taucht hier zum ersten Mal im `ArticleMapper` selbst als Typname auf — bisher wurde der Preis immer nur durchgereicht, ohne dass die Klasse ihn beim Namen nennen musste. Deshalb kommt jetzt ein Import dazu, der vorher nicht nötig war.
+
+:::note Warum nicht einfach das bestehende Feld überschreiben?
+`ArticleDto` ist ein `record` — unveränderlich, genau wie alle anderen Antwort-DTOs in diesem Projekt. Ein einmal gebautes `ArticleDto` lässt sich nicht nachträglich mit einem anderen Preis versehen. Deshalb entsteht das umgerechnete DTO neu, mit dem umgerechneten Preis gleich an der richtigen Stelle — nicht durch nachträgliches Verändern.
+:::
+
+<Task id="t5-ab01-a6-service">Der `ArticleService` braucht eine neue Abhängigkeit. Ergänze das Feld `exchangerateService` und **ersetze** den bestehenden Konstruktor durch eine Fassung mit vier Parametern — nicht einen zweiten Konstruktor daneben:</Task>
+
+```java title="in ArticleService"
+    private final ExchangerateService exchangerateService;
+
+    public ArticleService(ArticleRepository articleRepository,
+                          SupplierService supplierService,
+                          ArticleMapper mapper,
+                          ExchangerateService exchangerateService) {
+        this.articleRepository = articleRepository;
+        this.supplierService = supplierService;
+        this.mapper = mapper;
+        this.exchangerateService = exchangerateService;
+    }
+```
+
+```java
+import de.szut.webshop.exchangerate.ExchangerateService;
+```
+
+`ExchangerateService` steht in einem anderen Package als `ArticleService` — die beiden Packages kannten sich bisher nicht, deshalb braucht es hier einen expliziten Import.
+
+<Task id="t5-ab01-a6-logik">Baue `findById` so um, dass sie einen dritten Parameter `currency` entgegennimmt und ihn an eine neue, private Methode `toDto(Article, String)` weiterreicht:</Task>
+
+```java title="in ArticleService"
+    @Transactional(readOnly = true)
+    public ArticleDto findById(Long supplierId, Long id, String currency) {
+        supplierService.getEntity(supplierId);
+
+        Article article = articleRepository.findById(id)
+                .filter(a -> a.getSupplier().getId().equals(supplierId))
+                .orElseThrow(() -> new ArticleNotFoundException(id));
+
+        return toDto(article, currency);
+    }
+
+    private ArticleDto toDto(Article article, String currency) {
+        String normalized = currency.toUpperCase();
+        if (normalized.equals("EUR")) {
+            return mapper.toDto(article);
+        }
+
+        var convertedPrice = exchangerateService.convert(article.getPrice(), normalized);
+        return mapper.toDto(article, normalized, convertedPrice);
+    }
+```
+
+Zwei Entscheidungen darin sind neu, nicht nur Verkabelung:
+
+- **`currency.toUpperCase()`** — ein Request-Parameter kommt so an, wie der Client ihn schickt. Ohne die Normalisierung würde `?currency=usd` (klein geschrieben) unnötig die fremde API befragen, obwohl `?currency=USD` genau dasselbe meint, und die Antwort trüge den Code klein geschrieben weiter, statt im üblichen Großformat.
+- **`normalized.equals("EUR")`** — ohne diese Abfrage würde jeder Aufruf, auch der ganz gewöhnliche ohne Wunschwährung, die fremde API befragen. Für den Regelfall Euro gibt es an den gespeicherten Daten nichts umzurechnen.
+
+<Task id="t5-ab01-a6-controller">Ergänze im `ArticleController` den `currency`-Parameter:</Task>
+
+```java title="in ArticleController"
+    @GetMapping("/{id}")
+    public ResponseEntity<ArticleDto> findArticleById(
+            @PathVariable Long supplierId,
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "EUR") String currency) {
+        return ResponseEntity.ok(service.findById(supplierId, id, currency));
+    }
+```
+
+```java
+import org.springframework.web.bind.annotation.RequestParam;
+```
+
+`@RequestParam(defaultValue = "EUR")` ist die Stelle, an der A_3 aus der Anforderung entsteht: Fehlt der Parameter im Request vollständig, setzt Spring ihn selbst auf `"EUR"` — die Methode sieht keinen Unterschied zu einem Aufruf, der ihn ausdrücklich mitschickt.
+
+### Aufgabe 7 – Auch die Liste umrechnen
+
+A_7 aus der Anforderung fehlt noch: Auch die Liste aller Artikel eines Lieferanten soll den `currency`-Parameter verstehen.
+
+<Task id="t5-ab01-a7-service">Rüste `findAllBySupplier` genauso auf, wie du es eben bei `findById` gemacht hast: ein zusätzlicher Parameter `currency`, weitergereicht an dieselbe private Methode `toDto(Article, String)`.</Task>
+
+<Task id="t5-ab01-a7-controller">Ergänze im zugehörigen `GET`-Endpunkt denselben `currency`-Parameter wie beim Einzel-Artikel.</Task>
+
+Der Unterschied zu Aufgabe 6 ist klein: Statt eines einzelnen Artikels läuft jetzt eine ganze Liste durch dieselbe Umrechnung — für jeden Artikel einzeln. Neue Konzepte kommen keine dazu.
+
+<details>
+<summary>Wenn du nicht weiterkommst</summary>
+
+```java title="in ArticleService"
+    @Transactional(readOnly = true)
+    public List<ArticleDto> findAllBySupplier(Long supplierId, String currency) {
+        supplierService.getEntity(supplierId);
+
+        return articleRepository.findAllBySupplierIdOrderByIdDesc(supplierId).stream()
+                .map(article -> toDto(article, currency))
+                .toList();
+    }
+```
+
+```java title="in ArticleController"
+    @GetMapping
+    public ResponseEntity<List<ArticleDto>> findArticlesOfSupplier(
+            @PathVariable Long supplierId,
+            @RequestParam(defaultValue = "EUR") String currency) {
+        return ResponseEntity.ok(service.findAllBySupplier(supplierId, currency));
+    }
+```
+
+Dieselbe private Methode `toDto(Article, String)` aus Aufgabe 6 wird hier wiederverwendet — sie kennt schon die Regel „EUR wird nicht umgerechnet" und muss nicht zweimal geschrieben werden.
+
+</details>
+
+### Aufgabe 8 – Ausprobieren
+
+<Task id="t5-ab01-a8-requests">Ergänze `requests.http`:</Task>
+
+```http title="requests.http"
+### Ein Artikel, unveraendert in Euro
+GET http://localhost:8080/api/v1/suppliers/1/articles/1
+
+### Derselbe Artikel in US-Dollar
+GET http://localhost:8080/api/v1/suppliers/1/articles/1?currency=USD
+
+### Unbekannter Waehrungscode -> 404
+GET http://localhost:8080/api/v1/suppliers/1/articles/1?currency=XXX
+
+### Das ganze Sortiment in US-Dollar
+GET http://localhost:8080/api/v1/suppliers/1/articles?currency=USD
+```
+
+<Task id="t5-ab01-a8-test">Führe alle vier Requests aus. Prüfe bei jedem: Steht der richtige Wert bei `currency`? Passt der Statuscode?</Task>
+
+<Task id="t5-ab01-a8-db">Sieh danach im Datenbankfenster in die Tabelle `article`. Vergleiche den gespeicherten Preis mit der Antwort von eben.</Task>
+
+<details>
+<summary>Klappe aus, wenn du nachgesehen hast</summary>
+
+In der Tabelle steht weiterhin der ursprüngliche Europreis — unabhängig davon, in welcher Währung du zuletzt geantwortet bekommen hast. Die Umrechnung passiert ausschließlich beim Zusammenbauen der Antwort, nie beim Speichern. Das ist A_6 aus der Anforderung.
+
+</details>
+
+### Aufgabe 9 – Testfälle
+
+<Task id="t5-ab01-a9">Führe die Testfälle aus.</Task>
+
+<TestTable
+  storageKey="t5-ab01-tests"
+  tests={[
+    {
+      id: 'TF-01',
+      beschreibung: 'Artikel ohne Waehrungsangabe',
+      vorbedingung: 'Artikel 1 existiert mit Preis 0.45',
+      schritte: ['GET auf /api/v1/suppliers/1/articles/1'],
+      erwartet: <>Status <code>200</code>, <code>price</code> ist <code>0.45</code>, <code>currency</code> ist <code>"EUR"</code>.</>
+    },
+    {
+      id: 'TF-02',
+      beschreibung: 'Artikel mit gueltiger Fremdwaehrung',
+      vorbedingung: 'Artikel 1 existiert',
+      schritte: ['GET auf /api/v1/suppliers/1/articles/1?currency=USD'],
+      erwartet: <>Status <code>200</code>, <code>price</code> weicht von <code>0.45</code> ab, <code>currency</code> ist <code>"USD"</code>.</>
+    },
+    {
+      id: 'TF-03',
+      beschreibung: 'Unbekannter Waehrungscode',
+      vorbedingung: 'Artikel 1 existiert',
+      schritte: ['GET auf /api/v1/suppliers/1/articles/1?currency=XXX'],
+      erwartet: <>Status <code>404</code>, die Meldung nennt <code>XXX</code>.</>
+    },
+    {
+      id: 'TF-04',
+      beschreibung: 'Unbekannter Artikel',
+      vorbedingung: 'Es gibt keinen Artikel 999',
+      schritte: ['GET auf /api/v1/suppliers/1/articles/999'],
+      erwartet: <>Status <code>404</code>, die Meldung nennt <code>999</code>.</>
+    },
+    {
+      id: 'TF-05',
+      beschreibung: 'Artikel eines anderen Lieferanten',
+      vorbedingung: 'Artikel 1 gehoert zu Lieferant 1, nicht zu Lieferant 2',
+      schritte: ['GET auf /api/v1/suppliers/2/articles/1'],
+      erwartet: <>Status <code>404</code> — nicht der Artikel eines fremden Lieferanten.</>
+    },
+    {
+      id: 'TF-06',
+      beschreibung: 'Gespeicherter Preis bleibt unveraendert',
+      vorbedingung: 'TF-02 wurde ausgefuehrt',
+      schritte: ['Im Datenbankfenster die Tabelle article ansehen'],
+      erwartet: <>Der gespeicherte Preis steht weiterhin auf <code>0.45</code>.</>
+    },
+    {
+      id: 'TF-07',
+      beschreibung: 'Liste mit Fremdwaehrung',
+      vorbedingung: 'Lieferant 1 hat mindestens einen Artikel',
+      schritte: ['GET auf /api/v1/suppliers/1/articles?currency=USD'],
+      erwartet: <>Status <code>200</code>, bei jedem Artikel in der Liste steht <code>currency</code> auf <code>"USD"</code> und ein umgerechneter Preis.</>
+    },
+  ]}
+/>
+
+---
+
+## Musterlösung
+
+Hier steht der vollständige Quelltext der Anwendung nach diesem Arbeitsblatt — aufbauend auf Tutorial 04.
+
+:::warning Erst selbst versuchen
+Eine Lösung zu lesen fühlt sich an wie Verstehen, ist aber keines. Wer sie aufschlägt, bevor er selbst gescheitert ist, nimmt sich genau den Teil weg, an dem man etwas lernt.
+
+Sinnvoll ist sie in zwei Fällen: **nach** der eigenen Lösung zum Vergleichen — oder wenn du an einer Stelle wirklich nicht weiterkommst. Dann sieh dir nur diese eine Datei an und arbeite danach selbst weiter.
+:::
+
+<Solution daten={loesung} />

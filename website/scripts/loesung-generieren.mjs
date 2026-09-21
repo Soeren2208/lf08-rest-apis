@@ -109,6 +109,45 @@ const aufgaben = [
       'src/test/java/de/szut/webshop/SupplierIntegrationTest.java',
     ],
   },
+  {
+    ziel: 'src/data/loesung-tutorial-05.json',
+    projekt: '05-waehrungsumrechnung',
+    dateien: [
+      // Modell
+      'src/main/java/de/szut/webshop/contact/Contact.java',
+      'src/main/java/de/szut/webshop/supplier/Supplier.java',
+      'src/main/java/de/szut/webshop/article/Article.java',
+      // Datenzugriff
+      'src/main/java/de/szut/webshop/supplier/SupplierRepository.java',
+      'src/main/java/de/szut/webshop/article/ArticleRepository.java',
+      // DTOs
+      'src/main/java/de/szut/webshop/contact/ContactDto.java',
+      'src/main/java/de/szut/webshop/supplier/SupplierDto.java',
+      'src/main/java/de/szut/webshop/article/ArticleDto.java',
+      'src/main/java/de/szut/webshop/contact/CreateContactDto.java',
+      'src/main/java/de/szut/webshop/supplier/CreateSupplierDto.java',
+      'src/main/java/de/szut/webshop/article/CreateArticleDto.java',
+      'src/main/java/de/szut/webshop/exchangerate/RateDto.java',
+      // Fachlichkeit
+      'src/main/java/de/szut/webshop/supplier/SupplierMapper.java',
+      'src/main/java/de/szut/webshop/article/ArticleMapper.java',
+      'src/main/java/de/szut/webshop/supplier/SupplierNotFoundException.java',
+      'src/main/java/de/szut/webshop/supplier/SupplierHasArticlesException.java',
+      'src/main/java/de/szut/webshop/article/ArticleNotFoundException.java',
+      'src/main/java/de/szut/webshop/exchangerate/CurrencyNotFoundException.java',
+      'src/main/java/de/szut/webshop/supplier/SupplierService.java',
+      'src/main/java/de/szut/webshop/article/ArticleService.java',
+      'src/main/java/de/szut/webshop/exchangerate/ExchangerateService.java',
+      // Web
+      'src/main/java/de/szut/webshop/supplier/SupplierController.java',
+      'src/main/java/de/szut/webshop/article/ArticleController.java',
+      'src/main/java/de/szut/webshop/common/ApiExceptionHandler.java',
+      // Betrieb
+      'src/main/resources/application.properties',
+      'docker-compose.yml',
+      'requests.http',
+    ],
+  },
 ];
 
 const sprachen = {

@@ -72,6 +72,17 @@ const tutorials = [
       'Container, eine Beziehung legt einen laufenden Endpunkt lahm, und ' +
       'die Antwort wird zum ersten Mal selbst entworfen.',
   },
+  {
+    id: 'tutorial-05',
+    nummer: '05',
+    titel: 'Währungsumrechnung',
+    verweistAuf: ['tutorial-04'],
+    stichworte: 'RestClient · fremde APIs · User Story · Akzeptanzkriterien',
+    beschreibung:
+      'Das Backend wird selbst zum Client: ein fremder Dienst liefert ' +
+      'Wechselkurse, und eine Anforderung kommt zum ersten Mal als User ' +
+      'Story mit Akzeptanzkriterien.',
+  },
 ];
 
 // GitHub Actions setzt CI=true. Daran erkennen wir eine Veröffentlichung.
