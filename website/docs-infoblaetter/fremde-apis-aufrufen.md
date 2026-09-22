@@ -16,7 +16,7 @@ Bisher war dein Backend immer **Server**: Ein Client — Postman, ein Browser, `
 | Jetzt zusätzlich | dein Backend | ein fremder Server |
 
 <svg viewBox="0 0 720 200" width="100%" role="img"
-     aria-label="Ein Client ruft links dein Backend auf und bekommt eine Antwort. Dasselbe Backend ruft rechts einen fremden Server auf, um an die Wechselkurse zu kommen, und bekommt von dort ebenfalls eine Antwort."
+     aria-label="Ein Client ruft links dein Backend auf und bekommt eine Antwort. Dasselbe Backend ruft rechts einen fremden Server auf, um an Daten zu kommen, die es selbst nicht hat, und bekommt von dort ebenfalls eine Antwort."
      fontFamily="var(--ifm-font-family-base)">
 
   <rect x="20" y="66" width="150" height="68" rx="8"
@@ -87,10 +87,10 @@ import org.springframework.web.client.RestClient;
 
 RestClient client = RestClient.create();
 
-RateDto antwort = client.get()
-        .uri("https://api.frankfurter.dev/v2/rate/EUR/{to}", to)
+PostDto antwort = client.get()
+        .uri("https://jsonplaceholder.typicode.com/posts/{id}", id)
         .retrieve()
-        .body(RateDto.class);
+        .body(PostDto.class);
 ```
 
 Vier Schritte, jeder für sich benannt:
@@ -98,7 +98,7 @@ Vier Schritte, jeder für sich benannt:
 1. **`get()`** — die HTTP-Methode. Genauso gibt es `post()`, `put()`, `delete()`.
 2. **`uri(...)`** — die Adresse. Die geschweiften Klammern sind Platzhalter; die Werte dahinter werden der Reihe nach eingesetzt und dabei automatisch URL-kodiert.
 3. **`retrieve()`** — löst den Aufruf tatsächlich aus.
-4. **`body(RateDto.class)`** — liest den Antwortkörper und wandelt ihn in ein Objekt um. Dieselbe Jackson-Bibliothek, die auch `@RequestBody` bedient, arbeitet hier nur in die andere Richtung.
+4. **`body(PostDto.class)`** — liest den Antwortkörper und wandelt ihn in ein Objekt um. Dieselbe Jackson-Bibliothek, die auch `@RequestBody` bedient, arbeitet hier nur in die andere Richtung.
 
 :::note Was ist mit `RestTemplate`?
 `RestTemplate` ist die ältere Klasse für denselben Zweck — in vielen Anleitungen und älteren Projekten steht sie noch. Sie funktioniert nach demselben Grundprinzip, nur mit einer Methode je Kombination aus HTTP-Verb und Rückgabeart (`getForObject`, `postForEntity`, …) statt der fließenden Schreibweise oben. Seit Spring 6.1 ist `RestClient` der empfohlene Nachfolger und der einzige, den Spring Boot ab Version 4 noch selbst mit einer fertigen Builder-Bean unterstützt.
@@ -106,29 +106,29 @@ Vier Schritte, jeder für sich benannt:
 
 ## Was in der Antwort ankommt — und was davon zählt
 
-Eine fremde API antwortet selten genau mit dem, was du brauchst. Die Frankfurter-API zum Beispiel liefert auf eine Kursabfrage:
+Eine fremde API antwortet selten genau mit dem, was du brauchst. JSONPlaceholder — ein frei nutzbarer Testdienst für genau solche Übungen — liefert auf `GET /posts/1` zum Beispiel:
 
 ```json
 {
-  "date": "2026-09-21",
-  "base": "EUR",
-  "quote": "USD",
-  "rate": 1.1485
+  "userId": 1,
+  "id": 1,
+  "title": "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
+  "body": "quia et suscipit suscipit recusandae consequuntur expedita et cum ..."
 }
 ```
 
-Gebraucht wird daraus nur eine einzige Zahl. Trotzdem lohnt es sich nicht, von Hand im JSON zu suchen — dafür gibt es dasselbe Werkzeug, das du schon für eingehende Anfragen kennst: ein DTO, an das Jackson die Antwort bindet.
+Gebraucht werden davon vielleicht nur `id` und `title`, `userId` und `body` nicht. Trotzdem lohnt es sich nicht, von Hand im JSON zu suchen — dafür gibt es dasselbe Werkzeug, das du schon für eingehende Anfragen kennst: ein DTO, an das Jackson die Antwort bindet.
 
 ```java
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record RateDto(BigDecimal rate) {
+public record PostDto(Long id, String title) {
 }
 ```
 
-`@JsonIgnoreProperties(ignoreUnknown = true)` ist hier wichtiger als bei einem selbst entworfenen DTO: Du bestimmst nicht, was die fremde API liefert, und du willst nicht, dass dein Programm abstürzt, nur weil dort morgen ein zusätzliches Feld auftaucht. Ohne diese Annotation wirft Jackson bei jedem unbekannten Feld eine Ausnahme.
+`@JsonIgnoreProperties(ignoreUnknown = true)` ist hier wichtiger als bei einem selbst entworfenen DTO: Du bestimmst nicht, was die fremde API liefert, und du willst nicht, dass dein Programm abstürzt, nur weil dort morgen ein zusätzliches Feld auftaucht. Ohne diese Annotation wirft Jackson bei jedem unbekannten Feld eine Ausnahme — auch bei einem, das dich gar nicht interessiert, wie hier `userId` und `body`.
 
-:::tip Geld bleibt `BigDecimal`
-Auch wenn die fremde Antwort Zahlen als JSON-Zahl liefert: Bindest du sie an ein Feld vom Typ `BigDecimal` statt `double`, entsteht keine Rundung durch die Umwandlung. Derselbe Grund, aus dem in der eigenen Datenbank schon `BigDecimal` statt `double` steht.
+:::tip Nicht nur fehlende Felder ignorieren — auch überzählige
+Das DTO oben lässt `userId` und `body` einfach weg. Das ist kein Sonderfall, sondern der Normalfall: Ein DTO für eine fremde Antwort bildet nur ab, was die eigene Anwendung tatsächlich braucht, nicht die vollständige Struktur der Gegenseite.
 :::
 
 ## Wenn die fremde API einen Fehler meldet
@@ -137,16 +137,16 @@ Ein Aufruf kann scheitern — der Server ist nicht erreichbar, oder er meldet se
 
 ```java
 try {
-    RateDto rate = client.get()
-            .uri(url, to)
+    PostDto post = client.get()
+            .uri(url, id)
             .retrieve()
-            .body(RateDto.class);
-} catch (HttpClientErrorException.UnprocessableContent e) {
-    throw new CurrencyNotFoundException(to);
+            .body(PostDto.class);
+} catch (HttpClientErrorException.NotFound e) {
+    throw new PostNotFoundException(id);
 }
 ```
 
-`HttpClientErrorException` ist die allgemeine Ausnahme für 4xx-Antworten; für jeden Statuscode gibt es eine eigene Unterklasse — `NotFound` für 404, `UnprocessableContent` für 422, und so weiter. Welche davon zu fangen ist, verrät nur ein Blick in die Dokumentation der fremden API oder ein eigener Testaufruf mit einem absichtlich falschen Wert. Wichtig ist, was danach passiert: Die Ausnahme der fremden Bibliothek verlässt diese Methode nicht. Stattdessen entsteht eine **eigene** fachliche Ausnahme — genau wie bei `SupplierNotFoundException` in Tutorial 04. Der Rest der Anwendung soll nicht wissen müssen, dass hinter `CurrencyNotFoundException` gerade eine andere Firma mit ihrer eigenen API steckt.
+`HttpClientErrorException` ist die allgemeine Ausnahme für 4xx-Antworten; für jeden Statuscode gibt es eine eigene Unterklasse — `NotFound` für 404, `UnprocessableContent` für 422, und so weiter. Welche davon zu fangen ist, verrät nur ein Blick in die Dokumentation der fremden API oder ein eigener Testaufruf mit einer absichtlich falschen Kennung. Wichtig ist, was danach passiert: Die Ausnahme der fremden Bibliothek verlässt diese Methode nicht. Stattdessen entsteht eine **eigene** fachliche Ausnahme — genau wie bei `SupplierNotFoundException` in Tutorial 04. Der Rest der Anwendung soll nicht wissen müssen, dass hinter `PostNotFoundException` gerade eine andere Firma mit ihrer eigenen API steckt.
 
 :::warning Eine fremde API ist kein Teil deiner Anwendung — auch wenn es sich so anfühlt
 Sie kann langsam sein, ausfallen, ihr Antwortformat ändern oder ihre Nutzungsbedingungen anpassen — ohne dass du davon vorher erfährst. Fange deshalb an der Grenze ab, was du kontrollieren kannst (ungültige Eingaben, erwartbare Fehlerfälle), und mute dem Rest deiner Anwendung keine Kenntnis vom fremden Dienst zu.
@@ -154,33 +154,33 @@ Sie kann langsam sein, ausfallen, ihr Antwortformat ändern oder ihre Nutzungsbe
 
 ## Wo dieser Aufruf hinschreibt
 
-Der Aufruf einer fremden API ist fachliche Arbeit — er beantwortet eine Frage aus dem Anwendungsfall heraus („was kostet dieser Artikel in USD?"), keine HTTP-Detailfrage. Er gehört deshalb in eine eigene Klasse auf Höhe des Service, nicht in den Controller:
+Der Aufruf einer fremden API ist fachliche Arbeit — er beantwortet eine Frage aus dem Anwendungsfall heraus, keine HTTP-Detailfrage. Er gehört deshalb in eine eigene Klasse auf Höhe des Service, nicht in den Controller:
 
 ```java
 @Service
-public class ExchangerateService {
+public class PostService {
 
     private final RestClient restClient = RestClient.create();
 
-    @Value("${exchangerate.api.url}")
+    @Value("${posts.api.url}")
     private String apiUrl;
 
-    public BigDecimal convert(BigDecimal amount, String currency) {
+    public PostDto findById(Long id) {
         // ...
     }
 }
 ```
 
-`@Value("${exchangerate.api.url}")` holt die Adresse aus der `application.properties`, statt sie im Code fest zu verdrahten. Das hat denselben Grund wie bei der Datenbank-Adresse: Eine Testumgebung oder ein anderer Betreiber der Anwendung braucht womöglich eine andere Adresse, ohne dass dafür Java-Code geändert werden muss.
+`@Value("${posts.api.url}")` holt die Adresse aus der `application.properties`, statt sie im Code fest zu verdrahten. Das hat denselben Grund wie bei der Datenbank-Adresse: Eine Testumgebung oder ein anderer Betreiber der Anwendung braucht womöglich eine andere Adresse, ohne dass dafür Java-Code geändert werden muss.
 
-Ruft der eigentliche Service (hier: `ArticleService`) diese Klasse auf, bleibt die Regel aus dem Infoblatt [DTOs und Schichten](/infoblaetter/dto-schichten) gewahrt: Der Controller reicht nur weiter, die Fachlichkeit — wozu jetzt auch „eine fremde API befragen" zählt — bleibt im Service.
+Ruft der eigentliche fachliche Service diese Klasse auf, bleibt die Regel aus dem Infoblatt [DTOs und Schichten](/infoblaetter/dto-schichten) gewahrt: Der Controller reicht nur weiter, die Fachlichkeit — wozu jetzt auch „eine fremde API befragen" zählt — bleibt im Service.
 
 ## Das Wichtigste in Kürze
 
 - Dein Backend ist jetzt **Client und Server zugleich** — je nachdem, welche Verbindung man betrachtet.
 - `RestClient` ist das aktuelle Werkzeug für ausgehende Aufrufe; `RestTemplate` ist die ältere, in Spring Boot 4 nicht mehr automatisch unterstützte Alternative.
-- Die Antwort einer fremden API wird wie jede JSON-Antwort an ein DTO gebunden — mit `@JsonIgnoreProperties(ignoreUnknown = true)`, weil du das Format nicht selbst bestimmst.
-- Ein Fehler der fremden API (z. B. `HttpClientErrorException.UnprocessableContent`) wird an der Aufrufstelle in eine **eigene** fachliche Ausnahme übersetzt, nicht durchgereicht.
+- Die Antwort einer fremden API wird wie jede JSON-Antwort an ein DTO gebunden — mit `@JsonIgnoreProperties(ignoreUnknown = true)`, weil du das Format nicht selbst bestimmst, und mit nur den Feldern, die tatsächlich gebraucht werden.
+- Ein Fehler der fremden API (z. B. `HttpClientErrorException.NotFound`) wird an der Aufrufstelle in eine **eigene** fachliche Ausnahme übersetzt, nicht durchgereicht.
 - Der Aufruf gehört in eine eigene Service-Klasse, aufgerufen vom fachlichen Service — nicht in den Controller.
 
 ## Weiterlesen
