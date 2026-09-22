@@ -25,8 +25,13 @@ Bisher hat dein Backend ausschließlich geantwortet — auf Anfragen von Postman
 
 ## Die Anforderung
 
-> **Als** Kundin oder Kunde aus dem Ausland **möchte ich** den Preis eines Artikels in meiner eigenen Währung sehen, **damit** ich ihn ohne eigene Umrechnung einschätzen kann.
+Die Anforderung liegt dir diesmal nicht als Fließtext vor, sondern so, wie sie in echten Projekten formuliert würde: als **User Story** mit **Akzeptanzkriterien**. Eine User Story passt auf eine Karteikarte — vorne der Wunsch, hinten die Kriterien, an denen sich später prüfen lässt, ob er erfüllt ist.
 
+:::info Vorderseite — die Story
+**Als** Kundin oder Kunde aus dem Ausland **möchte ich** den Preis eines Artikels in meiner eigenen Währung sehen, **damit** ich ohne eigene Umrechnung entscheiden kann, ob ich ihn kaufen möchte.
+:::
+
+:::info Rückseite — die Akzeptanzkriterien
 | # | Akzeptanzkriterium |
 |---|---|
 | A_1 | Es gibt einen Endpunkt, der einen einzelnen Artikel anhand seiner Kennung liefert. |
@@ -36,6 +41,9 @@ Bisher hat dein Backend ausschließlich geantwortet — auf Anfragen von Postman
 | A_5 | Mit einem Währungscode, den die Umrechnungs-API nicht kennt, antwortet die Anwendung mit Statuscode 404 und einer Meldung, die den ungültigen Code erkennen lässt. |
 | A_6 | In der Datenbank steht weiterhin ausschließlich der Preis in EUR — die Umrechnung verändert keinen gespeicherten Wert. |
 | A_7 | Der Endpunkt, der alle Artikel eines Lieferanten auflistet, unterstützt denselben `currency`-Parameter für alle Artikel gleichzeitig. |
+:::
+
+Im Sprint Planning würden aus dieser Story und ihren Akzeptanzkriterien jetzt konkrete Tasks entstehen. Genau das sind die Aufgaben auf der folgenden Seite — Zug um Zug umgesetzt.
 
 ## Das Arbeitsblatt
 
