@@ -78,6 +78,28 @@ Bisher war dein Backend immer **Server**: Ein Client — Postman, ein Browser, `
 
 Beide Rollen passen in dieselbe Anwendung — nur nicht in dieselbe Schicht. Welcher Baustein den fremden Aufruf tätigt, ist keine Nebensächlichkeit, dazu weiter unten mehr.
 
+## Die Beispiel-API: JSONPlaceholder
+
+Für die Beispiele in diesem Infoblatt wird [JSONPlaceholder](https://jsonplaceholder.typicode.com) angefragt — ein kostenloser Testdienst ohne Anmeldung, extra für Übungszwecke gebaut. Er tut so, als wäre er das Backend eines Blogs, und liefert dafür erfundene Daten.
+
+| Endpunkt | Liefert |
+|---|---|
+| `GET /posts` | alle Blogbeiträge als Liste |
+| `GET /posts/{id}` | einen einzelnen Blogbeitrag |
+
+Ein einzelner Beitrag sieht so aus:
+
+```json
+{
+  "userId": 1,
+  "id": 1,
+  "title": "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
+  "body": "quia et suscipit suscipit recusandae consequuntur expedita et cum ..."
+}
+```
+
+Im Folgenden siehst du beides: wie ein einzelner Beitrag abgerufen und an ein DTO gebunden wird — und, kurz, wie aus derselben API eine ganze Liste wird.
+
 ## Das Werkzeug: `RestClient`
 
 Spring bringt für ausgehende HTTP-Aufrufe eine eigene, fließend zu lesende Klasse mit: `RestClient`.
@@ -100,24 +122,24 @@ Vier Schritte, jeder für sich benannt:
 3. **`retrieve()`** — löst den Aufruf tatsächlich aus.
 4. **`body(PostDto.class)`** — liest den Antwortkörper und wandelt ihn in ein Objekt um. Dieselbe Jackson-Bibliothek, die auch `@RequestBody` bedient, arbeitet hier nur in die andere Richtung.
 
+Für eine ganze Liste ändert sich nur die Adresse und die Bindung:
+
+```java
+List<PostDto> posts = client.get()
+        .uri("https://jsonplaceholder.typicode.com/posts")
+        .retrieve()
+        .body(new ParameterizedTypeReference<List<PostDto>>() {});
+```
+
+`body(List.class)` würde hier nicht reichen — Java löscht zur Laufzeit, welche Art Liste gemeint ist (**Type Erasure**). `ParameterizedTypeReference` trägt den vollen Typ `List<PostDto>` noch zur Laufzeit in sich.
+
 :::note Was ist mit `RestTemplate`?
 `RestTemplate` ist die ältere Klasse für denselben Zweck — in vielen Anleitungen und älteren Projekten steht sie noch. Sie funktioniert nach demselben Grundprinzip, nur mit einer Methode je Kombination aus HTTP-Verb und Rückgabeart (`getForObject`, `postForEntity`, …) statt der fließenden Schreibweise oben. Seit Spring 6.1 ist `RestClient` der empfohlene Nachfolger und der einzige, den Spring Boot ab Version 4 noch selbst mit einer fertigen Builder-Bean unterstützt.
 :::
 
 ## Was in der Antwort ankommt — und was davon zählt
 
-Eine fremde API antwortet selten genau mit dem, was du brauchst. JSONPlaceholder — ein frei nutzbarer Testdienst für genau solche Übungen — liefert auf `GET /posts/1` zum Beispiel:
-
-```json
-{
-  "userId": 1,
-  "id": 1,
-  "title": "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
-  "body": "quia et suscipit suscipit recusandae consequuntur expedita et cum ..."
-}
-```
-
-Gebraucht werden davon vielleicht nur `id` und `title`, `userId` und `body` nicht. Trotzdem lohnt es sich nicht, von Hand im JSON zu suchen — dafür gibt es dasselbe Werkzeug, das du schon für eingehende Anfragen kennst: ein DTO, an das Jackson die Antwort bindet.
+Eine fremde API antwortet selten genau mit dem, was du brauchst. Von den vier Feldern eines Beitrags (siehe oben) werden vielleicht nur `id` und `title` gebraucht, `userId` und `body` nicht. Trotzdem lohnt es sich nicht, von Hand im JSON zu suchen — dafür gibt es dasselbe Werkzeug, das du schon für eingehende Anfragen kennst: ein DTO, an das Jackson die Antwort bindet.
 
 ```java
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -169,6 +191,10 @@ public class PostService {
         // ...
     }
 }
+```
+
+```properties title="application.properties"
+posts.api.url=https://jsonplaceholder.typicode.com/posts
 ```
 
 `@Value("${posts.api.url}")` holt die Adresse aus der `application.properties`, statt sie im Code fest zu verdrahten. Das hat denselben Grund wie bei der Datenbank-Adresse: Eine Testumgebung oder ein anderer Betreiber der Anwendung braucht womöglich eine andere Adresse, ohne dass dafür Java-Code geändert werden muss.
