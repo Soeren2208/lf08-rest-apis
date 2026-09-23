@@ -115,6 +115,8 @@ PostDto antwort = client.get()
         .body(PostDto.class);
 ```
 
+`RestClient.create()` statt `new RestClient()`: `RestClient` ist ein **Interface**, keine Klasse — `new RestClient()` würde gar nicht kompilieren. `create()` ist eine statische Fabrikmethode, die eine fertig eingerichtete Standard-Implementierung liefert. Für mehr Kontrolle (Basis-URL, Timeouts, Interceptors) gibt es `RestClient.builder()`.
+
 Vier Schritte, jeder für sich benannt:
 
 1. **`get()`** — die HTTP-Methode. Genauso gibt es `post()`, `put()`, `delete()`.
