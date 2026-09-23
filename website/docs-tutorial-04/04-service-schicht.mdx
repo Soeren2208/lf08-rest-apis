@@ -32,7 +32,9 @@ Nach Bearbeitung dieses Arbeitsblatts kannst du:
 
 ## Warum eine dritte Schicht?
 
-Sieh dir an, was dein `SupplierController` inzwischen tut: aus zwei Repositories holen, den Mapper rufen, Artikel zählen, Adressen bauen, Statuscodes setzen. Das ist eine Menge — und das meiste davon hat mit der Aufgabe eines Controllers — dem HTTP-Handling — nichts zu tun.
+Sieh dir an, was dein `SupplierController` inzwischen tut: aus zwei Repositories holen, den Mapper rufen, Artikel zählen, Adressen bauen, Statuscodes setzen. Das sind mehrere Aufgaben, die inhaltlich nichts miteinander zu tun haben — genau das ist eine verletzte **Kohäsion**: Was in einer Klasse zusammensteht, sollte auch zusammengehören. Hier stehen Datenzugriff, Übersetzung zwischen Entität und DTO und HTTP-Handling nebeneinander — keine der drei Aufgaben hängt von einer anderen ab. Der Controller könnte genauso gut Artikel zählen, ohne je eine Anfrage zu bearbeiten, oder umgekehrt.
+
+Damit verletzt der Controller auch das **Single-Responsibility-Prinzip**: Er hat mehrere Gründe, sich zu ändern. Ändert sich, wie Artikel gezählt werden, muss der Controller angefasst werden. Ändert sich die Zuordnung zwischen `Supplier` und `SupplierDto`, ebenso. Ändert sich nur, wie eine Anfrage entgegengenommen wird — eigentlich seine einzige Aufgabe —, auch das. Eine Klasse mit mehreren Gründen zur Änderung bricht bei jedem einzelnen davon leichter.
 
 Die Lösung liegt in der Einführung einer **Service-Schicht**, sodass jede Schicht wieder ihre wohldefinierte Aufgabe hat.
 
