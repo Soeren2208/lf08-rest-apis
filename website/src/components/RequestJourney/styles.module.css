@@ -7,7 +7,7 @@
 .szenarien {
   display: flex;
   gap: 0.5rem;
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.5rem;
   flex-wrap: wrap;
 }
 
@@ -17,7 +17,7 @@
   flex-direction: column;
   gap: 0.1rem;
   min-height: 44px;
-  padding: 0.5rem 0.7rem;
+  padding: 0.4rem 0.65rem;
   text-align: left;
   color: var(--ifm-font-color-base);
   background: var(--ifm-background-surface-color);
@@ -39,12 +39,12 @@
 
 .szenarioLabel {
   font-family: var(--ifm-font-family-monospace);
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   font-weight: 800;
 }
 
 .szenarioUnter {
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   color: var(--ifm-color-emphasis-700);
 }
 
@@ -55,14 +55,14 @@
 .variantenReihe {
   display: flex;
   gap: 0.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.6rem;
 }
 
 .variantenKnopf {
   flex: 1 1 0;
-  min-height: 40px;
-  padding: 0.45rem 0.7rem;
-  font-size: 0.85rem;
+  min-height: 38px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.82rem;
   font-weight: 700;
   text-align: center;
   color: var(--ifm-font-color-base);
@@ -88,131 +88,176 @@
   border-color: var(--ifm-color-danger);
 }
 
-/* ---------- Diagramm ---------- */
+/* ---------- Buehne: Linien + Grid + Paket ---------- */
 
-.diagramm {
-  display: block;
-  margin: 0.5rem 0 0.75rem;
+.buehne {
+  position: relative;
+  padding-top: 2.6rem; /* Platz fuer die Paket-Karte, die oberhalb schwebt */
 }
 
-.stationBox {
-  fill: var(--ifm-background-surface-color);
-  stroke: var(--ifm-color-emphasis-500);
-  stroke-width: 1.6;
-  transition: stroke 0.2s ease, fill 0.2s ease;
+.linienSchicht {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
 }
 
-.stationLabel {
-  font-family: var(--ifm-font-family-base);
-  font-size: 13px;
-  font-weight: 700;
-  fill: var(--ifm-font-color-base);
-}
-
-.station {
-  transition: opacity 0.2s ease;
-}
-
-.stationBlass {
-  opacity: 0.35;
-}
-
-.stationAktiv .stationBox {
-  stroke: var(--ifm-color-primary);
-  stroke-width: 2.6;
-  fill: var(--ifm-color-primary-lightest);
-}
-
-.stationAktiv .stationLabel {
-  fill: #14181c;
-}
-
-.linie {
+.linie,
+.linieGestrichelt {
   stroke: var(--ifm-color-emphasis-400);
   stroke-width: 2;
-  transition: stroke 0.2s ease;
 }
 
 .linieGestrichelt {
   stroke-dasharray: 3 4;
 }
 
-.pfeilspitze {
-  fill: var(--ifm-color-emphasis-400);
+.grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-areas: 'client controller service repo' '. handler handler .';
+  gap: 0.6rem 0.5rem;
 }
 
-.pfeilspitzeAktiv {
-  fill: var(--zeichnung-akzent);
+.station {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.55rem 0.4rem 0.5rem;
+  border-radius: 12px;
+  border: 1.6px solid var(--ifm-color-emphasis-400);
+  background: var(--ifm-background-surface-color);
+  transition: opacity 0.2s ease, border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
 }
 
-.linieAktiv,
-.linieAktivZurueck {
-  stroke: var(--zeichnung-akzent);
-  stroke-width: 3;
-  stroke-dasharray: 7 6;
-  animation: fliessen 0.7s linear infinite;
+.stationIcon {
+  display: flex;
+  color: var(--ifm-color-emphasis-600);
 }
 
-.linieAktivZurueck {
-  animation-direction: reverse;
+.stationLabel {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.15;
 }
 
-@keyframes fliessen {
-  to {
-    stroke-dashoffset: -26;
-  }
+.stationRolle {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.66rem;
+  color: var(--ifm-color-emphasis-600);
+}
+
+.station_client { grid-area: client; }
+.station_controller { grid-area: controller; }
+.station_service { grid-area: service; }
+.station_repo { grid-area: repo; }
+.station_handler { grid-area: handler; }
+
+/* dezente Rollenfarben */
+.station_client .stationIcon { color: var(--ifm-color-emphasis-700); }
+.station_controller { border-color: var(--zeichnung-blau); }
+.station_controller .stationIcon { color: var(--zeichnung-blau); }
+.station_service { border-color: var(--ifm-color-primary); }
+.station_service .stationIcon { color: var(--ifm-color-primary); }
+.station_repo { border-color: var(--zeichnung-gelb); }
+.station_repo .stationIcon { color: var(--zeichnung-gelb); }
+.station_handler { border-color: var(--zeichnung-rot); border-style: dashed; }
+.station_handler .stationIcon { color: var(--zeichnung-rot); }
+
+.stationBlass {
+  opacity: 0.3;
+}
+
+.stationAktiv {
+  border-style: solid;
+  border-width: 2.4px;
+  box-shadow: 0 0 0 3px var(--ifm-color-primary-lightest);
+  transform: translateY(-2px);
+}
+
+/* ---------- die Paket-Karte ---------- */
+
+.paket {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  transition: transform 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+
+.paketInner {
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  background: var(--zeichnung-marke);
+  color: #ffffff;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: var(--ifm-global-shadow-md);
+}
+
+.paketSpitze {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--zeichnung-marke);
+  margin-top: -1px;
 }
 
 /* ---------- Beschreibung und Payload ---------- */
 
 .beschreibung {
-  padding: 0.9rem 1rem;
+  margin-top: 0.75rem;
+  padding: 0.7rem 0.85rem;
   border: 2px solid var(--ifm-color-emphasis-300);
   border-radius: var(--ifm-global-radius);
   background: var(--ifm-color-emphasis-100);
-  position: relative;
+}
+
+.beschreibungKopf {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
 }
 
 .text {
-  margin: 0 0 0.6rem;
-  font-size: 0.95rem;
-}
-
-.payload {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.payloadLabel {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--ifm-color-emphasis-700);
+  font-size: 0.9rem;
 }
 
 .payloadCode {
   margin: 0;
-  padding: 0.55rem 0.7rem;
+  padding: 0.5rem 0.65rem;
+  max-height: 6.4rem;
+  overflow-y: auto;
   background: var(--ifm-background-surface-color);
   border: 1px solid var(--ifm-color-emphasis-300);
   border-radius: var(--ifm-global-radius);
   font-family: var(--ifm-font-family-monospace);
-  font-size: 0.8rem;
+  font-size: 0.76rem;
+  line-height: 1.35;
   white-space: pre-wrap;
   word-break: break-word;
-  overflow-x: auto;
 }
 
 .statusBadge {
-  position: absolute;
-  top: 0.7rem;
-  right: 0.8rem;
-  padding: 0.2rem 0.6rem;
+  flex: none;
+  padding: 0.15rem 0.55rem;
   border-radius: 999px;
   font-family: var(--ifm-font-family-monospace);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 800;
 }
 
@@ -233,12 +278,12 @@
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  margin-top: 1rem;
+  margin-top: 0.85rem;
 }
 
 .iconKnopf {
-  min-width: 44px;
-  min-height: 44px;
+  min-width: 42px;
+  min-height: 42px;
   font-size: 1rem;
   color: var(--ifm-font-color-base);
   background: var(--ifm-background-surface-color);
@@ -258,9 +303,9 @@
 
 .playKnopf {
   min-width: 8rem;
-  min-height: 44px;
-  padding: 0.5rem 1rem;
-  font-size: 0.95rem;
+  min-height: 42px;
+  padding: 0.45rem 1rem;
+  font-size: 0.92rem;
   font-weight: 700;
   color: #ffffff;
   background: var(--ifm-color-primary);
@@ -277,12 +322,12 @@
   display: flex;
   justify-content: center;
   gap: 0.4rem;
-  margin-top: 0.7rem;
+  margin-top: 0.6rem;
 }
 
 .punkt {
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   padding: 0;
   border-radius: 50%;
   background: var(--ifm-color-emphasis-400);
@@ -301,9 +346,31 @@
 
 /* ---------- schmale Schirme ---------- */
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .szenarioUnter {
     display: none;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    grid-template-areas: 'client' 'controller' 'service' 'handler' 'repo';
+    gap: 0.5rem;
+  }
+
+  .station {
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 0.5rem 0.7rem;
+  }
+
+  .stationLabel {
+    text-align: left;
+  }
+
+  .beschreibungKopf {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
   }
 
   .steuerung {
@@ -312,6 +379,16 @@
 
   .playKnopf {
     min-width: 6rem;
-    padding: 0.5rem 0.6rem;
+    padding: 0.45rem 0.6rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paket {
+    transition: none;
+  }
+
+  .station {
+    transition: none;
   }
 }

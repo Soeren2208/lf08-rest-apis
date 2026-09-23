@@ -1,41 +1,102 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useLayoutEffect, useRef, useState} from 'react';
 import styles from './styles.module.css';
 
 /**
  * RequestJourney -- zeigt den Weg eines Requests durch Controller, Service,
  * Repository/Datenbank und (im Fehlerfall) den ApiExceptionHandler.
  *
- * Vier Szenarien x zwei Varianten (Erfolg/Fehler, bei der Liste nur Erfolg).
- * Jeder Schritt aktiviert eine Station und - falls vorhanden - die
- * Verbindung, auf der der Request gerade unterwegs ist. Die Verbindung
- * "fliesst" per CSS-Strichanimation (stroke-dashoffset), damit auch ohne
- * genaue Punktverfolgung eine echte Bewegungsrichtung zu sehen ist.
+ * Die Stationen sind ein CSS-Grid (kein SVG) - so kann mehrzeiliger
+ * JSON/DTO-Text sauber umbrechen. Eine kleine "Paket-Karte" traegt bei
+ * jedem Schritt den aktuellen Format-Namen und bewegt sich sichtbar
+ * zwischen den echten, gemessenen Positionen der Stationen (per
+ * getBoundingClientRect) - keine feste Choreografie, das passt sich von
+ * selbst an jede Bildschirmbreite an. Die Verbindungslinien werden aus
+ * denselben Messungen gezeichnet und liegen hinter den Kaesten.
  *
  * Nutzung in MDX (ohne Import, siehe src/theme/MDXComponents.js):
  *
  *   <RequestJourney />
  */
 
-const STATIONEN = {
-  client: {x: 10, y: 30, w: 130, h: 70, label: 'Client'},
-  controller: {x: 195, y: 30, w: 140, h: 70, label: 'Controller'},
-  service: {x: 380, y: 30, w: 140, h: 70, label: 'Service'},
-  repo: {x: 565, y: 30, w: 145, h: 70, label: 'Repository /', label2: 'Datenbank'},
-  handler: {x: 260, y: 235, w: 200, h: 62, label: 'ApiExceptionHandler'},
+const STATION_REIHENFOLGE = ['client', 'controller', 'service', 'repo', 'handler'];
+
+const STATION_INFO = {
+  client: {label: 'Client', rolle: 'ruft auf'},
+  controller: {label: 'Controller', rolle: '@RestController'},
+  service: {label: 'Service', rolle: '@Service'},
+  repo: {label: 'Repository / DB', rolle: '@Repository'},
+  handler: {label: 'ApiExceptionHandler', rolle: '@RestControllerAdvice'},
 };
 
-/** Verbindungen als SVG-Pfade, jeweils in "Vorwaerts"-Richtung (vom ersten zum zweiten Namen). */
-const VERBINDUNGEN = {
-  'client-controller': 'M 140 65 L 195 65',
-  'controller-service': 'M 335 65 L 380 65',
-  'service-repo': 'M 520 65 L 565 65',
-  'controller-handler': 'M 260 100 C 260 160 300 170 320 235',
-  'service-handler': 'M 445 100 C 445 160 410 170 400 235',
-  'handler-client': 'M 300 235 C 140 270 75 190 75 100',
-};
+/** Welche Stationen direkt verbunden sind - fuer die Linien im Hintergrund. */
+const VERBINDUNGEN = [
+  ['client', 'controller'],
+  ['controller', 'service'],
+  ['service', 'repo'],
+  ['controller', 'handler'],
+  ['service', 'handler'],
+];
 
-function zahl(n) {
-  return n === null || n === undefined ? '' : n.toLocaleString('de-DE');
+function Icon({name}) {
+  const gemeinsam = {
+    width: 22,
+    height: 22,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.8,
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+  };
+  switch (name) {
+    case 'client':
+      return (
+        <svg {...gemeinsam} aria-hidden="true">
+          <rect x="2.5" y="3.5" width="19" height="13" rx="1.8" />
+          <line x1="8" y1="20.5" x2="16" y2="20.5" />
+          <line x1="12" y1="16.5" x2="12" y2="20.5" />
+        </svg>
+      );
+    case 'controller':
+      return (
+        <svg {...gemeinsam} aria-hidden="true">
+          <line x1="6" y1="4" x2="6" y2="20" />
+          <path d="M6 6 L17 9 L6 12 Z" fill="currentColor" stroke="none" />
+        </svg>
+      );
+    case 'service':
+      return (
+        <svg {...gemeinsam} aria-hidden="true">
+          <circle cx="12" cy="12" r="4.2" />
+          <line x1="12" y1="2.5" x2="12" y2="5.4" />
+          <line x1="12" y1="18.6" x2="12" y2="21.5" />
+          <line x1="2.5" y1="12" x2="5.4" y2="12" />
+          <line x1="18.6" y1="12" x2="21.5" y2="12" />
+          <line x1="5.3" y1="5.3" x2="7.3" y2="7.3" />
+          <line x1="16.7" y1="16.7" x2="18.7" y2="18.7" />
+          <line x1="18.7" y1="5.3" x2="16.7" y2="7.3" />
+          <line x1="7.3" y1="16.7" x2="5.3" y2="18.7" />
+        </svg>
+      );
+    case 'repo':
+      return (
+        <svg {...gemeinsam} aria-hidden="true">
+          <ellipse cx="12" cy="6" rx="8" ry="3" />
+          <path d="M4 6 V17 A8 3 0 0 0 20 17 V6" />
+          <path d="M4 11.5 A8 3 0 0 0 20 11.5" />
+        </svg>
+      );
+    case 'handler':
+      return (
+        <svg {...gemeinsam} aria-hidden="true">
+          <path d="M12 3.2 L21.5 20 H2.5 Z" />
+          <line x1="12" y1="9.5" x2="12" y2="14.3" />
+          <circle cx="12" cy="17" r="0.9" fill="currentColor" stroke="none" />
+        </svg>
+      );
+    default:
+      return null;
+  }
 }
 
 /* ---------------------------------------------------------------------- */
@@ -50,25 +111,25 @@ const SZENARIEN = {
       erfolg: {
         badge: 'Lieferant 1',
         steps: [
-          {station: 'client', text: 'Der Client ruft einen einzelnen Lieferanten ab.', payloadLabel: 'Request', payload: 'GET /api/v1/suppliers/1'},
-          {station: 'controller', connector: 'client-controller', text: '`findSupplierById(id = 1)` nimmt die Pfadvariable entgegen und ruft `service.findById(1)`.', payloadLabel: 'Java', payload: 'Long id = 1L;'},
-          {station: 'service', connector: 'controller-service', text: '`SupplierService.findById(1)` ist `@Transactional(readOnly = true)` und fragt das Repository.', payloadLabel: 'Aufruf', payload: 'supplierRepository.findById(1)'},
-          {station: 'repo', connector: 'service-repo', text: 'Die Datenbank liefert die passende Zeile.', payloadLabel: 'SQL', payload: 'SELECT * FROM supplier\nWHERE id = 1;\n-- eine Zeile'},
-          {station: 'service', connector: 'service-repo', direction: 'zurueck', text: 'Der Mapper baut aus der Entität das Antwort-DTO.', payloadLabel: 'Supplier -> SupplierDto', payload: 'new SupplierDto(1, "Nordmetall GmbH",\n    contactDto, articleCount)'},
-          {station: 'controller', connector: 'controller-service', direction: 'zurueck', text: '`ResponseEntity.ok(dto)` verpackt das DTO mit Statuscode 200.', payloadLabel: 'Java', payload: 'ResponseEntity.ok(dto)'},
-          {station: 'client', connector: 'client-controller', direction: 'zurueck', text: 'Der Client bekommt seine Antwort.', payloadLabel: 'Antwort', payload: '200 OK\n{"id":1,"name":"Nordmetall GmbH", ...}', status: 200},
+          {station: 'client', format: 'Request', payload: 'GET /api/v1/suppliers/1', text: 'Der Client ruft einen einzelnen Lieferanten ab.'},
+          {station: 'controller', format: 'Java', payload: 'Long id = 1L;', text: '`findSupplierById(id = 1)` ruft `service.findById(1)`.'},
+          {station: 'service', format: 'Aufruf', payload: 'supplierRepository.findById(1)', text: '`@Transactional(readOnly = true)` — der Service fragt das Repository.'},
+          {station: 'repo', format: 'SQL', payload: 'SELECT * FROM supplier\nWHERE id = 1;\n-- eine Zeile', text: 'Die Datenbank liefert die passende Zeile.'},
+          {station: 'service', format: 'Supplier → SupplierDto', payload: 'new SupplierDto(1, "Nordmetall GmbH",\n  contactDto, articleCount)', text: 'Der Mapper baut aus der Entität das Antwort-DTO.'},
+          {station: 'controller', format: 'Java', payload: 'ResponseEntity.ok(dto)', text: 'Statuscode 200, das DTO im Rumpf.'},
+          {station: 'client', format: 'Antwort', payload: '200 OK\n{"id":1,"name":"Nordmetall GmbH", ...}', text: 'Der Client bekommt seine Antwort.', status: 200},
         ],
       },
       fehler: {
         badge: 'Lieferant 999',
         steps: [
-          {station: 'client', text: 'Der Client fragt eine Kennung ab, die es nicht gibt.', payloadLabel: 'Request', payload: 'GET /api/v1/suppliers/999'},
-          {station: 'controller', connector: 'client-controller', text: '`findSupplierById(999)` ruft `service.findById(999)`.', payloadLabel: 'Java', payload: 'Long id = 999L;'},
-          {station: 'service', connector: 'controller-service', text: 'Der Service fragt das Repository nach der Kennung 999.', payloadLabel: 'Aufruf', payload: 'supplierRepository.findById(999)'},
-          {station: 'repo', connector: 'service-repo', text: 'Die Datenbank findet keine passende Zeile.', payloadLabel: 'SQL', payload: 'SELECT * FROM supplier\nWHERE id = 999;\n-- keine Zeile'},
-          {station: 'service', connector: 'service-repo', direction: 'zurueck', text: '`orElseThrow(...)` wirft `SupplierNotFoundException`, statt weiterzumachen.', payloadLabel: 'Ausnahme', payload: 'throw new SupplierNotFoundException(999)'},
-          {station: 'handler', connector: 'service-handler', text: '`handleNotFound(...)` übersetzt die Ausnahme in ein `ProblemDetail` mit Status 404.', payloadLabel: 'ProblemDetail', payload: '{"status":404,"title":"Nicht gefunden",\n "detail":"Es gibt keinen Lieferanten..."}'},
-          {station: 'client', connector: 'handler-client', text: 'Repository und Controller-Rückweg werden dabei nie erreicht.', payloadLabel: 'Antwort', payload: '404 Not Found\n{"status":404, ...}', status: 404},
+          {station: 'client', format: 'Request', payload: 'GET /api/v1/suppliers/999', text: 'Der Client fragt eine Kennung ab, die es nicht gibt.'},
+          {station: 'controller', format: 'Java', payload: 'Long id = 999L;', text: '`findSupplierById(999)` ruft `service.findById(999)`.'},
+          {station: 'service', format: 'Aufruf', payload: 'supplierRepository.findById(999)', text: 'Der Service fragt das Repository nach der Kennung 999.'},
+          {station: 'repo', format: 'SQL', payload: 'SELECT * FROM supplier\nWHERE id = 999;\n-- keine Zeile', text: 'Die Datenbank findet keine passende Zeile.'},
+          {station: 'service', format: 'Ausnahme', payload: 'throw new SupplierNotFoundException(999)', text: '`orElseThrow(...)` wirft, statt weiterzumachen.'},
+          {station: 'handler', format: 'ProblemDetail', payload: '{"status":404,"title":"Nicht gefunden",\n "detail":"Es gibt keinen Lieferanten..."}', text: '`handleNotFound(...)` übersetzt die Ausnahme in Statuscode 404.'},
+          {station: 'client', format: 'Antwort', payload: '404 Not Found\n{"status":404, ...}', text: 'Repository-Rückweg und Controller werden dabei nie erreicht.', status: 404},
         ],
       },
     },
@@ -81,13 +142,13 @@ const SZENARIEN = {
       erfolg: {
         badge: 'Liste',
         steps: [
-          {station: 'client', text: 'Der Client ruft die ganze Lieferantenliste ab.', payloadLabel: 'Request', payload: 'GET /api/v1/suppliers'},
-          {station: 'controller', connector: 'client-controller', text: '`findAllSuppliers()` ruft `service.findAll()` — keine Parameter nötig.', payloadLabel: 'Java', payload: 'service.findAll()'},
-          {station: 'service', connector: 'controller-service', text: '`findAll()` holt sich alle Lieferanten aus dem Repository.', payloadLabel: 'Aufruf', payload: 'supplierRepository.findAll()'},
-          {station: 'repo', connector: 'service-repo', text: 'Die Datenbank liefert mehrere Zeilen.', payloadLabel: 'SQL', payload: 'SELECT * FROM supplier;\n-- mehrere Zeilen'},
-          {station: 'service', connector: 'service-repo', direction: 'zurueck', text: 'Für jeden Lieferanten baut der Mapper ein DTO, inklusive gezählter Artikel.', payloadLabel: 'Supplier[] -> SupplierDto[]', payload: 'suppliers.stream()\n  .map(s -> mapper.toDto(s, count))\n  .toList()'},
-          {station: 'controller', connector: 'controller-service', direction: 'zurueck', text: '`ResponseEntity.ok(liste)` verpackt die ganze Liste.', payloadLabel: 'Java', payload: 'ResponseEntity.ok(liste)'},
-          {station: 'client', connector: 'client-controller', direction: 'zurueck', text: 'Der Client bekommt ein JSON-Array zurück.', payloadLabel: 'Antwort', payload: '200 OK\n[{"id":1, ...}, {"id":2, ...}]', status: 200},
+          {station: 'client', format: 'Request', payload: 'GET /api/v1/suppliers', text: 'Der Client ruft die ganze Lieferantenliste ab.'},
+          {station: 'controller', format: 'Java', payload: 'service.findAll()', text: '`findAllSuppliers()` — keine Parameter nötig.'},
+          {station: 'service', format: 'Aufruf', payload: 'supplierRepository.findAll()', text: '`findAll()` holt sich alle Lieferanten.'},
+          {station: 'repo', format: 'SQL', payload: 'SELECT * FROM supplier;\n-- mehrere Zeilen', text: 'Die Datenbank liefert mehrere Zeilen.'},
+          {station: 'service', format: 'Supplier[] → SupplierDto[]', payload: 'suppliers.stream()\n  .map(s -> mapper.toDto(s, count))\n  .toList()', text: 'Für jeden Lieferanten baut der Mapper ein DTO.'},
+          {station: 'controller', format: 'Java', payload: 'ResponseEntity.ok(liste)', text: 'Die ganze Liste wird verpackt.'},
+          {station: 'client', format: 'Antwort', payload: '200 OK\n[{"id":1, ...}, {"id":2, ...}]', text: 'Der Client bekommt ein JSON-Array.', status: 200},
         ],
       },
       fehler: null,
@@ -101,22 +162,22 @@ const SZENARIEN = {
       erfolg: {
         badge: 'gültige Daten',
         steps: [
-          {station: 'client', text: 'Der Client legt einen neuen Lieferanten an.', payloadLabel: 'Request', payload: 'POST /api/v1/suppliers\n{"name":"Weser Werkzeug KG",\n "contact":{"street":"Am Deich 4", ...}}'},
-          {station: 'controller', connector: 'client-controller', text: '`@Valid @RequestBody` bindet das JSON an `CreateSupplierDto` — Bean Validation findet keinen Verstoß.', payloadLabel: 'JSON -> CreateSupplierDto', payload: 'new CreateSupplierDto("Weser Werkzeug KG",\n    new CreateContactDto(...))'},
-          {station: 'service', connector: 'controller-service', text: '`create(dto)` baut aus dem DTO eine neue Entität.', payloadLabel: 'CreateSupplierDto -> Supplier', payload: 'mapper.toEntity(dto)'},
-          {station: 'repo', connector: 'service-repo', text: 'Die Datenbank speichert Lieferant und Anschrift (Kaskade) und vergibt eine Kennung.', payloadLabel: 'SQL', payload: 'INSERT INTO contact (...) VALUES (...);\nINSERT INTO supplier (...) VALUES (...);\n-- neue id: 3'},
-          {station: 'service', connector: 'service-repo', direction: 'zurueck', text: 'Der Mapper baut aus der gespeicherten Entität das Antwort-DTO.', payloadLabel: 'Supplier -> SupplierDto', payload: 'mapper.toDto(saved, 0)'},
-          {station: 'controller', connector: 'controller-service', direction: 'zurueck', text: '`ResponseEntity.created(location).body(dto)` — Statuscode 201 mit `Location`-Kopfzeile.', payloadLabel: 'Java', payload: 'ResponseEntity.created(location).body(dto)'},
-          {station: 'client', connector: 'client-controller', direction: 'zurueck', text: 'Der Client bekommt die neue Kennung zurück.', payloadLabel: 'Antwort', payload: '201 Created\nLocation: /api/v1/suppliers/3\n{"id":3,"name":"Weser Werkzeug KG", ...}', status: 201},
+          {station: 'client', format: 'Request', payload: 'POST /api/v1/suppliers\n{"name":"Weser Werkzeug KG", ...}', text: 'Der Client legt einen neuen Lieferanten an.'},
+          {station: 'controller', format: 'JSON → CreateSupplierDto', payload: 'new CreateSupplierDto("Weser Werkzeug KG",\n  new CreateContactDto(...))', text: '`@Valid` prüft das DTO — kein Verstoß.'},
+          {station: 'service', format: 'CreateSupplierDto → Supplier', payload: 'mapper.toEntity(dto)', text: '`create(dto)` baut eine neue Entität.'},
+          {station: 'repo', format: 'SQL', payload: 'INSERT INTO contact (...) VALUES (...);\nINSERT INTO supplier (...) VALUES (...);\n-- neue id: 3', text: 'Lieferant und Anschrift werden gespeichert (Kaskade).'},
+          {station: 'service', format: 'Supplier → SupplierDto', payload: 'mapper.toDto(saved, 0)', text: 'Der Mapper baut das Antwort-DTO.'},
+          {station: 'controller', format: 'Java', payload: 'ResponseEntity.created(location).body(dto)', text: 'Statuscode 201 mit `Location`-Kopfzeile.'},
+          {station: 'client', format: 'Antwort', payload: '201 Created\nLocation: /api/v1/suppliers/3\n{"id":3, ...}', text: 'Der Client bekommt die neue Kennung.', status: 201},
         ],
       },
       fehler: {
         badge: 'leerer Name',
         steps: [
-          {station: 'client', text: 'Der Client schickt einen Lieferanten ohne Namen.', payloadLabel: 'Request', payload: 'POST /api/v1/suppliers\n{"name":"","contact":{...}}'},
-          {station: 'controller', connector: 'client-controller', text: '`@Valid` prüft `CreateSupplierDto`, **bevor** die Methode überhaupt läuft — der Name verletzt `@NotBlank`.', payloadLabel: 'Bean Validation', payload: '@NotBlank(message = "Der Name darf\\n  nicht leer sein.")\nString name; // ""'},
-          {station: 'handler', connector: 'controller-handler', text: 'Service und Repository werden nie erreicht. `handleValidation(...)` baut die Fehlerantwort — mit Feldnamen.', payloadLabel: 'ProblemDetail', payload: '{"status":400,"title":"Ungültige Eingabe",\n "errors":{"name":"Der Name darf..."}}'},
-          {station: 'client', connector: 'handler-client', text: 'Der Client erfährt genau, welches Feld falsch war.', payloadLabel: 'Antwort', payload: '400 Bad Request\n{"errors":{"name":"..."}}', status: 400},
+          {station: 'client', format: 'Request', payload: 'POST /api/v1/suppliers\n{"name":"","contact":{...}}', text: 'Der Client schickt einen Lieferanten ohne Namen.'},
+          {station: 'controller', format: 'Bean Validation', payload: '@NotBlank String name; // ""\n// verletzt, bevor die Methode laeuft', text: '`@Valid` prüft, **bevor** die Methode überhaupt läuft.'},
+          {station: 'handler', format: 'ProblemDetail', payload: '{"status":400,"title":"Ungültige Eingabe",\n "errors":{"name":"Der Name darf..."}}', text: 'Service und Repository werden nie erreicht.'},
+          {station: 'client', format: 'Antwort', payload: '400 Bad Request\n{"errors":{"name":"..."}}', text: 'Der Client erfährt, welches Feld falsch war.', status: 400},
         ],
       },
     },
@@ -129,24 +190,24 @@ const SZENARIEN = {
       erfolg: {
         badge: 'ohne Artikel',
         steps: [
-          {station: 'client', text: 'Der Client löscht einen Lieferanten ohne Artikel.', payloadLabel: 'Request', payload: 'DELETE /api/v1/suppliers/2'},
-          {station: 'controller', connector: 'client-controller', text: '`deleteSupplier(2)` ruft `service.deleteById(2)`.', payloadLabel: 'Java', payload: 'service.deleteById(2)'},
-          {station: 'service', connector: 'controller-service', text: 'Der Service prüft: Lieferant existiert, `articleCount` ist 0.', payloadLabel: 'Prüfung', payload: 'articleRepository.countBySupplierId(2)\n// 0 -> darf gelöscht werden'},
-          {station: 'repo', connector: 'service-repo', text: 'Die Datenbank löscht Lieferant und Anschrift (Kaskade).', payloadLabel: 'SQL', payload: 'DELETE FROM supplier WHERE id = 2;\n-- contact wird mitgelöscht'},
-          {station: 'controller', connector: 'controller-service', direction: 'zurueck', text: '`ResponseEntity.noContent().build()` — Statuscode 204, kein Rumpf.', payloadLabel: 'Java', payload: 'ResponseEntity.noContent().build()'},
-          {station: 'client', connector: 'client-controller', direction: 'zurueck', text: 'Der Client bekommt eine leere Erfolgsantwort.', payloadLabel: 'Antwort', payload: '204 No Content', status: 204},
+          {station: 'client', format: 'Request', payload: 'DELETE /api/v1/suppliers/2', text: 'Der Client löscht einen Lieferanten ohne Artikel.'},
+          {station: 'controller', format: 'Java', payload: 'service.deleteById(2)', text: '`deleteSupplier(2)` ruft den Service.'},
+          {station: 'service', format: 'Prüfung', payload: 'articleRepository.countBySupplierId(2)\n// 0 -> darf gelöscht werden', text: 'Der Service prüft: `articleCount` ist 0.'},
+          {station: 'repo', format: 'SQL', payload: 'DELETE FROM supplier WHERE id = 2;\n-- contact wird mitgelöscht', text: 'Lieferant und Anschrift werden gelöscht (Kaskade).'},
+          {station: 'controller', format: 'Java', payload: 'ResponseEntity.noContent().build()', text: 'Statuscode 204, kein Rumpf.'},
+          {station: 'client', format: 'Antwort', payload: '204 No Content', text: 'Der Client bekommt eine leere Erfolgsantwort.', status: 204},
         ],
       },
       fehler: {
         badge: 'mit Artikeln',
         steps: [
-          {station: 'client', text: 'Der Client versucht, einen Lieferanten mit Artikeln zu löschen.', payloadLabel: 'Request', payload: 'DELETE /api/v1/suppliers/1'},
-          {station: 'controller', connector: 'client-controller', text: '`deleteSupplier(1)` ruft `service.deleteById(1)`.', payloadLabel: 'Java', payload: 'service.deleteById(1)'},
-          {station: 'service', connector: 'controller-service', text: 'Der Service liest nach: Lieferant 1 hat noch einen Artikel.', payloadLabel: 'Prüfung', payload: 'articleRepository.countBySupplierId(1)\n// 1 -> darf NICHT gelöscht werden'},
-          {station: 'repo', connector: 'service-repo', text: 'Die Datenbank wird nur gelesen — kein `DELETE` wird ausgeführt.', payloadLabel: 'SQL', payload: 'SELECT count(*) FROM article\nWHERE supplier_id = 1;\n-- 1, kein DELETE'},
-          {station: 'service', connector: 'service-repo', direction: 'zurueck', text: '`articleCount > 0` — der Service wirft `SupplierHasArticlesException`, statt zu löschen.', payloadLabel: 'Ausnahme', payload: 'throw new SupplierHasArticlesException(1, 1)'},
-          {station: 'handler', connector: 'service-handler', text: '`handleConflict(...)` übersetzt das in Statuscode 409.', payloadLabel: 'ProblemDetail', payload: '{"status":409,"title":"Löschen nicht möglich",\n "detail":"Lieferant 1 hat noch 1 Artikel..."}'},
-          {station: 'client', connector: 'handler-client', text: 'Der Lieferant bleibt erhalten — der Client erfährt, warum.', payloadLabel: 'Antwort', payload: '409 Conflict\n{"detail":"...hat noch 1 Artikel..."}', status: 409},
+          {station: 'client', format: 'Request', payload: 'DELETE /api/v1/suppliers/1', text: 'Der Client versucht, einen Lieferanten mit Artikeln zu löschen.'},
+          {station: 'controller', format: 'Java', payload: 'service.deleteById(1)', text: '`deleteSupplier(1)` ruft den Service.'},
+          {station: 'service', format: 'Prüfung', payload: 'articleRepository.countBySupplierId(1)\n// 1 -> darf NICHT gelöscht werden', text: 'Der Service liest nach: Lieferant 1 hat noch einen Artikel.'},
+          {station: 'repo', format: 'SQL', payload: 'SELECT count(*) FROM article\nWHERE supplier_id = 1;\n-- 1, kein DELETE', text: 'Die Datenbank wird nur gelesen.'},
+          {station: 'service', format: 'Ausnahme', payload: 'throw new SupplierHasArticlesException(1, 1)', text: '`articleCount > 0` — der Service wirft, statt zu löschen.'},
+          {station: 'handler', format: 'ProblemDetail', payload: '{"status":409,"title":"Löschen nicht möglich",\n "detail":"...hat noch 1 Artikel..."}', text: '`handleConflict(...)` übersetzt das in Statuscode 409.'},
+          {station: 'client', format: 'Antwort', payload: '409 Conflict\n{"detail":"...hat noch 1 Artikel..."}', text: 'Der Lieferant bleibt erhalten.', status: 409},
         ],
       },
     },
@@ -157,68 +218,10 @@ const SZENARIO_IDS = ['getEins', 'getListe', 'post', 'delete'];
 
 function statusFarbe(status) {
   if (status === null || status === undefined) return null;
-  if (status < 300) return 'gut';
-  return 'schlecht';
+  return status < 300 ? 'gut' : 'schlecht';
 }
 
 /* ---------------------------------------------------------------------- */
-
-function Diagramm({steps, activeIndex}) {
-  const step = steps[activeIndex];
-  const activeStation = step.station;
-  const activeConnector = step.connector;
-  const direction = step.direction === 'zurueck';
-
-  return (
-    <svg viewBox="0 0 720 320" width="100%" role="img" aria-hidden="true" className={styles.diagramm}>
-      {Object.entries(VERBINDUNGEN).map(([name, d]) => {
-        const dashed = name.includes('handler');
-        const active = name === activeConnector;
-        return (
-          <path
-            key={name}
-            d={d}
-            className={[
-              styles.linie,
-              dashed ? styles.linieGestrichelt : '',
-              active ? (direction ? styles.linieAktivZurueck : styles.linieAktiv) : '',
-            ].join(' ')}
-            fill="none"
-            markerEnd={active && !direction ? 'url(#pfeil-aktiv)' : dashed ? undefined : 'url(#pfeil)'}
-            markerStart={active && direction ? 'url(#pfeil-aktiv)' : undefined}
-          />
-        );
-      })}
-
-      <defs>
-        <marker id="pfeil" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
-          <path d="M 0 0 L 8 4 L 0 8 z" className={styles.pfeilspitze} />
-        </marker>
-        <marker id="pfeil-aktiv" markerWidth="9" markerHeight="9" refX="7.5" refY="4.5" orient="auto">
-          <path d="M 0 0 L 9 4.5 L 0 9 z" className={styles.pfeilspitzeAktiv} />
-        </marker>
-      </defs>
-
-      {Object.entries(STATIONEN).map(([name, s]) => {
-        const active = name === activeStation;
-        const relevant = steps.some((st) => st.station === name);
-        return (
-          <g key={name} className={[styles.station, active ? styles.stationAktiv : '', !relevant ? styles.stationBlass : ''].join(' ')}>
-            <rect x={s.x} y={s.y} width={s.w} height={s.h} rx="10" className={styles.stationBox} />
-            <text x={s.x + s.w / 2} y={s.y + s.h / 2 + (s.label2 ? -2 : 5)} textAnchor="middle" className={styles.stationLabel}>
-              {s.label}
-            </text>
-            {s.label2 && (
-              <text x={s.x + s.w / 2} y={s.y + s.h / 2 + 16} textAnchor="middle" className={styles.stationLabel}>
-                {s.label2}
-              </text>
-            )}
-          </g>
-        );
-      })}
-    </svg>
-  );
-}
 
 export default function RequestJourney() {
   const [szenarioId, setSzenarioId] = useState('getEins');
@@ -227,12 +230,41 @@ export default function RequestJourney() {
   const [spielt, setSpielt] = useState(false);
   const timer = useRef(null);
 
+  const containerRef = useRef(null);
+  const stationRefs = useRef({});
+  const [positionen, setPositionen] = useState(null);
+
   const szenario = SZENARIEN[szenarioId];
   const hatFehler = !!szenario.varianten.fehler;
   const daten = szenario.varianten[variante] || szenario.varianten.erfolg;
   const steps = daten.steps;
   const step = steps[index];
   const letzterSchritt = index === steps.length - 1;
+
+  function messen() {
+    const container = containerRef.current;
+    if (!container) return;
+    const contRect = container.getBoundingClientRect();
+    const neu = {};
+    STATION_REIHENFOLGE.forEach((name) => {
+      const el = stationRefs.current[name];
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      neu[name] = {
+        x: r.left - contRect.left + r.width / 2,
+        y: r.top - contRect.top + r.height / 2,
+      };
+    });
+    setPositionen(neu);
+  }
+
+  useLayoutEffect(() => {
+    messen();
+    const onResize = () => messen();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [szenarioId, variante]);
 
   useEffect(() => {
     if (!spielt) return undefined;
@@ -242,7 +274,7 @@ export default function RequestJourney() {
     }
     timer.current = setTimeout(() => {
       setIndex((i) => Math.min(i + 1, steps.length - 1));
-    }, 2400);
+    }, 4800);
     return () => clearTimeout(timer.current);
   }, [spielt, index, steps.length, letzterSchritt]);
 
@@ -265,6 +297,8 @@ export default function RequestJourney() {
   }
 
   const farbe = statusFarbe(step.status);
+  const relevanteStationen = new Set(steps.map((s) => s.station));
+  const paketPos = positionen && positionen[step.station];
 
   return (
     <div className={styles.wrapper}>
@@ -304,19 +338,77 @@ export default function RequestJourney() {
         </div>
       )}
 
-      <Diagramm steps={steps} activeIndex={index} />
+      <div className={styles.buehne} ref={containerRef}>
+        <svg className={styles.linienSchicht} aria-hidden="true">
+          {positionen &&
+            VERBINDUNGEN.map(([a, b]) => {
+              const pa = positionen[a];
+              const pb = positionen[b];
+              if (!pa || !pb) return null;
+              return (
+                <line
+                  key={`${a}-${b}`}
+                  x1={pa.x}
+                  y1={pa.y}
+                  x2={pb.x}
+                  y2={pb.y}
+                  className={a === 'client' || b === 'client' || (a !== 'handler' && b !== 'handler') ? styles.linie : styles.linieGestrichelt}
+                />
+              );
+            })}
+        </svg>
+
+        <div className={styles.grid}>
+          {STATION_REIHENFOLGE.map((name) => {
+            const info = STATION_INFO[name];
+            const aktiv = name === step.station;
+            const relevant = relevanteStationen.has(name);
+            return (
+              <div
+                key={name}
+                ref={(el) => {
+                  stationRefs.current[name] = el;
+                }}
+                className={[
+                  styles.station,
+                  styles[`station_${name}`],
+                  aktiv ? styles.stationAktiv : '',
+                  !relevant ? styles.stationBlass : '',
+                ].join(' ')}
+              >
+                <span className={styles.stationIcon}>
+                  <Icon name={name} />
+                </span>
+                <span className={styles.stationLabel}>{info.label}</span>
+                <span className={styles.stationRolle}>{info.rolle}</span>
+              </div>
+            );
+          })}
+        </div>
+
+        {paketPos && (
+          <div
+            className={styles.paket}
+            style={{
+              transform: `translate(${paketPos.x}px, ${paketPos.y - 40}px) translate(-50%, -50%)`,
+            }}
+          >
+            <span className={styles.paketInner}>{step.format}</span>
+            <span className={styles.paketSpitze} />
+          </div>
+        )}
+      </div>
 
       <div className={styles.beschreibung}>
-        <p className={styles.text}>{step.text}</p>
-        <div className={styles.payload}>
-          <span className={styles.payloadLabel}>{step.payloadLabel}</span>
-          <pre className={styles.payloadCode}>{step.payload}</pre>
+        <div className={styles.beschreibungKopf}>
+          <span className={styles.text}>{step.text}</span>
+          {farbe && (
+            <span className={[styles.statusBadge, farbe === 'gut' ? styles.statusGut : styles.statusSchlecht].join(' ')}>
+              {step.status}
+            </span>
+          )}
         </div>
-        {farbe && (
-          <span className={[styles.statusBadge, farbe === 'gut' ? styles.statusGut : styles.statusSchlecht].join(' ')}>
-            {step.status}
-          </span>
-        )}
+        <pre className={styles.payloadCode}>{step.payload}</pre>
       </div>
 
       <div className={styles.steuerung}>
