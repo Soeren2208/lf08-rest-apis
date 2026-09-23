@@ -102,7 +102,7 @@ Im Folgenden siehst du beides: wie ein einzelner Beitrag abgerufen und an ein DT
 
 ## Das Werkzeug: `RestClient`
 
-Spring bringt für ausgehende HTTP-Aufrufe eine eigene, fließend zu lesende Klasse mit: `RestClient`.
+Spring bringt für ausgehende HTTP-Aufrufe eine eigene Klasse mit: `RestClient`. Ihre Aufrufe reihen sich aneinander (**Method-Chaining**, auch *Fluent API* genannt) — jeder Aufruf gibt ein Objekt zurück, an dem der nächste direkt andockt.
 
 ```java
 import org.springframework.web.client.RestClient;
