@@ -8,6 +8,7 @@ import Solution from '@site/src/components/Solution';
 import PageExplorer from '@site/src/components/PageExplorer';
 import TestLayers from '@site/src/components/TestLayers';
 import ResponseExplorer from '@site/src/components/ResponseExplorer';
+import RequestJourney from '@site/src/components/RequestJourney';
 
 export default {
   // Bestehende Docusaurus-MDX-Komponenten übernehmen ...
@@ -21,4 +22,5 @@ export default {
   PageExplorer,
   TestLayers,
   ResponseExplorer,
+  RequestJourney,
 };

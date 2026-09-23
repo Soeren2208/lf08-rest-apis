@@ -837,6 +837,14 @@ Im Controller:
 
 ---
 
+## Der ganze Weg
+
+Vier Schichten, ein Weg — vom Request bis zur Antwort. Wähle ein Szenario, wähle Erfolg oder Fehler, und lass dir Schritt für Schritt zeigen, wie eine Anfrage durch Controller, Service und Repository läuft — und wo sie stattdessen beim `ApiExceptionHandler` landet.
+
+<RequestJourney />
+
+Bei allen drei Fehlerfällen — unbekannte Kennung, ungültige Eingabe, Löschen mit Artikeln — läuft die Antwort über **dieselbe** Stelle: den `ApiExceptionHandler`. Das ist der Kern von „zentralem" Exception-Handling — nicht, dass Fehler nie vorkommen, sondern dass es für ihre Übersetzung in eine HTTP-Antwort nur einen einzigen Ort gibt.
+
 ## Musterlösung
 
 Hier steht der vollständige Quelltext der Anwendung nach allen vier Arbeitsblättern: die drei Entitäten, beide Repositories, alle DTOs, beide Mapper, beide Services, die Ausnahmen, beide Controller, der `ApiExceptionHandler`, die `application.properties` und die `docker-compose.yml`.
